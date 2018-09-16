@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-test-1
+spec:
+  template:
+    spec:
+      containers:
+      - name: foobar
+        image: foo/bar:123
+        resources:
+          limits:
+            cpu: 200m
+            memory: 1Gi
+  
