@@ -42,3 +42,7 @@ func TestPodContainerResourceLimitsAndRequests(t *testing.T) {
 func TestDeploymentResources(t *testing.T) {
 	testExpectedScore(t, "deployment-test-resources.yaml", "Container Resources", 5)
 }
+
+func TestStatefulSetResources(t *testing.T) {
+	testExpectedScore(t, "statefulset-test-resources.yaml", "Container Resources", 5)
+}

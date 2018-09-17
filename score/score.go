@@ -1,11 +1,10 @@
 package score
 
 import (
+	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
-
-	"gopkg.in/yaml.v2"
 
 	//"errors"
 	//"fmt"
@@ -64,6 +63,7 @@ func Score(file io.Reader) (*Scorecard, error) {
 
 	var pods []corev1.Pod
 	var deployments []appsv1.Deployment
+	var statefulsets []appsv1.StatefulSet
 
 	decode := func(data []byte, object runtime.Object) {
 		deserializer := codecs.UniversalDeserializer()
@@ -82,6 +82,14 @@ func Score(file io.Reader) (*Scorecard, error) {
 		var deployment appsv1.Deployment
 		decode(allData, &deployment)
 		deployments = append(deployments, deployment)
+
+	case "StatefulSet":
+		var statefulSet appsv1.StatefulSet
+		decode(allData, &statefulSet)
+		statefulsets = append(statefulsets, statefulSet)
+
+	default:
+		log.Panicf("Unknown datatype: %s", detect.Kind)
 	}
 
 	podTests := []func(corev1.PodSpec) TestScore{
@@ -99,6 +107,12 @@ func Score(file io.Reader) (*Scorecard, error) {
 	for _, deployment := range deployments {
 		for _, podTest := range podTests {
 			scoreCard.Scores = append(scoreCard.Scores, podTest(deployment.Spec.Template.Spec))
+		}
+	}
+
+	for _, statefulset := range statefulsets {
+		for _, podTest := range podTests {
+			scoreCard.Scores = append(scoreCard.Scores, podTest(statefulset.Spec.Template.Spec))
 		}
 	}
 
