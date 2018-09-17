@@ -46,3 +46,11 @@ func TestDeploymentResources(t *testing.T) {
 func TestStatefulSetResources(t *testing.T) {
 	testExpectedScore(t, "statefulset-test-resources.yaml", "Container Resources", 5)
 }
+
+func TestPodContainerTagLatest(t *testing.T) {
+	testExpectedScore(t, "pod-image-tag-latest.yaml", "Container Image Tag", 0)
+}
+
+func TestPodContainerTagFixed(t *testing.T) {
+	testExpectedScore(t, "pod-image-tag-fixed.yaml", "Container Image Tag", 10)
+}

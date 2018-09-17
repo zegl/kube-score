@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	//"errors"
 	//"fmt"
@@ -94,6 +95,7 @@ func Score(file io.Reader) (*Scorecard, error) {
 
 	podTests := []func(corev1.PodSpec) TestScore{
 		scoreContainerLimits,
+		scoreContainerImageTag,
 	}
 
 	scoreCard := Scorecard{}
@@ -154,6 +156,33 @@ func scoreContainerLimits(pod corev1.PodSpec) (score TestScore) {
 		score.Grade = 0
 	} else if hasMissingRequest {
 		score.Grade = 5
+	} else {
+		score.Grade = 10
+	}
+
+	return
+}
+
+func scoreContainerImageTag(pod corev1.PodSpec) (score TestScore) {
+	score.Name = "Container Image Tag"
+
+	allContainers := pod.InitContainers
+	allContainers = append(allContainers, pod.Containers...)
+
+	hasTagLatest := false
+
+	for _, container := range allContainers{
+		imageParts := strings.Split(container.Image, ":")
+		imageVersion := imageParts[len(imageParts)-1]
+
+		if imageVersion == "latest" {
+			score.Comments = append(score.Comments, "Image with latest tag")
+			hasTagLatest = true
+		}
+	}
+
+	if hasTagLatest {
+		score.Grade = 0
 	} else {
 		score.Grade = 10
 	}
