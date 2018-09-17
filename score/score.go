@@ -96,6 +96,7 @@ func Score(file io.Reader) (*Scorecard, error) {
 	podTests := []func(corev1.PodSpec) TestScore{
 		scoreContainerLimits,
 		scoreContainerImageTag,
+		scoreContainerImagePullPolicy,
 	}
 
 	scoreCard := Scorecard{}
@@ -182,6 +183,30 @@ func scoreContainerImageTag(pod corev1.PodSpec) (score TestScore) {
 	}
 
 	if hasTagLatest {
+		score.Grade = 0
+	} else {
+		score.Grade = 10
+	}
+
+	return
+}
+
+func scoreContainerImagePullPolicy(pod corev1.PodSpec) (score TestScore) {
+	score.Name = "Container Image Pull Policy"
+
+	allContainers := pod.InitContainers
+	allContainers = append(allContainers, pod.Containers...)
+
+	hasNonAlways := false
+
+	for _, container := range allContainers{
+		if container.ImagePullPolicy != corev1.PullAlways {
+			score.Comments = append(score.Comments, "ImagePullPolicy is not set to PullAlways")
+			hasNonAlways = true
+		}
+	}
+
+	if hasNonAlways {
 		score.Grade = 0
 	} else {
 		score.Grade = 10

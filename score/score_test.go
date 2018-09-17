@@ -54,3 +54,13 @@ func TestPodContainerTagLatest(t *testing.T) {
 func TestPodContainerTagFixed(t *testing.T) {
 	testExpectedScore(t, "pod-image-tag-fixed.yaml", "Container Image Tag", 10)
 }
+
+func TestPodContainerPullPolicyUndefined(t *testing.T) {
+	testExpectedScore(t, "pod-image-pullpolicy-undefined.yaml", "Container Image Pull Policy", 0)
+}
+func TestPodContainerPullPolicyNever(t *testing.T) {
+	testExpectedScore(t, "pod-image-pullpolicy-never.yaml", "Container Image Pull Policy", 0)
+}
+func TestPodContainerPullPolicyAlways(t *testing.T) {
+	testExpectedScore(t, "pod-image-pullpolicy-always.yaml", "Container Image Pull Policy", 10)
+}
