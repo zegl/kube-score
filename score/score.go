@@ -1,23 +1,19 @@
 package score
 
 import (
+	"bytes"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
 	"strings"
 
-	//"errors"
-	//"fmt"
-	// "github.com/labstack/echo"
-	// "k8s.io/api/admission/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
-	// batchv1 "k8s.io/api/batch/v1"
-	// batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	// "reflect"
 )
 
 var scheme = runtime.NewScheme()
@@ -30,9 +26,7 @@ func init() {
 func addToScheme(scheme *runtime.Scheme) {
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
-	// batchv1.AddToScheme(scheme)
-	// batchv1beta1.AddToScheme(scheme)
-	// v1beta1.AddToScheme(scheme)
+	networkingv1.AddToScheme(scheme)
 }
 
 type Scorecard struct {
@@ -47,7 +41,7 @@ type TestScore struct {
 }
 
 func Score(file io.Reader) (*Scorecard, error) {
-	allData, err := ioutil.ReadAll(file)
+	allFiles, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
@@ -56,74 +50,88 @@ func Score(file io.Reader) (*Scorecard, error) {
 		Kind string `yaml:"kind"`
 	}
 
-	var detect detectKind
-	err = yaml.Unmarshal(allData, &detect)
-	if err != nil {
-		return nil, err
-	}
-
 	var pods []corev1.Pod
 	var deployments []appsv1.Deployment
 	var statefulsets []appsv1.StatefulSet
+	var networkPolies []networkingv1.NetworkPolicy
 
-	decode := func(data []byte, object runtime.Object) {
-		deserializer := codecs.UniversalDeserializer()
-		if _, _, err := deserializer.Decode(data, nil, object); err != nil {
-			panic(err)
+	for _, fileContents := range bytes.Split(allFiles, []byte("---\n")) {
+		var detect detectKind
+		err = yaml.Unmarshal(fileContents, &detect)
+		if err != nil {
+			return nil, err
+		}
+
+		decode := func(data []byte, object runtime.Object) {
+			deserializer := codecs.UniversalDeserializer()
+			if _, _, err := deserializer.Decode(data, nil, object); err != nil {
+				panic(err)
+			}
+		}
+
+		switch detect.Kind {
+		case "Pod":
+			var pod corev1.Pod
+			decode(fileContents, &pod)
+			pods = append(pods, pod)
+
+		case "Deployment":
+			var deployment appsv1.Deployment
+			decode(fileContents, &deployment)
+			deployments = append(deployments, deployment)
+
+		case "StatefulSet":
+			var statefulSet appsv1.StatefulSet
+			decode(fileContents, &statefulSet)
+			statefulsets = append(statefulsets, statefulSet)
+
+		case "NetworkPolicy":
+			var netpol networkingv1.NetworkPolicy
+			decode(fileContents, &netpol)
+			networkPolies = append(networkPolies, netpol)
+
+		default:
+			log.Panicf("Unknown datatype: %s", detect.Kind)
 		}
 	}
 
-	switch detect.Kind {
-	case "Pod":
-		var pod corev1.Pod
-		decode(allData, &pod)
-		pods = append(pods, pod)
-
-	case "Deployment":
-		var deployment appsv1.Deployment
-		decode(allData, &deployment)
-		deployments = append(deployments, deployment)
-
-	case "StatefulSet":
-		var statefulSet appsv1.StatefulSet
-		decode(allData, &statefulSet)
-		statefulsets = append(statefulsets, statefulSet)
-
-	default:
-		log.Panicf("Unknown datatype: %s", detect.Kind)
-	}
-
-	podTests := []func(corev1.PodSpec) TestScore{
+	podTests := []func(corev1.PodTemplateSpec) TestScore{
 		scoreContainerLimits,
 		scoreContainerImageTag,
 		scoreContainerImagePullPolicy,
+		scorePodHasNetworkPolicy(networkPolies),
 	}
 
 	scoreCard := Scorecard{}
 
 	for _, pod := range pods {
 		for _, podTest := range podTests {
-			scoreCard.Scores = append(scoreCard.Scores, podTest(pod.Spec))
+			scoreCard.Scores = append(scoreCard.Scores, podTest(corev1.PodTemplateSpec{
+				ObjectMeta: pod.ObjectMeta,
+				Spec: pod.Spec,
+			}))
 		}
 	}
 
 	for _, deployment := range deployments {
 		for _, podTest := range podTests {
-			scoreCard.Scores = append(scoreCard.Scores, podTest(deployment.Spec.Template.Spec))
+			scoreCard.Scores = append(scoreCard.Scores, podTest(deployment.Spec.Template))
 		}
 	}
 
 	for _, statefulset := range statefulsets {
 		for _, podTest := range podTests {
-			scoreCard.Scores = append(scoreCard.Scores, podTest(statefulset.Spec.Template.Spec))
+			scoreCard.Scores = append(scoreCard.Scores, podTest(statefulset.Spec.Template))
 		}
 	}
 
 	return &scoreCard, nil
 }
 
-func scoreContainerLimits(pod corev1.PodSpec) (score TestScore) {
+func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score TestScore) {
 	score.Name = "Container Resources"
+
+	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
@@ -164,8 +172,10 @@ func scoreContainerLimits(pod corev1.PodSpec) (score TestScore) {
 	return
 }
 
-func scoreContainerImageTag(pod corev1.PodSpec) (score TestScore) {
+func scoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score TestScore) {
 	score.Name = "Container Image Tag"
+
+	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
@@ -191,8 +201,10 @@ func scoreContainerImageTag(pod corev1.PodSpec) (score TestScore) {
 	return
 }
 
-func scoreContainerImagePullPolicy(pod corev1.PodSpec) (score TestScore) {
+func scoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score TestScore) {
 	score.Name = "Container Image Pull Policy"
+
+	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)

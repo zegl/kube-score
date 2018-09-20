@@ -5,6 +5,5 @@ metadata:
 spec:
   containers:
   - name: foobar
-    resources:
     image: foo/bar:123
     imagePullPolicy: Never

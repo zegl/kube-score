@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: testapp-netpol
+  namespace: testspace
+spec:
+  podSelector:
+    app: testapp
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  labels:
+    app: not-testapp
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:latest
