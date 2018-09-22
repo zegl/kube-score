@@ -2,6 +2,7 @@ package score
 
 import (
 	"bytes"
+	"github.com/zegl/kube-score/scorecard"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
@@ -10,8 +11,8 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	extensionsbetav1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
@@ -27,20 +28,10 @@ func addToScheme(scheme *runtime.Scheme) {
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	networkingv1.AddToScheme(scheme)
+	extensionsbetav1.AddToScheme(scheme)
 }
 
-type Scorecard struct {
-	Scores []TestScore
-}
-
-type TestScore struct {
-	Name        string
-	Description string
-	Grade       int
-	Comments    []string
-}
-
-func Score(file io.Reader) (*Scorecard, error) {
+func Score(file io.Reader) (*scorecard.Scorecard, error) {
 	allFiles, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
@@ -91,44 +82,50 @@ func Score(file io.Reader) (*Scorecard, error) {
 			networkPolies = append(networkPolies, netpol)
 
 		default:
-			log.Panicf("Unknown datatype: %s", detect.Kind)
+			log.Println("Unknown datatype: %s", detect.Kind)
 		}
 	}
 
-	podTests := []func(corev1.PodTemplateSpec) TestScore{
+	podTests := []func(corev1.PodTemplateSpec) scorecard.TestScore{
 		scoreContainerLimits,
 		scoreContainerImageTag,
 		scoreContainerImagePullPolicy,
 		scorePodHasNetworkPolicy(networkPolies),
 	}
 
-	scoreCard := Scorecard{}
+	scoreCard := scorecard.New()
 
 	for _, pod := range pods {
 		for _, podTest := range podTests {
-			scoreCard.Scores = append(scoreCard.Scores, podTest(corev1.PodTemplateSpec{
+			score := podTest(corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
 				Spec: pod.Spec,
-			}))
+			})
+			score.AddMeta(pod.TypeMeta, pod.ObjectMeta)
+			scoreCard.Add(score)
 		}
 	}
 
 	for _, deployment := range deployments {
 		for _, podTest := range podTests {
-			scoreCard.Scores = append(scoreCard.Scores, podTest(deployment.Spec.Template))
+			score := podTest(deployment.Spec.Template)
+			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
+			scoreCard.Add(score)
 		}
 	}
 
 	for _, statefulset := range statefulsets {
 		for _, podTest := range podTests {
-			scoreCard.Scores = append(scoreCard.Scores, podTest(statefulset.Spec.Template))
+			score := podTest(statefulset.Spec.Template)
+			score.AddMeta(statefulset.TypeMeta, statefulset.ObjectMeta)
+			scoreCard.Add(score)
 		}
 	}
 
-	return &scoreCard, nil
+	return scoreCard, nil
 }
 
-func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score TestScore) {
+func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Resources"
 
 	pod := podTemplate.Spec
@@ -172,7 +169,7 @@ func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score TestScore) 
 	return
 }
 
-func scoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score TestScore) {
+func scoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Image Tag"
 
 	pod := podTemplate.Spec
@@ -201,7 +198,7 @@ func scoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score TestScore
 	return
 }
 
-func scoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score TestScore) {
+func scoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Image Pull Policy"
 
 	pod := podTemplate.Spec
