@@ -18,10 +18,12 @@ func testExpectedScore(t *testing.T, filename string, testcase string, expectedS
 	sc, err := Score(testFile(filename))
 	assert.NoError(t, err)
 	tested := false
-	for _, s := range sc.Scores {
-		if s.Name == testcase {
-			assert.Equal(t, expectedScore, s.Grade)
-			tested = true
+	for _, objectScore := range sc.Scores {
+		for _, s := range objectScore {
+			if s.Name == testcase {
+				assert.Equal(t, expectedScore, s.Grade)
+				tested = true
+			}
 		}
 	}
 	assert.True(t, tested, "Was not tested")
@@ -68,16 +70,16 @@ func TestPodContainerPullPolicyAlways(t *testing.T) {
 }
 
 func TestPodHasNoMatchingNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-not-matching.yaml", "Pod Has NetworkPolicy", 0)
+	testExpectedScore(t, "networkpolicy-not-matching.yaml", "Pod NetworkPolicy", 0)
 }
 
 func TestPodHasMatchingNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-matching.yaml", "Pod Has NetworkPolicy", 10)
+	testExpectedScore(t, "networkpolicy-matching.yaml", "Pod NetworkPolicy", 10)
 }
 
 func TestPodHasMatchingIngressNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-matching-only-ingress.yaml", "Pod Has NetworkPolicy", 5)
+	testExpectedScore(t, "networkpolicy-matching-only-ingress.yaml", "Pod NetworkPolicy", 5)
 }
 func TestPodHasMatchingEgressNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-matching-only-egress.yaml", "Pod Has NetworkPolicy", 5)
+	testExpectedScore(t, "networkpolicy-matching-only-egress.yaml", "Pod NetworkPolicy", 5)
 }

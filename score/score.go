@@ -82,7 +82,7 @@ func Score(file io.Reader) (*scorecard.Scorecard, error) {
 			networkPolies = append(networkPolies, netpol)
 
 		default:
-			log.Println("Unknown datatype: %s", detect.Kind)
+			log.Printf("Unknown datatype: %s", detect.Kind)
 		}
 	}
 
