@@ -89,6 +89,7 @@ func Score(file io.Reader) (*scorecard.Scorecard, error) {
 		scoreContainerImageTag,
 		scoreContainerImagePullPolicy,
 		scorePodHasNetworkPolicy(networkPolies),
+		scoreContainerProbes,
 	}
 
 	scoreCard := scorecard.New()

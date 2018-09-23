@@ -80,6 +80,25 @@ func TestPodHasMatchingNetworkPolicy(t *testing.T) {
 func TestPodHasMatchingIngressNetworkPolicy(t *testing.T) {
 	testExpectedScore(t, "networkpolicy-matching-only-ingress.yaml", "Pod NetworkPolicy", 5)
 }
+
 func TestPodHasMatchingEgressNetworkPolicy(t *testing.T) {
 	testExpectedScore(t, "networkpolicy-matching-only-egress.yaml", "Pod NetworkPolicy", 5)
+}
+
+func TestPodProbesAllMissing(t *testing.T) {
+	testExpectedScore(t, "pod-probes-all-missing.yaml", "Pod Probes", 0)
+}
+
+func TestPodProbesMissingReady(t *testing.T) {
+	testExpectedScore(t, "pod-probes-missing-ready.yaml", "Pod Probes", 5)
+}
+
+func TestPodProbesIdenticalHTTP(t *testing.T) {
+	testExpectedScore(t, "pod-probes-identical-http.yaml", "Pod Probes", 7)
+}
+func TestPodProbesIdenticalTCP(t *testing.T) {
+	testExpectedScore(t, "pod-probes-identical-tcp.yaml", "Pod Probes", 7)
+}
+func TestPodProbesIdenticalExec(t *testing.T) {
+	testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", 7)
 }
