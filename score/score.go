@@ -49,10 +49,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 
 	var typeMetas []bothMeta
 	var pods []corev1.Pod
-	var appsv1Deployment []appsv1.Deployment
-	var appsv1beta1Deployment []appsv1beta1.Deployment
-	var appsv1beta2Deployment []appsv1beta2.Deployment
-	var extensionsv1beta1Deployment []extensionsv1beta1.Deployment
+	var genericDeployments []Deployment
 	var statefulsets []appsv1.StatefulSet
 	var networkPolies []networkingv1.NetworkPolicy
 
@@ -84,31 +81,35 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				typeMetas = append(typeMetas, bothMeta{pod.TypeMeta, pod.ObjectMeta})
 
 			case "Deployment":
+
+				var genericDeployment Deployment
+
 				switch detect.ApiVersion {
 				case "apps/v1":
 					var deployment appsv1.Deployment
 					decode(fileContents, &deployment)
-					appsv1Deployment = append(appsv1Deployment, deployment)
-					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+					genericDeployment = appsv1Deployment{deployment}
 				case "apps/v1beta1":
 					var deployment appsv1beta1.Deployment
 					decode(fileContents, &deployment)
-					appsv1beta1Deployment = append(appsv1beta1Deployment, deployment)
-					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+					genericDeployment = appsv1beta1Deployment{deployment}
 				case "apps/v1beta2":
 					var deployment appsv1beta2.Deployment
 					decode(fileContents, &deployment)
-					appsv1beta2Deployment = append(appsv1beta2Deployment, deployment)
-					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+					genericDeployment = appsv1beta2Deployment{deployment}
 				case "extensions/v1beta1":
 					var deployment extensionsv1beta1.Deployment
 					decode(fileContents, &deployment)
-					extensionsv1beta1Deployment = append(extensionsv1beta1Deployment, deployment)
-					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+					genericDeployment = extensionsv1beta1Deployment{deployment}
 				default:
 					log.Printf("Unknown type version of Deployment: %s", detect.ApiVersion)
 				}
 
+				genericDeployments = append(genericDeployments, genericDeployment)
+				typeMetas = append(typeMetas,  bothMeta{
+					genericDeployment.GetTypeMeta(),
+					genericDeployment.GetObjectMeta(),
+				})
 
 			case "StatefulSet":
 				var statefulSet appsv1.StatefulSet
@@ -161,34 +162,10 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, deployment := range appsv1Deployment {
+	for _, deployment := range genericDeployments {
 		for _, podTest := range podTests {
-			score := podTest(deployment.Spec.Template)
-			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
-			scoreCard.Add(score)
-		}
-	}
-
-	for _, deployment := range appsv1beta1Deployment {
-		for _, podTest := range podTests {
-			score := podTest(deployment.Spec.Template)
-			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
-			scoreCard.Add(score)
-		}
-	}
-
-	for _, deployment := range appsv1beta2Deployment {
-		for _, podTest := range podTests {
-			score := podTest(deployment.Spec.Template)
-			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
-			scoreCard.Add(score)
-		}
-	}
-
-	for _, deployment := range extensionsv1beta1Deployment {
-		for _, podTest := range podTests {
-			score := podTest(deployment.Spec.Template)
-			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
+			score := podTest(deployment.GetPodTemplateSpec())
+			score.AddMeta(deployment.GetTypeMeta(), deployment.GetObjectMeta())
 			scoreCard.Add(score)
 		}
 	}
