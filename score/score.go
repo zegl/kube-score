@@ -16,6 +16,8 @@ import (
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
@@ -34,6 +36,14 @@ func addToScheme(scheme *runtime.Scheme) {
 	extensionsv1beta1.AddToScheme(scheme)
 	appsv1beta1.AddToScheme(scheme)
 	appsv1beta2.AddToScheme(scheme)
+	batchv1.AddToScheme(scheme)
+	batchv1beta1.AddToScheme(scheme)
+}
+
+type PodSpecer interface {
+	GetTypeMeta() metav1.TypeMeta
+	GetObjectMeta() metav1.ObjectMeta
+	GetPodTemplateSpec() corev1.PodTemplateSpec
 }
 
 func Score(files []io.Reader) (*scorecard.Scorecard, error) {
@@ -49,8 +59,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 
 	var typeMetas []bothMeta
 	var pods []corev1.Pod
-	var genericDeployments []Deployment
-	var genericStatefulsets []StatefulSet
+	var podspecers []PodSpecer
 	var networkPolies []networkingv1.NetworkPolicy
 
 	for _, file := range files {
@@ -80,59 +89,82 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				pods = append(pods, pod)
 				typeMetas = append(typeMetas, bothMeta{pod.TypeMeta, pod.ObjectMeta})
 
+			case "Job":
+				fallthrough
+			case "CronJob":
+				fallthrough
 			case "Deployment":
+				fallthrough
+			case "DaemonSet":
+				fallthrough
+			case "StatefulSet":
+				var podspecer PodSpecer
 
-				var genericDeployment Deployment
+				kindAndVersion := detect.Kind + "-" + detect.ApiVersion
 
-				switch detect.ApiVersion {
-				case "apps/v1":
+				switch kindAndVersion {
+				case "Deployment-apps/v1":
 					var deployment appsv1.Deployment
 					decode(fileContents, &deployment)
-					genericDeployment = appsv1Deployment{deployment}
-				case "apps/v1beta1":
+					podspecer = appsv1Deployment{deployment}
+				case "Deployment-apps/v1beta1":
 					var deployment appsv1beta1.Deployment
 					decode(fileContents, &deployment)
-					genericDeployment = appsv1beta1Deployment{deployment}
-				case "apps/v1beta2":
+					podspecer = appsv1beta1Deployment{deployment}
+				case "Deployment-apps/v1beta2":
 					var deployment appsv1beta2.Deployment
 					decode(fileContents, &deployment)
-					genericDeployment = appsv1beta2Deployment{deployment}
-				case "extensions/v1beta1":
+					podspecer = appsv1beta2Deployment{deployment}
+				case "Deployment-extensions/v1beta1":
 					var deployment extensionsv1beta1.Deployment
 					decode(fileContents, &deployment)
-					genericDeployment = extensionsv1beta1Deployment{deployment}
-				default:
-					log.Printf("Unknown type version of Deployment: %s", detect.ApiVersion)
-				}
+					podspecer = extensionsv1beta1Deployment{deployment}
 
-				genericDeployments = append(genericDeployments, genericDeployment)
-				typeMetas = append(typeMetas,  bothMeta{
-					genericDeployment.GetTypeMeta(),
-					genericDeployment.GetObjectMeta(),
-				})
-
-			case "StatefulSet":
-				var genericStatefulset StatefulSet
-
-				switch detect.ApiVersion {
-				case "apps/v1":
+				case "StatefulSet-apps/v1":
 					var statefulSet appsv1.StatefulSet
 					decode(fileContents, &statefulSet)
-					genericStatefulset = appsv1StatefulSet{statefulSet}
-				case "apps/v1beta1":
+					podspecer = appsv1StatefulSet{statefulSet}
+				case "StatefulSet-apps/v1beta1":
 					var statefulSet appsv1beta1.StatefulSet
 					decode(fileContents, &statefulSet)
-					genericStatefulset = appsv1beta1StatefulSet{statefulSet}
-				case "apps/v1beta2":
+					podspecer = appsv1beta1StatefulSet{statefulSet}
+				case "StatefulSet-apps/v1beta2":
 					var statefulSet appsv1beta2.StatefulSet
 					decode(fileContents, &statefulSet)
-					genericStatefulset = appsv1beta2StatefulSet{statefulSet}
+					podspecer = appsv1beta2StatefulSet{statefulSet}
+
+				case "DaemonSet-apps/v1":
+					var daemonset appsv1.DaemonSet
+					decode(fileContents, &daemonset)
+					podspecer = appsv1DaemonSet{daemonset}
+				case "DaemonSet-apps/v1beta2":
+					var daemonset appsv1beta2.DaemonSet
+					decode(fileContents, &daemonset)
+					podspecer = appsv1beta2DaemonSet{daemonset}
+				case "DaemonSet-extensions/v1beta1":
+					var daemonset extensionsv1beta1.DaemonSet
+					decode(fileContents, &daemonset)
+					podspecer = extensionsv1beta1DaemonSet{daemonset}
+
+				case "Job-batch/v1":
+					var job batchv1.Job
+					decode(fileContents, &job)
+					podspecer = batchv1Job{job}
+
+				case "CronJob-batch/v1beta1":
+					var cronjob batchv1beta1.CronJob
+					decode(fileContents, &cronjob)
+					podspecer = batchv1beta1CronJob{cronjob}
+
+				default:
+					log.Printf("Unknown type %s %s", detect.ApiVersion, detect.Kind)
+					continue
 				}
 
-				genericStatefulsets = append(genericStatefulsets, genericStatefulset)
+				podspecers = append(podspecers, podspecer)
 				typeMetas = append(typeMetas,  bothMeta{
-					genericStatefulset.GetTypeMeta(),
-					genericStatefulset.GetObjectMeta(),
+					podspecer.GetTypeMeta(),
+					podspecer.GetObjectMeta(),
 				})
 
 			case "NetworkPolicy":
@@ -180,18 +212,10 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, deployment := range genericDeployments {
+	for _, podspecer := range podspecers {
 		for _, podTest := range podTests {
-			score := podTest(deployment.GetPodTemplateSpec())
-			score.AddMeta(deployment.GetTypeMeta(), deployment.GetObjectMeta())
-			scoreCard.Add(score)
-		}
-	}
-
-	for _, statefulset := range genericStatefulsets {
-		for _, podTest := range podTests {
-			score := podTest(statefulset.GetPodTemplateSpec())
-			score.AddMeta(statefulset.GetTypeMeta(), statefulset.GetObjectMeta())
+			score := podTest(podspecer.GetPodTemplateSpec())
+			score.AddMeta(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
 			scoreCard.Add(score)
 		}
 	}

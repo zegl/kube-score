@@ -9,12 +9,6 @@ import (
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 )
 
-type Deployment interface {
-	GetTypeMeta() metav1.TypeMeta
-	GetObjectMeta() metav1.ObjectMeta
-	GetPodTemplateSpec() corev1.PodTemplateSpec
-}
-
 type appsv1Deployment struct {
 	appsv1.Deployment
 }

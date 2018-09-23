@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonset-test
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:latest

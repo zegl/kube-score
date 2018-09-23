@@ -1,6 +1,5 @@
 package score
 
-
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -8,12 +7,6 @@ import (
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 )
-
-type StatefulSet interface {
-	GetTypeMeta() metav1.TypeMeta
-	GetObjectMeta() metav1.ObjectMeta
-	GetPodTemplateSpec() corev1.PodTemplateSpec
-}
 
 type appsv1StatefulSet struct {
 	appsv1.StatefulSet
