@@ -11,8 +11,11 @@ import (
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensionsbetav1 "k8s.io/api/extensions/v1beta1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
@@ -28,16 +31,28 @@ func addToScheme(scheme *runtime.Scheme) {
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	networkingv1.AddToScheme(scheme)
-	extensionsbetav1.AddToScheme(scheme)
+	extensionsv1beta1.AddToScheme(scheme)
+	appsv1beta1.AddToScheme(scheme)
+	appsv1beta2.AddToScheme(scheme)
 }
 
 func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 	type detectKind struct {
+		ApiVersion string `yaml:"apiVersion"`
 		Kind string `yaml:"kind"`
 	}
 
+	type bothMeta struct {
+		typeMeta metav1.TypeMeta
+		objectMeta metav1.ObjectMeta
+	}
+
+	var typeMetas []bothMeta
 	var pods []corev1.Pod
-	var deployments []appsv1.Deployment
+	var appsv1Deployment []appsv1.Deployment
+	var appsv1beta1Deployment []appsv1beta1.Deployment
+	var appsv1beta2Deployment []appsv1beta2.Deployment
+	var extensionsv1beta1Deployment []extensionsv1beta1.Deployment
 	var statefulsets []appsv1.StatefulSet
 	var networkPolies []networkingv1.NetworkPolicy
 
@@ -66,26 +81,55 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				var pod corev1.Pod
 				decode(fileContents, &pod)
 				pods = append(pods, pod)
+				typeMetas = append(typeMetas, bothMeta{pod.TypeMeta, pod.ObjectMeta})
 
 			case "Deployment":
-				var deployment appsv1.Deployment
-				decode(fileContents, &deployment)
-				deployments = append(deployments, deployment)
+				switch detect.ApiVersion {
+				case "apps/v1":
+					var deployment appsv1.Deployment
+					decode(fileContents, &deployment)
+					appsv1Deployment = append(appsv1Deployment, deployment)
+					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+				case "apps/v1beta1":
+					var deployment appsv1beta1.Deployment
+					decode(fileContents, &deployment)
+					appsv1beta1Deployment = append(appsv1beta1Deployment, deployment)
+					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+				case "apps/v1beta2":
+					var deployment appsv1beta2.Deployment
+					decode(fileContents, &deployment)
+					appsv1beta2Deployment = append(appsv1beta2Deployment, deployment)
+					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+				case "extensions/v1beta1":
+					var deployment extensionsv1beta1.Deployment
+					decode(fileContents, &deployment)
+					extensionsv1beta1Deployment = append(extensionsv1beta1Deployment, deployment)
+					typeMetas = append(typeMetas,  bothMeta{deployment.TypeMeta, deployment.ObjectMeta})
+				default:
+					log.Printf("Unknown type version of Deployment: %s", detect.ApiVersion)
+				}
+
 
 			case "StatefulSet":
 				var statefulSet appsv1.StatefulSet
 				decode(fileContents, &statefulSet)
 				statefulsets = append(statefulsets, statefulSet)
+				typeMetas = append(typeMetas,  bothMeta{statefulSet.TypeMeta, statefulSet.ObjectMeta})
 
 			case "NetworkPolicy":
 				var netpol networkingv1.NetworkPolicy
 				decode(fileContents, &netpol)
 				networkPolies = append(networkPolies, netpol)
+				typeMetas = append(typeMetas,  bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
 
 			default:
 				log.Printf("Unknown datatype: %s", detect.Kind)
 			}
 		}
+	}
+
+	metaTests := []func(metav1.TypeMeta) scorecard.TestScore {
+		scoreMetaStableAvailable,
 	}
 
 	podTests := []func(corev1.PodTemplateSpec) scorecard.TestScore{
@@ -98,6 +142,14 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 
 	scoreCard := scorecard.New()
 
+	for _, meta := range typeMetas {
+		for _, metaTest := range metaTests {
+			score := metaTest(meta.typeMeta)
+			score.AddMeta(meta.typeMeta, meta.objectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
 	for _, pod := range pods {
 		for _, podTest := range podTests {
 			score := podTest(corev1.PodTemplateSpec{
@@ -109,7 +161,31 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, deployment := range deployments {
+	for _, deployment := range appsv1Deployment {
+		for _, podTest := range podTests {
+			score := podTest(deployment.Spec.Template)
+			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, deployment := range appsv1beta1Deployment {
+		for _, podTest := range podTests {
+			score := podTest(deployment.Spec.Template)
+			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, deployment := range appsv1beta2Deployment {
+		for _, podTest := range podTests {
+			score := podTest(deployment.Spec.Template)
+			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, deployment := range extensionsv1beta1Deployment {
 		for _, podTest := range podTests {
 			score := podTest(deployment.Spec.Template)
 			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)

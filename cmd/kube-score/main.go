@@ -46,7 +46,7 @@ func main() {
 
 		p := color.New(color.FgMagenta)
 
-		p.Printf("%s %s", firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
+		p.Printf("%s/%s %s", firstCard.ResourceRef.Version, firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
 
 		if firstCard.ResourceRef.Namespace != "" {
 			p.Printf("in %s\n", firstCard.ResourceRef.Namespace )

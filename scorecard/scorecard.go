@@ -32,6 +32,7 @@ type TestScore struct {
 		Kind string
 		Name string
 		Namespace string
+		Version string
 	}
 
 	Grade       int
@@ -42,6 +43,7 @@ func (ts *TestScore) AddMeta(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 	ts.ResourceRef.Name = objectMeta.Name
 	ts.ResourceRef.Namespace = objectMeta.Namespace
 	ts.ResourceRef.Kind = typeMeta.Kind
+	ts.ResourceRef.Version = typeMeta.APIVersion
 }
 
 func (ts TestScore) resourceRefKey() string {

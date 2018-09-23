@@ -1,6 +1,7 @@
 package score
 
 import (
+	"io"
 	"os"
 	"testing"
 
@@ -16,7 +17,7 @@ func testFile(name string) *os.File {
 }
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore int) {
-	sc, err := Score(testFile(filename))
+	sc, err := Score([]io.Reader{testFile(filename)})
 	assert.NoError(t, err)
 	tested := false
 	for _, objectScore := range sc.Scores {
@@ -97,9 +98,15 @@ func TestPodProbesMissingReady(t *testing.T) {
 func TestPodProbesIdenticalHTTP(t *testing.T) {
 	testExpectedScore(t, "pod-probes-identical-http.yaml", "Pod Probes", 7)
 }
+
 func TestPodProbesIdenticalTCP(t *testing.T) {
 	testExpectedScore(t, "pod-probes-identical-tcp.yaml", "Pod Probes", 7)
 }
+
 func TestPodProbesIdenticalExec(t *testing.T) {
 	testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", 7)
+}
+
+func TestDeploymentUnstableExtensionsv1beta1(t *testing.T) {
+	testExpectedScore(t, "deployment-extensions-v1beta1.yaml", "Unstable version", 5)
 }
