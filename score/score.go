@@ -50,7 +50,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 	var typeMetas []bothMeta
 	var pods []corev1.Pod
 	var genericDeployments []Deployment
-	var statefulsets []appsv1.StatefulSet
+	var genericStatefulsets []StatefulSet
 	var networkPolies []networkingv1.NetworkPolicy
 
 	for _, file := range files {
@@ -112,10 +112,28 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				})
 
 			case "StatefulSet":
-				var statefulSet appsv1.StatefulSet
-				decode(fileContents, &statefulSet)
-				statefulsets = append(statefulsets, statefulSet)
-				typeMetas = append(typeMetas,  bothMeta{statefulSet.TypeMeta, statefulSet.ObjectMeta})
+				var genericStatefulset StatefulSet
+
+				switch detect.ApiVersion {
+				case "apps/v1":
+					var statefulSet appsv1.StatefulSet
+					decode(fileContents, &statefulSet)
+					genericStatefulset = appsv1StatefulSet{statefulSet}
+				case "apps/v1beta1":
+					var statefulSet appsv1beta1.StatefulSet
+					decode(fileContents, &statefulSet)
+					genericStatefulset = appsv1beta1StatefulSet{statefulSet}
+				case "apps/v1beta2":
+					var statefulSet appsv1beta2.StatefulSet
+					decode(fileContents, &statefulSet)
+					genericStatefulset = appsv1beta2StatefulSet{statefulSet}
+				}
+
+				genericStatefulsets = append(genericStatefulsets, genericStatefulset)
+				typeMetas = append(typeMetas,  bothMeta{
+					genericStatefulset.GetTypeMeta(),
+					genericStatefulset.GetObjectMeta(),
+				})
 
 			case "NetworkPolicy":
 				var netpol networkingv1.NetworkPolicy
@@ -170,10 +188,10 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, statefulset := range statefulsets {
+	for _, statefulset := range genericStatefulsets {
 		for _, podTest := range podTests {
-			score := podTest(statefulset.Spec.Template)
-			score.AddMeta(statefulset.TypeMeta, statefulset.ObjectMeta)
+			score := podTest(statefulset.GetPodTemplateSpec())
+			score.AddMeta(statefulset.GetTypeMeta(), statefulset.GetObjectMeta())
 			scoreCard.Add(score)
 		}
 	}

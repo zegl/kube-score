@@ -12,9 +12,11 @@ func scoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) 
 		},
 		"apps/v1beta1": {
 			"Deployment": "apps/v1",
+			"StatefulSet": "apps/v1",
 		},
 		"apps/v1beta2": {
 			"Deployment": "apps/v1",
+			"StatefulSet": "apps/v1",
 		},
 	}
 
