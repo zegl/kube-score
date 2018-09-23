@@ -1,9 +1,10 @@
 package score
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func testFile(name string) *os.File {

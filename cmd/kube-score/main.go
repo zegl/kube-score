@@ -16,8 +16,9 @@ func main() {
 		os.Exit(1)
  	}
 
-	for _, file := range filesToRead {
+	var allFilePointers []io.Reader
 
+	for _, file := range filesToRead {
 		var fp io.Reader
 
 		if file == "-" {
@@ -30,39 +31,48 @@ func main() {
 			}
 		}
 
-		scoreCard, err := score.Score(fp)
-		if err != nil {
-			panic(err)
+		allFilePointers = append(allFilePointers, fp)
+	}
+
+	scoreCard, err := score.Score(allFilePointers)
+	if err != nil {
+		panic(err)
+	}
+
+	sumGrade := 0
+
+	for _, resourceScores := range scoreCard.Scores {
+		firstCard := resourceScores[0]
+
+		p := color.New(color.FgMagenta)
+
+		p.Printf("%s %s", firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
+
+		if firstCard.ResourceRef.Namespace != "" {
+			p.Printf("in %s\n", firstCard.ResourceRef.Namespace )
+		}  else {
+			p.Println()
 		}
 
-		sumGrade := 0
+		for _, card := range resourceScores {
+			col := color.FgGreen
+			status := "OK"
 
-		for _, resourceScores := range scoreCard.Scores {
-
-			firstCard := resourceScores[0]
-
-			color.New(color.FgMagenta).Printf("%s %s in %s\n", firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name, firstCard.ResourceRef.Namespace)
-
-			for _, card := range resourceScores {
-				col := color.FgGreen
-				status := "OK"
-
-				if card.Grade == 0 {
-					col = color.FgRed
-					status = "CRITICAL"
-				} else if card.Grade < 10 {
-					col = color.FgYellow
-					status = "WARNING"
-				}
-
-				color.New(col).Printf("    [%s] %s\n", status, card.Name)
-
-				for _, comment := range card.Comments {
-					fmt.Printf("        * %s\n", comment)
-				}
-
-				sumGrade += card.Grade
+			if card.Grade == 0 {
+				col = color.FgRed
+				status = "CRITICAL"
+			} else if card.Grade < 10 {
+				col = color.FgYellow
+				status = "WARNING"
 			}
+
+			color.New(col).Printf("    [%s] %s\n", status, card.Name)
+
+			for _, comment := range card.Comments {
+				fmt.Printf("        * %s\n", comment)
+			}
+
+			sumGrade += card.Grade
 		}
 	}
 }

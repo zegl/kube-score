@@ -1,9 +1,11 @@
 package score
 
 import (
-	"github.com/zegl/kube-score/scorecard"
-	corev1 "k8s.io/api/core/v1"
 	"strings"
+
+	"github.com/zegl/kube-score/scorecard"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
