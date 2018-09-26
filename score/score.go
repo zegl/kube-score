@@ -189,6 +189,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		scoreContainerImagePullPolicy,
 		scorePodHasNetworkPolicy(networkPolies),
 		scoreContainerProbes,
+		scoreContainerSecurityContext,
 	}
 
 	scoreCard := scorecard.New()

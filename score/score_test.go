@@ -146,3 +146,23 @@ func TestCronJobBatchv1beta1(t *testing.T) {
 func TestJobBatchv1(t *testing.T) {
 	testExpectedScore(t, "job-batchv1.yaml", "Unstable version", 10)
 }
+
+func TestContainerSecurityContextPrivilegied(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 0)
+}
+
+func TestContainerSecurityContextNonPrivilegied(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-non-privilegied.yaml", "Container Security Context", 10)
+}
+
+func TestContainerSecurityContextLowUser(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 0)
+}
+
+func TestContainerSecurityContextLowGroup(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 0)
+}
+
+func TestContainerSecurityContextHighIds(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-high-ids.yaml", "Container Security Context", 10)
+}

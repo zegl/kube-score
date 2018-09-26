@@ -183,3 +183,52 @@ func scoreContainerProbes(podTemplate corev1.PodTemplateSpec) (score scorecard.T
 
 	return
 }
+
+func scoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+	score.Name = "Container Security Context"
+
+	allContainers := podTemplate.Spec.InitContainers
+	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+
+	hasPrivileged := false
+	hasWritableRootFS := false
+	hasLowUserID := false
+	hasLowGroupID := false
+
+	for _, container := range allContainers {
+
+		if container.SecurityContext == nil {
+			continue
+		}
+
+		sec := container.SecurityContext
+
+		if sec.Privileged != nil && *sec.Privileged {
+			hasPrivileged = true
+			score.Comments = append(score.Comments, "The pod has a privileged container")
+		}
+
+		if sec.ReadOnlyRootFilesystem != nil && *sec.ReadOnlyRootFilesystem == false {
+			hasWritableRootFS = true
+			score.Comments = append(score.Comments, "The pod has a container with a writable root filesystem")
+		}
+
+		if sec.RunAsUser != nil && *sec.RunAsUser < 10000 {
+			hasLowUserID = true
+			score.Comments = append(score.Comments, "The pod has a container running with a low user ID")
+		}
+
+		if sec.RunAsGroup != nil && *sec.RunAsGroup < 10000 {
+			hasLowGroupID = true
+			score.Comments = append(score.Comments, "The pod has a container running with a low group ID")
+		}
+	}
+
+	if hasPrivileged || hasWritableRootFS || hasLowUserID || hasLowGroupID {
+		score.Grade = 0
+	} else {
+		score.Grade = 10
+	}
+
+	return
+}
