@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/zegl/kube-score/score"
@@ -10,7 +11,17 @@ import (
 )
 
 func main() {
-	filesToRead := os.Args[1:]
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
+	printHelp := fs.Bool("help", false, "Print help")
+	fs.Parse(os.Args[1:])
+
+	if *printHelp {
+		fs.Usage()
+		return
+	}
+
+	filesToRead := fs.Args()
 	if len(filesToRead) == 0 {
 		log.Println("No files given as arguments")
 		os.Exit(1)
@@ -41,6 +52,9 @@ func main() {
 
 	sumGrade := 0
 
+	hasWarning := false
+	hasCritical := false
+
 	for _, resourceScores := range scoreCard.Scores {
 		firstCard := resourceScores[0]
 
@@ -61,9 +75,11 @@ func main() {
 			if card.Grade == 0 {
 				col = color.FgRed
 				status = "CRITICAL"
+				hasCritical = true
 			} else if card.Grade < 10 {
 				col = color.FgYellow
 				status = "WARNING"
+				hasWarning = true
 			}
 
 			color.New(col).Printf("    [%s] %s\n", status, card.Name)
@@ -74,5 +90,13 @@ func main() {
 
 			sumGrade += card.Grade
 		}
+	}
+
+	if hasCritical {
+		os.Exit(1)
+	} else if hasWarning && *exitOneOnWarning {
+		os.Exit(1)
+	} else {
+		os.Exit(0)
 	}
 }
