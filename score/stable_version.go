@@ -7,7 +7,7 @@ import (
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 func scoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) {
-	score.Name = "Unstable version"
+	score.Name = "Stable version"
 
 	withStable := map[string]map[string]string {
 		"extensions/v1beta1": {
