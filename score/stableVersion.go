@@ -1,6 +1,9 @@
 package score
 
-import "github.com/zegl/kube-score/scorecard"
+import (
+	"fmt"
+	"github.com/zegl/kube-score/scorecard"
+)
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 func scoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) {
@@ -25,7 +28,10 @@ func scoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) 
 	if inVersion, ok := withStable[meta.APIVersion]; ok  {
 		if recommendedVersion, ok := inVersion[meta.Kind]; ok {
 			score.Grade = 5
-			score.Comments = []string{"Recommended replacement: " + recommendedVersion}
+			score.AddComment("",
+				fmt.Sprintf("The apiVersion and kind %s/%s is deprecated", meta.APIVersion, meta.Kind),
+				fmt.Sprintf("It's recommended to use %s instead", recommendedVersion),
+			)
 			return
 		}
 	}

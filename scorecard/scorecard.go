@@ -36,7 +36,21 @@ type TestScore struct {
 	}
 
 	Grade       int
-	Comments    []string
+	Comments    []TestScoreComment
+}
+
+type TestScoreComment struct {
+	Path string
+	Summary string
+	Description string
+}
+
+func (ts *TestScore) AddComment(path, summary, description string) {
+	ts.Comments = append(ts.Comments, TestScoreComment{
+		Path: path,
+		Summary: summary,
+		Description: description,
+	})
 }
 
 func (ts *TestScore) AddMeta(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) {
