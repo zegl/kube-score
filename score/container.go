@@ -21,19 +21,19 @@ func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score scorecard.T
 
 	for _, container := range allContainers {
 		if container.Resources.Limits.Cpu().IsZero() {
-			score.AddComment("", "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS")
+			score.AddComment(container.Name, "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS")
 			hasMissingLimit = true
 		}
 		if container.Resources.Limits.Memory().IsZero() {
-			score.AddComment("", "Memory limit is not set", "Resource limits are recommended to avoid resource DDOS")
+			score.AddComment(container.Name, "Memory limit is not set", "Resource limits are recommended to avoid resource DDOS")
 			hasMissingLimit = true
 		}
 		if container.Resources.Requests.Cpu().IsZero() {
-			score.AddComment("", "CPU request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing")
+			score.AddComment(container.Name, "CPU request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing")
 			hasMissingRequest = true
 		}
 		if container.Resources.Requests.Memory().IsZero() {
-			score.AddComment("", "Memory request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing")
+			score.AddComment(container.Name, "Memory request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing")
 			hasMissingRequest = true
 		}
 	}
@@ -67,7 +67,7 @@ func scoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard
 		imageVersion := imageParts[len(imageParts)-1]
 
 		if imageVersion == "latest" {
-			score.AddComment("", "Image with latest tag", "Using a fixed tag is recommended to avoid accidental upgrades")
+			score.AddComment(container.Name, "Image with latest tag", "Using a fixed tag is recommended to avoid accidental upgrades")
 			hasTagLatest = true
 		}
 	}
@@ -93,7 +93,7 @@ func scoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score sc
 
 	for _, container := range allContainers{
 		if container.ImagePullPolicy != corev1.PullAlways {
-			score.AddComment("", "ImagePullPolicy is not set to PullAlways", "It's recommended to always set the ImagePullPolicy to PullAlways, to make sure that the imagePullSecrets are always correct, and to always get the image you want.")
+			score.AddComment(container.Name, "ImagePullPolicy is not set to PullAlways", "It's recommended to always set the ImagePullPolicy to PullAlways, to make sure that the imagePullSecrets are always correct, and to always get the image you want.")
 			hasNonAlways = true
 		}
 	}
@@ -121,12 +121,12 @@ func scoreContainerProbes(podTemplate corev1.PodTemplateSpec) (score scorecard.T
 	for _, container := range allContainers {
 		if container.ReadinessProbe == nil  {
 			hasReadinessProbe = false
-			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
+			score.AddComment(container.Name, "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
 		}
 
 		if container.LivenessProbe == nil {
 			hasLivenessProbe = false
-			score.AddComment("", "Container is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
+			score.AddComment(container.Name, "Container is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
 		}
 
 		if container.ReadinessProbe != nil && container.LivenessProbe != nil {
@@ -138,14 +138,14 @@ func scoreContainerProbes(podTemplate corev1.PodTemplateSpec) (score scorecard.T
 				if r.HTTPGet.Path == l.HTTPGet.Path &&
 					r.HTTPGet.Port.IntValue() == l.HTTPGet.Port.IntValue() {
 					probesAreIdentical = true
-					score.AddComment("", "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
+					score.AddComment(container.Name, "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 				}
 			}
 
 			if r.TCPSocket != nil && l.TCPSocket != nil {
 				if r.TCPSocket.Port == l.TCPSocket.Port {
 					probesAreIdentical = true
-					score.AddComment("", "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
+					score.AddComment(container.Name, "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 				}
 			}
 
@@ -161,7 +161,7 @@ func scoreContainerProbes(podTemplate corev1.PodTemplateSpec) (score scorecard.T
 
 					if !hasDifferent {
 						probesAreIdentical = true
-						score.AddComment("", "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
+						score.AddComment(container.Name, "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 					}
 				}
 			}
@@ -205,22 +205,22 @@ func scoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score sc
 
 		if sec.Privileged != nil && *sec.Privileged {
 			hasPrivileged = true
-			score.AddComment("", "The container is privileged", "")
+			score.AddComment(container.Name, "The container is privileged", "")
 		}
 
 		if sec.ReadOnlyRootFilesystem != nil && *sec.ReadOnlyRootFilesystem == false {
 			hasWritableRootFS = true
-			score.AddComment("", "The pod has a container with a writable root filesystem", "")
+			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "")
 		}
 
 		if sec.RunAsUser != nil && *sec.RunAsUser < 10000 {
 			hasLowUserID = true
-			score.AddComment("", "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host")
+			score.AddComment(container.Name, "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host")
 		}
 
 		if sec.RunAsGroup != nil && *sec.RunAsGroup < 10000 {
 			hasLowGroupID = true
-			score.AddComment("", "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host")
+			score.AddComment(container.Name, "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host")
 		}
 	}
 
