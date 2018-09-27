@@ -37,13 +37,13 @@ func scorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec
 			score.Grade = 10
 		} else if hasMatchingEgressNetpol && !hasMatchingIngressNetpol {
 			score.Grade = 5
-			score.Comments = append(score.Comments, "The pod does not have a matching ingress network policy")
+			score.AddComment("", "The pod does not have a matching ingress network policy", "")
 		} else if hasMatchingIngressNetpol && !hasMatchingEgressNetpol {
 			score.Grade = 5
-			score.Comments = append(score.Comments, "The pod does not have a matching egress network policy")
+			score.AddComment("", "The pod does not have a matching egress network policy", "")
 		} else {
 			score.Grade = 0
-			score.Comments = append(score.Comments, "The pod does not have a matching network policy")
+			score.AddComment("", "The pod does not have a matching network policy", "")
 		}
 
 		return

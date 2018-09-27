@@ -85,7 +85,7 @@ func main() {
 			color.New(col).Printf("    [%s] %s\n", status, card.Name)
 
 			for _, comment := range card.Comments {
-				fmt.Printf("        * %s\n", comment)
+				fmt.Printf("        * %s (%s)\n", comment.Summary, comment.Description)
 			}
 
 			sumGrade += card.Grade
