@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  labels:
+    app: my-app
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:latest
+    livenessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app-not-matching
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

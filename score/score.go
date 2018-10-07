@@ -3,21 +3,21 @@ package score
 import (
 	"bytes"
 	"io"
-	"log"
 	"io/ioutil"
+	"log"
 
 	"github.com/zegl/kube-score/scorecard"
 
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
-	networkingv1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
@@ -49,11 +49,11 @@ type PodSpecer interface {
 func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 	type detectKind struct {
 		ApiVersion string `yaml:"apiVersion"`
-		Kind string `yaml:"kind"`
+		Kind       string `yaml:"kind"`
 	}
 
 	type bothMeta struct {
-		typeMeta metav1.TypeMeta
+		typeMeta   metav1.TypeMeta
 		objectMeta metav1.ObjectMeta
 	}
 
@@ -61,12 +61,16 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 	var pods []corev1.Pod
 	var podspecers []PodSpecer
 	var networkPolies []networkingv1.NetworkPolicy
+	var services []corev1.Service
 
 	for _, file := range files {
 		fullFile, err := ioutil.ReadAll(file)
 		if err != nil {
 			return nil, err
 		}
+
+		// Convert to unix style newlines
+		fullFile = bytes.Replace(fullFile, []byte("\r\n"), []byte("\n"), -1)
 
 		for _, fileContents := range bytes.Split(fullFile, []byte("---\n")) {
 			var detect detectKind
@@ -162,7 +166,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				}
 
 				podspecers = append(podspecers, podspecer)
-				typeMetas = append(typeMetas,  bothMeta{
+				typeMetas = append(typeMetas, bothMeta{
 					podspecer.GetTypeMeta(),
 					podspecer.GetObjectMeta(),
 				})
@@ -171,7 +175,13 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				var netpol networkingv1.NetworkPolicy
 				decode(fileContents, &netpol)
 				networkPolies = append(networkPolies, netpol)
-				typeMetas = append(typeMetas,  bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
+				typeMetas = append(typeMetas, bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
+
+			case "Service":
+				var service corev1.Service
+				decode(fileContents, &service)
+				services = append(services, service)
+				typeMetas = append(typeMetas, bothMeta{service.TypeMeta, service.ObjectMeta})
 
 			default:
 				log.Printf("Unknown datatype: %s", detect.Kind)
@@ -179,7 +189,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	metaTests := []func(metav1.TypeMeta) scorecard.TestScore {
+	metaTests := []func(metav1.TypeMeta) scorecard.TestScore{
 		scoreMetaStableAvailable,
 	}
 
@@ -188,7 +198,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		scoreContainerImageTag,
 		scoreContainerImagePullPolicy,
 		scorePodHasNetworkPolicy(networkPolies),
-		scoreContainerProbes,
+		scoreContainerProbes(services),
 		scoreContainerSecurityContext,
 	}
 
@@ -206,7 +216,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		for _, podTest := range podTests {
 			score := podTest(corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
-				Spec: pod.Spec,
+				Spec:       pod.Spec,
 			})
 			score.AddMeta(pod.TypeMeta, pod.ObjectMeta)
 			scoreCard.Add(score)
