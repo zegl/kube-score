@@ -1,6 +1,7 @@
 package score
 
 import (
+	"github.com/zegl/kube-score/scorecard"
 	"io"
 	"os"
 	"testing"
@@ -29,6 +30,20 @@ func testExpectedScore(t *testing.T, filename string, testcase string, expectedS
 		}
 	}
 	assert.True(t, tested, "Was not tested")
+}
+
+func testGetComments(t *testing.T, filename, testcase string) []scorecard.TestScoreComment {
+	sc, err := Score([]io.Reader{testFile(filename)})
+	assert.NoError(t, err)
+	for _, objectScore := range sc.Scores {
+		for _, s := range objectScore {
+			if s.Name == testcase {
+				return s.Comments
+			}
+		}
+	}
+	t.Fatalf("Testcase %s was not run", testcase)
+	return nil
 }
 
 func TestPodContainerNoResources(t *testing.T) {
@@ -92,7 +107,7 @@ func TestPodProbesAllMissing(t *testing.T) {
 }
 
 func TestPodProbesMissingReady(t *testing.T) {
-	testExpectedScore(t, "pod-probes-missing-ready.yaml", "Pod Probes", 5)
+	testExpectedScore(t, "pod-probes-missing-ready.yaml", "Pod Probes", 10)
 }
 
 func TestPodProbesIdenticalHTTP(t *testing.T) {
@@ -105,6 +120,18 @@ func TestPodProbesIdenticalTCP(t *testing.T) {
 
 func TestPodProbesIdenticalExec(t *testing.T) {
 	testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", 7)
+}
+
+func TestProbesTargetedByService(t *testing.T) {
+	comments := testGetComments(t, "pod-probes-targeted-by-service.yaml", "Pod Probes")
+	assert.Len(t, comments, 1)
+	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
+
+	testExpectedScore(t, "pod-probes-targeted-by-service.yaml", "Pod Probes", 0)
+}
+
+func TestProbesTargetedByServiceNotTargeted(t *testing.T) {
+	testExpectedScore(t, "pod-probes-not-targeted-by-service.yaml", "Pod Probes", 10)
 }
 
 func TestContainerSecurityContextPrivilegied(t *testing.T) {
