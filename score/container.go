@@ -21,19 +21,19 @@ func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score scorecard.T
 
 	for _, container := range allContainers {
 		if container.Resources.Limits.Cpu().IsZero() {
-			score.AddComment(container.Name, "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS")
+			score.AddComment(container.Name, "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.cpu")
 			hasMissingLimit = true
 		}
 		if container.Resources.Limits.Memory().IsZero() {
-			score.AddComment(container.Name, "Memory limit is not set", "Resource limits are recommended to avoid resource DDOS")
+			score.AddComment(container.Name, "Memory limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.memory")
 			hasMissingLimit = true
 		}
 		if container.Resources.Requests.Cpu().IsZero() {
-			score.AddComment(container.Name, "CPU request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing")
+			score.AddComment(container.Name, "CPU request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing. Set resources.requests.cpu")
 			hasMissingRequest = true
 		}
 		if container.Resources.Requests.Memory().IsZero() {
-			score.AddComment(container.Name, "Memory request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing")
+			score.AddComment(container.Name, "Memory request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing. Set resources.requests.memory")
 			hasMissingRequest = true
 		}
 	}
@@ -223,22 +223,22 @@ func scoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score sc
 
 		if sec.Privileged != nil && *sec.Privileged {
 			hasPrivileged = true
-			score.AddComment(container.Name, "The container is privileged", "")
+			score.AddComment(container.Name, "The container is privileged", "Set securityContext.Privileged to false")
 		}
 
 		if sec.ReadOnlyRootFilesystem != nil && *sec.ReadOnlyRootFilesystem == false {
 			hasWritableRootFS = true
-			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "")
+			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.ReadOnlyFileSystem to true")
 		}
 
 		if sec.RunAsUser != nil && *sec.RunAsUser < 10000 {
 			hasLowUserID = true
-			score.AddComment(container.Name, "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host")
+			score.AddComment(container.Name, "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsUser to a value > 10000")
 		}
 
 		if sec.RunAsGroup != nil && *sec.RunAsGroup < 10000 {
 			hasLowGroupID = true
-			score.AddComment(container.Name, "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host")
+			score.AddComment(container.Name, "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsGroup to a value > 10000")
 		}
 	}
 
