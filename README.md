@@ -1,7 +1,7 @@
 # kube-score
 
 `kube-score` is a tool that does static code analysis of your Kubernetes object definitions.
-The output is a list of recommendations of what you can improbe to make your application more secure and resiliant.
+The output is a list of recommendations of what you can improve to make your application more secure and resiliant.
 
 
 ## Checks
