@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"log"
 
 	"github.com/zegl/kube-score/scorecard"
@@ -63,6 +64,14 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 	var networkPolies []networkingv1.NetworkPolicy
 	var services []corev1.Service
 
+	addPodSpeccer := func(ps PodSpecer) {
+		podspecers = append(podspecers, ps)
+		typeMetas = append(typeMetas, bothMeta{
+			typeMeta: ps.GetTypeMeta(),
+			objectMeta: ps.GetObjectMeta(),
+		})
+	}
+
 	for _, file := range files {
 		fullFile, err := ioutil.ReadAll(file)
 		if err != nil {
@@ -86,98 +95,75 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				}
 			}
 
-			switch detect.Kind {
-			case "Pod":
+			detectedVersion := schema.FromAPIVersionAndKind(detect.ApiVersion, detect.Kind)
+
+			switch detectedVersion {
+			case corev1.SchemeGroupVersion.WithKind("Pod"):
 				var pod corev1.Pod
 				decode(fileContents, &pod)
 				pods = append(pods, pod)
 				typeMetas = append(typeMetas, bothMeta{pod.TypeMeta, pod.ObjectMeta})
 
-			case "Job":
-				fallthrough
-			case "CronJob":
-				fallthrough
-			case "Deployment":
-				fallthrough
-			case "DaemonSet":
-				fallthrough
-			case "StatefulSet":
-				var podspecer PodSpecer
+			case batchv1.SchemeGroupVersion.WithKind("Job"):
+				var job batchv1.Job
+				decode(fileContents, &job)
+				addPodSpeccer(batchv1Job{job})
 
-				kindAndVersion := detect.Kind + "-" + detect.ApiVersion
+			case batchv1beta1.SchemeGroupVersion.WithKind("CronJob"):
+				var cronjob batchv1beta1.CronJob
+				decode(fileContents, &cronjob)
+				addPodSpeccer(batchv1beta1CronJob{cronjob})
 
-				switch kindAndVersion {
-				case "Deployment-apps/v1":
-					var deployment appsv1.Deployment
-					decode(fileContents, &deployment)
-					podspecer = appsv1Deployment{deployment}
-				case "Deployment-apps/v1beta1":
-					var deployment appsv1beta1.Deployment
-					decode(fileContents, &deployment)
-					podspecer = appsv1beta1Deployment{deployment}
-				case "Deployment-apps/v1beta2":
-					var deployment appsv1beta2.Deployment
-					decode(fileContents, &deployment)
-					podspecer = appsv1beta2Deployment{deployment}
-				case "Deployment-extensions/v1beta1":
-					var deployment extensionsv1beta1.Deployment
-					decode(fileContents, &deployment)
-					podspecer = extensionsv1beta1Deployment{deployment}
+			case appsv1.SchemeGroupVersion.WithKind("Deployment"):
+				var deployment appsv1.Deployment
+				decode(fileContents, &deployment)
+				addPodSpeccer(appsv1Deployment{deployment})
+			case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
+				var deployment appsv1beta1.Deployment
+				decode(fileContents, &deployment)
+				addPodSpeccer(appsv1beta1Deployment{deployment})
+			case appsv1beta2.SchemeGroupVersion.WithKind("Deployment"):
+				var deployment appsv1beta2.Deployment
+				decode(fileContents, &deployment)
+				addPodSpeccer(appsv1beta2Deployment{deployment})
+			case extensionsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
+				var deployment extensionsv1beta1.Deployment
+				decode(fileContents, &deployment)
+				addPodSpeccer(extensionsv1beta1Deployment{deployment})
 
-				case "StatefulSet-apps/v1":
-					var statefulSet appsv1.StatefulSet
-					decode(fileContents, &statefulSet)
-					podspecer = appsv1StatefulSet{statefulSet}
-				case "StatefulSet-apps/v1beta1":
-					var statefulSet appsv1beta1.StatefulSet
-					decode(fileContents, &statefulSet)
-					podspecer = appsv1beta1StatefulSet{statefulSet}
-				case "StatefulSet-apps/v1beta2":
-					var statefulSet appsv1beta2.StatefulSet
-					decode(fileContents, &statefulSet)
-					podspecer = appsv1beta2StatefulSet{statefulSet}
+			case appsv1.SchemeGroupVersion.WithKind("StatefulSet"):
+				var statefulSet appsv1.StatefulSet
+				decode(fileContents, &statefulSet)
+				addPodSpeccer(appsv1StatefulSet{statefulSet})
+			case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
+				var statefulSet appsv1beta1.StatefulSet
+				decode(fileContents, &statefulSet)
+				addPodSpeccer(appsv1beta1StatefulSet{statefulSet})
+			case appsv1beta2.SchemeGroupVersion.WithKind("StatefulSet"):
+				var statefulSet appsv1beta2.StatefulSet
+				decode(fileContents, &statefulSet)
+				addPodSpeccer(appsv1beta2StatefulSet{statefulSet})
 
-				case "DaemonSet-apps/v1":
-					var daemonset appsv1.DaemonSet
-					decode(fileContents, &daemonset)
-					podspecer = appsv1DaemonSet{daemonset}
-				case "DaemonSet-apps/v1beta2":
-					var daemonset appsv1beta2.DaemonSet
-					decode(fileContents, &daemonset)
-					podspecer = appsv1beta2DaemonSet{daemonset}
-				case "DaemonSet-extensions/v1beta1":
-					var daemonset extensionsv1beta1.DaemonSet
-					decode(fileContents, &daemonset)
-					podspecer = extensionsv1beta1DaemonSet{daemonset}
+			case appsv1.SchemeGroupVersion.WithKind("DaemonSet"):
+				var daemonset appsv1.DaemonSet
+				decode(fileContents, &daemonset)
+				addPodSpeccer(appsv1DaemonSet{daemonset})
+			case appsv1beta2.SchemeGroupVersion.WithKind("DaemonSet"):
+				var daemonset appsv1beta2.DaemonSet
+				decode(fileContents, &daemonset)
+				addPodSpeccer(appsv1beta2DaemonSet{daemonset})
+			case extensionsv1beta1.SchemeGroupVersion.WithKind("DaemonSet"):
+				var daemonset extensionsv1beta1.DaemonSet
+				decode(fileContents, &daemonset)
+				addPodSpeccer(extensionsv1beta1DaemonSet{daemonset})
 
-				case "Job-batch/v1":
-					var job batchv1.Job
-					decode(fileContents, &job)
-					podspecer = batchv1Job{job}
-
-				case "CronJob-batch/v1beta1":
-					var cronjob batchv1beta1.CronJob
-					decode(fileContents, &cronjob)
-					podspecer = batchv1beta1CronJob{cronjob}
-
-				default:
-					log.Printf("Unknown type %s %s", detect.ApiVersion, detect.Kind)
-					continue
-				}
-
-				podspecers = append(podspecers, podspecer)
-				typeMetas = append(typeMetas, bothMeta{
-					podspecer.GetTypeMeta(),
-					podspecer.GetObjectMeta(),
-				})
-
-			case "NetworkPolicy":
+			case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 				var netpol networkingv1.NetworkPolicy
 				decode(fileContents, &netpol)
 				networkPolies = append(networkPolies, netpol)
 				typeMetas = append(typeMetas, bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
 
-			case "Service":
+			case corev1.SchemeGroupVersion.WithKind("Service"):
 				var service corev1.Service
 				decode(fileContents, &service)
 				services = append(services, service)
