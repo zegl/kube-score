@@ -16,4 +16,4 @@ The output is a list of recommendations of what you can improve to make your app
 
 ## Example output
 
-![](https://i.imgur.com/no1HZuQ.png)
+![](https://i.imgur.com/zETNJNS.png)
