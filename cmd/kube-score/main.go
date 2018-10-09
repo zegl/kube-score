@@ -6,7 +6,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/zegl/kube-score/score"
 	"io"
-	"log"
 	"os"
 )
 
@@ -23,7 +22,13 @@ func main() {
 
 	filesToRead := fs.Args()
 	if len(filesToRead) == 0 {
-		log.Println("No files given as arguments")
+		fmt.Println(`Error: No files given as arguments.
+
+Usage: kube-score [--flag1 --flag2] file1 file2 ...
+
+Use "-" as filename to read from STDIN.`)
+		fmt.Println()
+		fs.Usage()
 		os.Exit(1)
  	}
 
