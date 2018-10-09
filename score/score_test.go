@@ -18,7 +18,9 @@ func testFile(name string) *os.File {
 }
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore int) {
-	sc, err := Score([]io.Reader{testFile(filename)})
+	sc, err := Score(Configuration{
+		AllFiles: []io.Reader{testFile(filename),
+	}})
 	assert.NoError(t, err)
 	tested := false
 	for _, objectScore := range sc.Scores {
@@ -33,7 +35,9 @@ func testExpectedScore(t *testing.T, filename string, testcase string, expectedS
 }
 
 func testGetComments(t *testing.T, filename, testcase string) []scorecard.TestScoreComment {
-	sc, err := Score([]io.Reader{testFile(filename)})
+	sc, err := Score(Configuration{
+		AllFiles: []io.Reader{testFile(filename),
+	}})
 	assert.NoError(t, err)
 	for _, objectScore := range sc.Scores {
 		for _, s := range objectScore {
