@@ -47,7 +47,12 @@ type PodSpecer interface {
 	GetPodTemplateSpec() corev1.PodTemplateSpec
 }
 
-func Score(files []io.Reader) (*scorecard.Scorecard, error) {
+type Configuration struct {
+	AllFiles []io.Reader
+	VerboseOutput bool
+}
+
+func Score(config Configuration) (*scorecard.Scorecard, error) {
 	type detectKind struct {
 		ApiVersion string `yaml:"apiVersion"`
 		Kind       string `yaml:"kind"`
@@ -72,7 +77,7 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 		})
 	}
 
-	for _, file := range files {
+	for _, file := range config.AllFiles {
 		fullFile, err := ioutil.ReadAll(file)
 		if err != nil {
 			return nil, err
@@ -170,7 +175,9 @@ func Score(files []io.Reader) (*scorecard.Scorecard, error) {
 				typeMetas = append(typeMetas, bothMeta{service.TypeMeta, service.ObjectMeta})
 
 			default:
-				log.Printf("Unknown datatype: %s", detect.Kind)
+				if config.VerboseOutput {
+					log.Printf("Unknown datatype: %s", detect.Kind)
+				}
 			}
 		}
 	}
