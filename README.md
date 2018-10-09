@@ -7,7 +7,7 @@ The output is a list of recommendations of what you can improve to make your app
 
 ### Download
 
-Pre-built releases can be downloaded from the [Github Releases page](https://github.com/zegl/kube-score/releases).
+Pre-built releases can be downloaded from the [Github Releases page](https://github.com/zegl/kube-score/releases), or from [Docker Hub](https://hub.docker.com/r/zegl/kube-score/).
 
 ### Building from source
 
