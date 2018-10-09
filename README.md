@@ -3,6 +3,16 @@
 `kube-score` is a tool that does static code analysis of your Kubernetes object definitions.
 The output is a list of recommendations of what you can improve to make your application more secure and resiliant.
 
+## Installation
+
+`kube-score` requires [go](https://golang.org/) in version `1.11.+` with [go modules](https://github.com/golang/go/wiki/Modules). To install `kube-score` into you local gobin path run the following commands:
+
+```bash
+go get github.com/zegl/kube-score
+cd $GOPATH/src/github.com/zegl/kube-score/
+GO111MODULE=on go install github.com/zegl/kube-score/cmd/kube-score
+```
+
 
 ## Checks
 
