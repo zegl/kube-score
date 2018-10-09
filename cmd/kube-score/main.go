@@ -13,6 +13,7 @@ import (
 func main() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
+	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
 	fs.Parse(os.Args[1:])
 
@@ -45,7 +46,10 @@ func main() {
 		allFilePointers = append(allFilePointers, fp)
 	}
 
-	scoreCard, err := score.Score(allFilePointers)
+	scoreCard, err := score.Score(score.Configuration{
+		AllFiles: allFilePointers,
+		VerboseOutput: *verboseOutput,
+	})
 	if err != nil {
 		panic(err)
 	}
