@@ -1,2 +1,4 @@
-kube-score
-.idea
+/kube-score
+/.idea
+/cmd/kube-score/dist/
+/cmd/kube-score/kube-score
