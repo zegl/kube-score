@@ -8,6 +8,13 @@ archive:
     windows: Windows
     386: i386
     amd64: x86_64
+dockers:
+  - image: zegl/kube-score
+    goos: linux
+    goarch: amd64
+    binary: kube-score
+    skip_push: true
+    dockerfile: Dockerfile
 checksum:
   name_template: 'checksums.txt'
 snapshot:
