@@ -5,6 +5,12 @@ The output is a list of recommendations of what you can improve to make your app
 
 ## Installation
 
+### Download
+
+Pre-built releases can be downloaded from the [Github Releases page](https://github.com/zegl/kube-score/releases).
+
+### Building from source
+
 `kube-score` requires [go](https://golang.org/) in version `1.11.+` with [go modules](https://github.com/golang/go/wiki/Modules). To install `kube-score` into you local gobin path run the following commands:
 
 ```bash
@@ -12,7 +18,6 @@ go get github.com/zegl/kube-score
 cd $GOPATH/src/github.com/zegl/kube-score/
 GO111MODULE=on go install github.com/zegl/kube-score/cmd/kube-score
 ```
-
 
 ## Checks
 
@@ -27,3 +32,41 @@ GO111MODULE=on go install github.com/zegl/kube-score/cmd/kube-score
 ## Example output
 
 ![](https://i.imgur.com/zETNJNS.png)
+
+## Usage in CI
+
+`kube-score` can run in your CI/CD environment and will exit with exit code 1 if a critical error has been found.
+The trigger level can be changed to warning with the `--exit-one-on-warning` argument.
+
+The input to `kube-score` should be all applications that you deploy to the same namespace for the best result.
+
+### Example with Helm
+
+```bash
+helm template my-app | kube-score -
+```
+
+### Example with static yamls
+
+```bash
+kube-score my-app/*.yaml
+```
+
+```bash
+kube-score my-app/deployment.yaml my-app/service.yaml
+```
+
+## Configuration
+
+```
+Usage: kube-score [--flag1 --flag2] file1 file2 ...
+
+Use "-" as filename to read from STDIN.
+
+Usage of ./kube-score:
+  -exit-one-on-warning
+    	Exit with code 1 in case of warnings
+  -help
+    	Print help
+  -v	Verbose output
+```
