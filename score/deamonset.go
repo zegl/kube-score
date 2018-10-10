@@ -2,9 +2,9 @@ package score
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -55,4 +55,3 @@ func (d extensionsv1beta1DaemonSet) GetObjectMeta() metav1.ObjectMeta {
 func (d extensionsv1beta1DaemonSet) GetPodTemplateSpec() corev1.PodTemplateSpec {
 	return d.Spec.Template
 }
-

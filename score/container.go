@@ -8,7 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func scoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) (scorecard.TestScore) {
+func scoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Container Resources"
 

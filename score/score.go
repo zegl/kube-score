@@ -48,7 +48,7 @@ type PodSpecer interface {
 }
 
 type Configuration struct {
-	AllFiles []io.Reader
+	AllFiles      []io.Reader
 	VerboseOutput bool
 
 	IgnoreContainerCpuLimitRequirement bool
@@ -74,7 +74,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 	addPodSpeccer := func(ps PodSpecer) {
 		podspecers = append(podspecers, ps)
 		typeMetas = append(typeMetas, bothMeta{
-			typeMeta: ps.GetTypeMeta(),
+			typeMeta:   ps.GetTypeMeta(),
 			objectMeta: ps.GetObjectMeta(),
 		})
 	}
