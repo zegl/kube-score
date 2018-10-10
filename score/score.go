@@ -50,6 +50,8 @@ type PodSpecer interface {
 type Configuration struct {
 	AllFiles []io.Reader
 	VerboseOutput bool
+
+	IgnoreContainerCpuLimitRequirement bool
 }
 
 func Score(config Configuration) (*scorecard.Scorecard, error) {
@@ -187,7 +189,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 	}
 
 	podTests := []func(corev1.PodTemplateSpec) scorecard.TestScore{
-		scoreContainerLimits,
+		scoreContainerLimits(!config.IgnoreContainerCpuLimitRequirement),
 		scoreContainerImageTag,
 		scoreContainerImagePullPolicy,
 		scorePodHasNetworkPolicy(networkPolies),

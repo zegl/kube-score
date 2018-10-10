@@ -8,48 +8,50 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func scoreContainerLimits(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
-	score.Name = "Container Resources"
+func scoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) (scorecard.TestScore) {
+	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+		score.Name = "Container Resources"
 
-	pod := podTemplate.Spec
+		pod := podTemplate.Spec
 
-	allContainers := pod.InitContainers
-	allContainers = append(allContainers, pod.Containers...)
+		allContainers := pod.InitContainers
+		allContainers = append(allContainers, pod.Containers...)
 
-	hasMissingLimit := false
-	hasMissingRequest := false
+		hasMissingLimit := false
+		hasMissingRequest := false
 
-	for _, container := range allContainers {
-		if container.Resources.Limits.Cpu().IsZero() {
-			score.AddComment(container.Name, "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.cpu")
-			hasMissingLimit = true
+		for _, container := range allContainers {
+			if container.Resources.Limits.Cpu().IsZero() && requireCpuLimit {
+				score.AddComment(container.Name, "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.cpu")
+				hasMissingLimit = true
+			}
+			if container.Resources.Limits.Memory().IsZero() {
+				score.AddComment(container.Name, "Memory limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.memory")
+				hasMissingLimit = true
+			}
+			if container.Resources.Requests.Cpu().IsZero() {
+				score.AddComment(container.Name, "CPU request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing. Set resources.requests.cpu")
+				hasMissingRequest = true
+			}
+			if container.Resources.Requests.Memory().IsZero() {
+				score.AddComment(container.Name, "Memory request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing. Set resources.requests.memory")
+				hasMissingRequest = true
+			}
 		}
-		if container.Resources.Limits.Memory().IsZero() {
-			score.AddComment(container.Name, "Memory limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.memory")
-			hasMissingLimit = true
+
+		if len(allContainers) == 0 {
+			score.Grade = 0
+			score.AddComment("", "No containers defined", "")
+		} else if hasMissingLimit {
+			score.Grade = 0
+		} else if hasMissingRequest {
+			score.Grade = 5
+		} else {
+			score.Grade = 10
 		}
-		if container.Resources.Requests.Cpu().IsZero() {
-			score.AddComment(container.Name, "CPU request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing. Set resources.requests.cpu")
-			hasMissingRequest = true
-		}
-		if container.Resources.Requests.Memory().IsZero() {
-			score.AddComment(container.Name, "Memory request is not set", "Resource requests are recommended to make sure that the application can start and run without crashing. Set resources.requests.memory")
-			hasMissingRequest = true
-		}
+
+		return
 	}
-
-	if len(allContainers) == 0 {
-		score.Grade = 0
-		score.AddComment("", "No containers defined", "")
-	} else if hasMissingLimit {
-		score.Grade = 0
-	} else if hasMissingRequest {
-		score.Grade = 5
-	} else {
-		score.Grade = 10
-	}
-
-	return
 }
 
 func scoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
