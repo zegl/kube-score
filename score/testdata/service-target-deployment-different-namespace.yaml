@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-test-1
+  namespace: foospace
+spec:
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: foobar
+        image: foo/bar:123
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+  namespace: not-foospace
+spec:
+  selector:
+    app: my-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
