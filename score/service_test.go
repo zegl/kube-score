@@ -25,3 +25,11 @@ func TestServiceTargetsPodRawMultiLabel(t *testing.T) {
 func TestServiceNotTargetsPodRawMultiLabel(t *testing.T) {
 	testExpectedScore(t, "service-not-target-pod-multi-label.yaml", "Service Targets Pod", 0)
 }
+
+func TestServiceTargetsPodRawSameNamespace(t *testing.T) {
+	testExpectedScore(t, "service-target-pod-same-namespace.yaml", "Service Targets Pod", 10)
+}
+
+func TestServiceTargetsPodRawDifferentNamespace(t *testing.T) {
+	testExpectedScore(t, "service-target-pod-different-namespace.yaml", "Service Targets Pod", 0)
+}

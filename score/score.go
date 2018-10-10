@@ -195,7 +195,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		scoreContainerSecurityContext,
 	}
 
-	serviceTests := []func(corev1.ServiceSpec) scorecard.TestScore{
+	serviceTests := []func(corev1.Service) scorecard.TestScore{
 		scoreServiceTargetsPod(pods, podspecers),
 	}
 
@@ -230,7 +230,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 
 	for _, service := range services {
 		for _, serviceTest := range serviceTests {
-			score := serviceTest(service.Spec)
+			score := serviceTest(service)
 			score.AddMeta(service.TypeMeta, service.ObjectMeta)
 			scoreCard.Add(score)
 		}
