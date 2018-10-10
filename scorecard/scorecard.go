@@ -26,29 +26,29 @@ func (s *Scorecard) Add(ts TestScore) {
 }
 
 type TestScore struct {
-	Name        string
+	Name string
 
-	ResourceRef struct{
-		Kind string
-		Name string
+	ResourceRef struct {
+		Kind      string
+		Name      string
 		Namespace string
-		Version string
+		Version   string
 	}
 
-	Grade       int
-	Comments    []TestScoreComment
+	Grade    int
+	Comments []TestScoreComment
 }
 
 type TestScoreComment struct {
-	Path string
-	Summary string
+	Path        string
+	Summary     string
 	Description string
 }
 
 func (ts *TestScore) AddComment(path, summary, description string) {
 	ts.Comments = append(ts.Comments, TestScoreComment{
-		Path: path,
-		Summary: summary,
+		Path:        path,
+		Summary:     summary,
 		Description: description,
 	})
 }
@@ -63,4 +63,3 @@ func (ts *TestScore) AddMeta(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 func (ts TestScore) resourceRefKey() string {
 	return ts.ResourceRef.Kind + "/" + ts.ResourceRef.Namespace + "/" + ts.ResourceRef.Name
 }
-

@@ -2,7 +2,6 @@ package score
 
 import "testing"
 
-
 func TestStatefulSetAppsv1beta1(t *testing.T) {
 	testExpectedScore(t, "statefulset-appsv1beta1.yaml", "Stable version", 5)
 }

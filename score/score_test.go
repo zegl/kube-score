@@ -39,8 +39,7 @@ func testExpectedScore(t *testing.T, filename string, testcase string, expectedS
 
 func testGetComments(t *testing.T, filename, testcase string) []scorecard.TestScoreComment {
 	sc, err := Score(Configuration{
-		AllFiles: []io.Reader{testFile(filename),
-	}})
+		AllFiles: []io.Reader{testFile(filename)}})
 	assert.NoError(t, err)
 	for _, objectScore := range sc.Scores {
 		for _, s := range objectScore {
@@ -65,13 +64,12 @@ func TestPodContainerResourceLimitsAndRequests(t *testing.T) {
 	testExpectedScore(t, "pod-test-resources-limits-and-requests.yaml", "Container Resources", 10)
 }
 
-
 func TestPodContainerResourceLimitCpuNotRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement:true}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 10)
+	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement: true}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 10)
 }
 
 func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement:false},"pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 0)
+	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement: false}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 0)
 }
 
 func TestDeploymentResources(t *testing.T) {

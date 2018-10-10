@@ -32,7 +32,7 @@ Use "-" as filename to read from STDIN.`)
 		fmt.Println()
 		fs.Usage()
 		os.Exit(1)
- 	}
+	}
 
 	var allFilePointers []io.Reader
 
@@ -53,8 +53,8 @@ Use "-" as filename to read from STDIN.`)
 	}
 
 	scoreCard, err := score.Score(score.Configuration{
-		AllFiles: allFilePointers,
-		VerboseOutput: *verboseOutput,
+		AllFiles:                           allFilePointers,
+		VerboseOutput:                      *verboseOutput,
 		IgnoreContainerCpuLimitRequirement: *ignoreContainerCpuLimit,
 	})
 	if err != nil {
@@ -74,8 +74,8 @@ Use "-" as filename to read from STDIN.`)
 		p.Printf("%s/%s %s", firstCard.ResourceRef.Version, firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
 
 		if firstCard.ResourceRef.Namespace != "" {
-			p.Printf(" in %s\n", firstCard.ResourceRef.Namespace )
-		}  else {
+			p.Printf(" in %s\n", firstCard.ResourceRef.Namespace)
+		} else {
 			p.Println()
 		}
 
