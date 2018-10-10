@@ -12,6 +12,7 @@ import (
 func main() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
+	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
 	fs.Parse(os.Args[1:])
@@ -54,6 +55,7 @@ Use "-" as filename to read from STDIN.`)
 	scoreCard, err := score.Score(score.Configuration{
 		AllFiles: allFilePointers,
 		VerboseOutput: *verboseOutput,
+		IgnoreContainerCpuLimitRequirement: *ignoreContainerCpuLimit,
 	})
 	if err != nil {
 		panic(err)

@@ -68,5 +68,7 @@ Usage of ./kube-score:
     	Exit with code 1 in case of warnings
   -help
     	Print help
+  -ignore-container-cpu-limit
+    	Disables the requirement of setting a container CPU limit
   -v	Verbose output
 ```
