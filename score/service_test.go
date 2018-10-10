@@ -33,3 +33,11 @@ func TestServiceTargetsPodRawSameNamespace(t *testing.T) {
 func TestServiceTargetsPodRawDifferentNamespace(t *testing.T) {
 	testExpectedScore(t, "service-target-pod-different-namespace.yaml", "Service Targets Pod", 0)
 }
+
+func TestServiceTargetsPodDeploymentSameNamespace(t *testing.T) {
+	testExpectedScore(t, "service-target-deployment-same-namespace.yaml", "Service Targets Pod", 10)
+}
+
+func TestServiceTargetsPodDeploymentDifferentNamespace(t *testing.T) {
+	testExpectedScore(t, "service-target-deployment-different-namespace.yaml", "Service Targets Pod", 0)
+}
