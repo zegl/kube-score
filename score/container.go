@@ -120,9 +120,11 @@ func scoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateS
 		isTargetedByService := false
 
 		for _, service := range allServices {
-			for selectorKey, selectorVal := range service.Spec.Selector {
-				if podLabelVal, ok := podTemplate.Labels[selectorKey]; ok && podLabelVal == selectorVal {
-					isTargetedByService = true
+			if podTemplate.Namespace == service.Namespace {
+				for selectorKey, selectorVal := range service.Spec.Selector {
+					if podLabelVal, ok := podTemplate.Labels[selectorKey]; ok && podLabelVal == selectorVal {
+						isTargetedByService = true
+					}
 				}
 			}
 		}
