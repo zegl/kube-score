@@ -17,39 +17,28 @@ func testFile(name string) *os.File {
 	return fp
 }
 
-func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename string, testcase string, expectedScore int) {
+// testExpectedScoreWithConfig runs all tests, but makes sure that the test for "testcase" was executed, and that
+// the grade is set to expectedScore. The function returns the comments of "testcase".
+func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename string, testcase string, expectedScore int) []scorecard.TestScoreComment {
 	config.AllFiles = []io.Reader{testFile(filename)}
 	sc, err := Score(config)
 	assert.NoError(t, err)
-	tested := false
+
 	for _, objectScore := range sc.Scores {
 		for _, s := range objectScore {
 			if s.Name == testcase {
 				assert.Equal(t, expectedScore, s.Grade)
-				tested = true
-			}
-		}
-	}
-	assert.True(t, tested, "Was not tested")
-}
-
-func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore int) {
-	testExpectedScoreWithConfig(t, Configuration{}, filename, testcase, expectedScore)
-}
-
-func testGetComments(t *testing.T, filename, testcase string) []scorecard.TestScoreComment {
-	sc, err := Score(Configuration{
-		AllFiles: []io.Reader{testFile(filename)}})
-	assert.NoError(t, err)
-	for _, objectScore := range sc.Scores {
-		for _, s := range objectScore {
-			if s.Name == testcase {
 				return s.Comments
 			}
 		}
 	}
-	t.Fatalf("Testcase %s was not run", testcase)
+
+	t.Error("Was not tested")
 	return nil
+}
+
+func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore int) []scorecard.TestScoreComment {
+	return testExpectedScoreWithConfig(t, Configuration{}, filename, testcase, expectedScore)
 }
 
 func TestPodContainerNoResources(t *testing.T) {
