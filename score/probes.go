@@ -30,16 +30,10 @@ func scoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateS
 		for _, container := range allContainers {
 			if container.ReadinessProbe != nil {
 				hasReadinessProbe = true
-			} else {
-				if isTargetedByService {
-					score.AddComment(container.Name, "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
-				}
 			}
 
 			if container.LivenessProbe != nil {
 				hasLivenessProbe = true
-			} else {
-				score.AddComment(container.Name, "Container is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
 			}
 
 			if container.ReadinessProbe != nil && container.LivenessProbe != nil {
@@ -51,14 +45,12 @@ func scoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateS
 					if r.HTTPGet.Path == l.HTTPGet.Path &&
 						r.HTTPGet.Port.IntValue() == l.HTTPGet.Port.IntValue() {
 						probesAreIdentical = true
-						score.AddComment(container.Name, "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 					}
 				}
 
 				if r.TCPSocket != nil && l.TCPSocket != nil {
 					if r.TCPSocket.Port == l.TCPSocket.Port {
 						probesAreIdentical = true
-						score.AddComment(container.Name, "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 					}
 				}
 
@@ -74,7 +66,6 @@ func scoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateS
 
 						if !hasDifferent {
 							probesAreIdentical = true
-							score.AddComment(container.Name, "Container has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 						}
 					}
 				}
@@ -87,15 +78,18 @@ func scoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateS
 				score.Grade = 10
 			} else {
 				score.Grade = 7
+				score.AddComment("", "Pod has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 			}
 		} else if !hasReadinessProbe && !hasLivenessProbe {
 			score.Grade = 0
+			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
+			score.AddComment("", "Container is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
 		} else if isTargetedByService && !hasReadinessProbe {
 			score.Grade = 0
+			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
 		} else if !hasLivenessProbe {
 			score.Grade = 5
-		} else {
-			score.Grade = 0
+			score.AddComment("", "Pod is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
 		}
 
 		return score
