@@ -51,3 +51,15 @@ func TestProbesTargetedByServiceNotTargeted(t *testing.T) {
 	testExpectedScore(t, "pod-probes-not-targeted-by-service.yaml", "Pod Probes", 10)
 }
 
+func TestProbesMultipleContainers(t *testing.T) {
+	comments := testGetComments(t, "pod-probes-on-different-containers.yaml", "Pod Probes")
+	assert.Len(t, comments, 0)
+	testExpectedScore(t, "pod-probes-on-different-containers.yaml", "Pod Probes", 10)
+}
+
+
+func TestProbesMultipleContainersInit(t *testing.T) {
+	comments := testGetComments(t, "pod-probes-on-different-containers-init.yaml", "Pod Probes")
+	assert.Len(t, comments, 0)
+	testExpectedScore(t, "pod-probes-on-different-containers-init.yaml", "Pod Probes", 10)
+}
