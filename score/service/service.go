@@ -1,11 +1,14 @@
-package score
+package service
 
-import "github.com/zegl/kube-score/scorecard"
-import corev1 "k8s.io/api/core/v1"
+import (
+	ks "github.com/zegl/kube-score"
+	"github.com/zegl/kube-score/scorecard"
+	corev1 "k8s.io/api/core/v1"
+)
 
-// scoreServiceTargetsPod checks if a Service targets a pod and issues a critical warning if no matching pod
+// ScoreServiceTargetsPod checks if a Service targets a pod and issues a critical warning if no matching pod
 // could be found
-func scoreServiceTargetsPod(pods []corev1.Pod, podspecers []PodSpecer) func(corev1.Service) scorecard.TestScore {
+func ScoreServiceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(corev1.Service) scorecard.TestScore {
 	podsInNamespace := make(map[string][]map[string]string)
 
 	for _, pod := range pods {

@@ -89,22 +89,6 @@ func TestPodContainerPullPolicyAlways(t *testing.T) {
 	testExpectedScore(t, "pod-image-pullpolicy-always.yaml", "Container Image Pull Policy", 10)
 }
 
-func TestPodHasNoMatchingNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-not-matching.yaml", "Pod NetworkPolicy", 0)
-}
-
-func TestPodHasMatchingNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-matching.yaml", "Pod NetworkPolicy", 10)
-}
-
-func TestPodHasMatchingIngressNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-matching-only-ingress.yaml", "Pod NetworkPolicy", 5)
-}
-
-func TestPodHasMatchingEgressNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-matching-only-egress.yaml", "Pod NetworkPolicy", 5)
-}
-
 func TestContainerSecurityContextPrivilegied(t *testing.T) {
 	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 0)
 }

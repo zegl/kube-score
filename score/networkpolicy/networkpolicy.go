@@ -1,13 +1,14 @@
-package score
+package networkpolicy
 
 import (
 	"github.com/zegl/kube-score/scorecard"
-
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
-func scorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec corev1.PodTemplateSpec) scorecard.TestScore {
+// ScorePodHasNetworkPolicy returns a function that tests that all pods have matching NetworkPolicies
+// ScorePodHasNetworkPolicy takes a list of all defined NetworkPolicies as input
+func ScorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podSpec corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Pod NetworkPolicy"
 
@@ -28,7 +29,6 @@ func scorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec
 							hasMatchingEgressNetpol = true
 						}
 					}
-
 				}
 			}
 		}
