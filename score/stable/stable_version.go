@@ -1,4 +1,4 @@
-package score
+package stable
 
 import (
 	"fmt"
@@ -6,7 +6,8 @@ import (
 )
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-func scoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) {
+// ScoreMetaStableAvailable checks if the supplied TypeMeta is an unstable object type, that has a stable(r) replacement
+func ScoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) {
 	score.Name = "Stable version"
 
 	withStable := map[string]map[string]string{

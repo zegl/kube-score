@@ -2,12 +2,19 @@ package score
 
 import (
 	"bytes"
+	ks "github.com/zegl/kube-score"
+	"github.com/zegl/kube-score/score/container"
+	"github.com/zegl/kube-score/score/internal"
+	"github.com/zegl/kube-score/score/networkpolicy"
+	"github.com/zegl/kube-score/score/probes"
+	"github.com/zegl/kube-score/score/security"
+	"github.com/zegl/kube-score/score/service"
+	"github.com/zegl/kube-score/score/stable"
+	"github.com/zegl/kube-score/scorecard"
 	"io"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"log"
-
-	"github.com/zegl/kube-score/scorecard"
 
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
@@ -41,12 +48,6 @@ func addToScheme(scheme *runtime.Scheme) {
 	batchv1beta1.AddToScheme(scheme)
 }
 
-type PodSpecer interface {
-	GetTypeMeta() metav1.TypeMeta
-	GetObjectMeta() metav1.ObjectMeta
-	GetPodTemplateSpec() corev1.PodTemplateSpec
-}
-
 type Configuration struct {
 	AllFiles      []io.Reader
 	VerboseOutput bool
@@ -54,6 +55,12 @@ type Configuration struct {
 	IgnoreContainerCpuLimitRequirement bool
 }
 
+var metaTests []func(metav1.TypeMeta) scorecard.TestScore
+var podSpecTests []func(corev1.PodTemplateSpec) scorecard.TestScore
+var serviceTests []func(corev1.Service) scorecard.TestScore
+
+// Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
+// Additional configuration and tuning parameters can be provided via the config.
 func Score(config Configuration) (*scorecard.Scorecard, error) {
 	type detectKind struct {
 		ApiVersion string `yaml:"apiVersion"`
@@ -67,11 +74,11 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 
 	var typeMetas []bothMeta
 	var pods []corev1.Pod
-	var podspecers []PodSpecer
+	var podspecers []ks.PodSpecer
 	var networkPolies []networkingv1.NetworkPolicy
 	var services []corev1.Service
 
-	addPodSpeccer := func(ps PodSpecer) {
+	addPodSpeccer := func(ps ks.PodSpecer) {
 		podspecers = append(podspecers, ps)
 		typeMetas = append(typeMetas, bothMeta{
 			typeMeta:   ps.GetTypeMeta(),
@@ -114,55 +121,55 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 			case batchv1.SchemeGroupVersion.WithKind("Job"):
 				var job batchv1.Job
 				decode(fileContents, &job)
-				addPodSpeccer(batchv1Job{job})
+				addPodSpeccer(internal.Batchv1Job{job})
 
 			case batchv1beta1.SchemeGroupVersion.WithKind("CronJob"):
 				var cronjob batchv1beta1.CronJob
 				decode(fileContents, &cronjob)
-				addPodSpeccer(batchv1beta1CronJob{cronjob})
+				addPodSpeccer(internal.Batchv1beta1CronJob{cronjob})
 
 			case appsv1.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment appsv1.Deployment
 				decode(fileContents, &deployment)
-				addPodSpeccer(appsv1Deployment{deployment})
+				addPodSpeccer(internal.Appsv1Deployment{deployment})
 			case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment appsv1beta1.Deployment
 				decode(fileContents, &deployment)
-				addPodSpeccer(appsv1beta1Deployment{deployment})
+				addPodSpeccer(internal.Appsv1beta1Deployment{deployment})
 			case appsv1beta2.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment appsv1beta2.Deployment
 				decode(fileContents, &deployment)
-				addPodSpeccer(appsv1beta2Deployment{deployment})
+				addPodSpeccer(internal.Appsv1beta2Deployment{deployment})
 			case extensionsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment extensionsv1beta1.Deployment
 				decode(fileContents, &deployment)
-				addPodSpeccer(extensionsv1beta1Deployment{deployment})
+				addPodSpeccer(internal.Extensionsv1beta1Deployment{deployment})
 
 			case appsv1.SchemeGroupVersion.WithKind("StatefulSet"):
 				var statefulSet appsv1.StatefulSet
 				decode(fileContents, &statefulSet)
-				addPodSpeccer(appsv1StatefulSet{statefulSet})
+				addPodSpeccer(internal.Appsv1StatefulSet{statefulSet})
 			case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
 				var statefulSet appsv1beta1.StatefulSet
 				decode(fileContents, &statefulSet)
-				addPodSpeccer(appsv1beta1StatefulSet{statefulSet})
+				addPodSpeccer(internal.Appsv1beta1StatefulSet{statefulSet})
 			case appsv1beta2.SchemeGroupVersion.WithKind("StatefulSet"):
 				var statefulSet appsv1beta2.StatefulSet
 				decode(fileContents, &statefulSet)
-				addPodSpeccer(appsv1beta2StatefulSet{statefulSet})
+				addPodSpeccer(internal.Appsv1beta2StatefulSet{statefulSet})
 
 			case appsv1.SchemeGroupVersion.WithKind("DaemonSet"):
 				var daemonset appsv1.DaemonSet
 				decode(fileContents, &daemonset)
-				addPodSpeccer(appsv1DaemonSet{daemonset})
+				addPodSpeccer(internal.Appsv1DaemonSet{daemonset})
 			case appsv1beta2.SchemeGroupVersion.WithKind("DaemonSet"):
 				var daemonset appsv1beta2.DaemonSet
 				decode(fileContents, &daemonset)
-				addPodSpeccer(appsv1beta2DaemonSet{daemonset})
+				addPodSpeccer(internal.Appsv1beta2DaemonSet{daemonset})
 			case extensionsv1beta1.SchemeGroupVersion.WithKind("DaemonSet"):
 				var daemonset extensionsv1beta1.DaemonSet
 				decode(fileContents, &daemonset)
-				addPodSpeccer(extensionsv1beta1DaemonSet{daemonset})
+				addPodSpeccer(internal.Extensionsv1beta1DaemonSet{daemonset})
 
 			case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 				var netpol networkingv1.NetworkPolicy
@@ -185,20 +192,20 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 	}
 
 	metaTests := []func(metav1.TypeMeta) scorecard.TestScore{
-		scoreMetaStableAvailable,
+		stable.ScoreMetaStableAvailable,
 	}
 
 	podTests := []func(corev1.PodTemplateSpec) scorecard.TestScore{
-		scoreContainerLimits(!config.IgnoreContainerCpuLimitRequirement),
-		scoreContainerImageTag,
-		scoreContainerImagePullPolicy,
-		scorePodHasNetworkPolicy(networkPolies),
-		scoreContainerProbes(services),
-		scoreContainerSecurityContext,
+		container.ScoreContainerLimits(!config.IgnoreContainerCpuLimitRequirement),
+		container.ScoreContainerImageTag,
+		container.ScoreContainerImagePullPolicy,
+		networkpolicy.ScorePodHasNetworkPolicy(networkPolies),
+		probes.ScoreContainerProbes(services),
+		security.ScoreContainerSecurityContext,
 	}
 
 	serviceTests := []func(corev1.Service) scorecard.TestScore{
-		scoreServiceTargetsPod(pods, podspecers),
+		service.ScoreServiceTargetsPod(pods, podspecers),
 	}
 
 	scoreCard := scorecard.New()
