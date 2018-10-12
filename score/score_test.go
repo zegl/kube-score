@@ -81,6 +81,14 @@ func TestPodContainerPullPolicyUndefined(t *testing.T) {
 	testExpectedScore(t, "pod-image-pullpolicy-undefined.yaml", "Container Image Pull Policy", 0)
 }
 
+func TestPodContainerPullPolicyUndefinedLatestTag(t *testing.T) {
+	testExpectedScore(t, "pod-image-pullpolicy-undefined-latest-tag.yaml", "Container Image Pull Policy", 10)
+}
+
+func TestPodContainerPullPolicyUndefinedNoTag(t *testing.T) {
+	testExpectedScore(t, "pod-image-pullpolicy-undefined-no-tag.yaml", "Container Image Pull Policy", 10)
+}
+
 func TestPodContainerPullPolicyNever(t *testing.T) {
 	testExpectedScore(t, "pod-image-pullpolicy-never.yaml", "Container Image Pull Policy", 0)
 }
