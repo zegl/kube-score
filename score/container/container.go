@@ -68,10 +68,8 @@ func ScoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard
 	hasTagLatest := false
 
 	for _, container := range allContainers {
-		imageParts := strings.Split(container.Image, ":")
-		imageVersion := imageParts[len(imageParts)-1]
-
-		if imageVersion == "latest" {
+		tag := containerTag(container.Image)
+		if tag == "" || tag == "latest" {
 			score.AddComment(container.Name, "Image with latest tag", "Using a fixed tag is recommended to avoid accidental upgrades")
 			hasTagLatest = true
 		}
@@ -98,9 +96,18 @@ func ScoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score sc
 	hasNonAlways := false
 
 	for _, container := range allContainers {
-		if container.ImagePullPolicy != corev1.PullAlways {
-			score.AddComment(container.Name, "ImagePullPolicy is not set to PullAlways", "It's recommended to always set the ImagePullPolicy to PullAlways, to make sure that the imagePullSecrets are always correct, and to always get the image you want.")
-			hasNonAlways = true
+
+		// No defined pull policy
+		if container.ImagePullPolicy == corev1.PullPolicy("") {
+			tag := containerTag(container.Image)
+			if tag != "" && tag != "latest" {
+				hasNonAlways = true
+			}
+		} else {
+			if container.ImagePullPolicy != corev1.PullAlways {
+				score.AddComment(container.Name, "ImagePullPolicy is not set to Always", "It's recommended to always set the ImagePullPolicy to Always, to make sure that the imagePullSecrets are always correct, and to always get the image you want.")
+				hasNonAlways = true
+			}
 		}
 	}
 
@@ -111,4 +118,15 @@ func ScoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score sc
 	}
 
 	return
+}
+
+// containerTag returns the image tag
+// An empty string is returned if the image has no tag
+func containerTag(image string) string {
+	imageParts := strings.Split(image, ":")
+	if len(imageParts) > 1 {
+		imageVersion := imageParts[len(imageParts)-1]
+		return imageVersion
+	}
+	return ""
 }
