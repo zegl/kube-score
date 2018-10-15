@@ -34,15 +34,15 @@ func ScorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec
 		}
 
 		if hasMatchingEgressNetpol && hasMatchingIngressNetpol {
-			score.Grade = 10
+			score.Grade = scorecard.GradeAllOK
 		} else if hasMatchingEgressNetpol && !hasMatchingIngressNetpol {
-			score.Grade = 5
+			score.Grade = scorecard.GradeWarning
 			score.AddComment("", "The pod does not have a matching ingress network policy", "Add a egress policy to the pods NetworkPolicy")
 		} else if hasMatchingIngressNetpol && !hasMatchingEgressNetpol {
-			score.Grade = 5
+			score.Grade = scorecard.GradeWarning
 			score.AddComment("", "The pod does not have a matching egress network policy", "Add a ingress policy to the pods NetworkPolicy")
 		} else {
-			score.Grade = 0
+			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "The pod does not have a matching network policy", "Create a NetworkPolicy that targets this pod")
 		}
 

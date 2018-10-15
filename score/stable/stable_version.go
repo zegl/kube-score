@@ -28,7 +28,7 @@ func ScoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) 
 
 	if inVersion, ok := withStable[meta.APIVersion]; ok {
 		if recommendedVersion, ok := inVersion[meta.Kind]; ok {
-			score.Grade = 5
+			score.Grade = scorecard.GradeWarning
 			score.AddComment("",
 				fmt.Sprintf("The apiVersion and kind %s/%s is deprecated", meta.APIVersion, meta.Kind),
 				fmt.Sprintf("It's recommended to use %s instead", recommendedVersion),
@@ -37,6 +37,6 @@ func ScoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) 
 		}
 	}
 
-	score.Grade = 10
+	score.Grade = scorecard.GradeAllOK
 	return
 }

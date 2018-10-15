@@ -19,7 +19,7 @@ func testFile(name string) *os.File {
 
 // testExpectedScoreWithConfig runs all tests, but makes sure that the test for "testcase" was executed, and that
 // the grade is set to expectedScore. The function returns the comments of "testcase".
-func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename string, testcase string, expectedScore int) []scorecard.TestScoreComment {
+func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
 	config.AllFiles = []io.Reader{testFile(filename)}
 	sc, err := Score(config)
 	assert.NoError(t, err)
@@ -37,12 +37,12 @@ func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename st
 	return nil
 }
 
-func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore int) []scorecard.TestScoreComment {
+func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
 	return testExpectedScoreWithConfig(t, Configuration{}, filename, testcase, expectedScore)
 }
 
 func TestPodContainerNoResources(t *testing.T) {
-	testExpectedScore(t, "pod-test-resources-none.yaml", "Container Resources", 0)
+	testExpectedScore(t, "pod-test-resources-none.yaml", "Container Resources", 1)
 }
 
 func TestPodContainerResourceLimits(t *testing.T) {
@@ -58,7 +58,7 @@ func TestPodContainerResourceLimitCpuNotRequired(t *testing.T) {
 }
 
 func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement: false}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 0)
+	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement: false}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 1)
 }
 
 func TestDeploymentResources(t *testing.T) {
@@ -70,7 +70,7 @@ func TestStatefulSetResources(t *testing.T) {
 }
 
 func TestPodContainerTagLatest(t *testing.T) {
-	testExpectedScore(t, "pod-image-tag-latest.yaml", "Container Image Tag", 0)
+	testExpectedScore(t, "pod-image-tag-latest.yaml", "Container Image Tag", 1)
 }
 
 func TestPodContainerTagFixed(t *testing.T) {
@@ -78,7 +78,7 @@ func TestPodContainerTagFixed(t *testing.T) {
 }
 
 func TestPodContainerPullPolicyUndefined(t *testing.T) {
-	testExpectedScore(t, "pod-image-pullpolicy-undefined.yaml", "Container Image Pull Policy", 0)
+	testExpectedScore(t, "pod-image-pullpolicy-undefined.yaml", "Container Image Pull Policy", 1)
 }
 
 func TestPodContainerPullPolicyUndefinedLatestTag(t *testing.T) {
@@ -90,7 +90,7 @@ func TestPodContainerPullPolicyUndefinedNoTag(t *testing.T) {
 }
 
 func TestPodContainerPullPolicyNever(t *testing.T) {
-	testExpectedScore(t, "pod-image-pullpolicy-never.yaml", "Container Image Pull Policy", 0)
+	testExpectedScore(t, "pod-image-pullpolicy-never.yaml", "Container Image Pull Policy", 1)
 }
 
 func TestPodContainerPullPolicyAlways(t *testing.T) {
@@ -98,7 +98,7 @@ func TestPodContainerPullPolicyAlways(t *testing.T) {
 }
 
 func TestContainerSecurityContextPrivilegied(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 0)
+	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 1)
 }
 
 func TestContainerSecurityContextNonPrivilegied(t *testing.T) {
@@ -106,11 +106,11 @@ func TestContainerSecurityContextNonPrivilegied(t *testing.T) {
 }
 
 func TestContainerSecurityContextLowUser(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 0)
+	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 1)
 }
 
 func TestContainerSecurityContextLowGroup(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 0)
+	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 1)
 }
 
 func TestContainerSecurityContextHighIds(t *testing.T) {

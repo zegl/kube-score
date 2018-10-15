@@ -61,8 +61,6 @@ Use "-" as filename to read from STDIN.`)
 		panic(err)
 	}
 
-	sumGrade := 0
-
 	hasWarning := false
 	hasCritical := false
 
@@ -110,8 +108,6 @@ Use "-" as filename to read from STDIN.`)
 
 				fmt.Println()
 			}
-
-			sumGrade += card.Grade
 		}
 	}
 

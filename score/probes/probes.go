@@ -80,20 +80,20 @@ func ScoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateS
 
 		if hasLivenessProbe && (hasReadinessProbe || !isTargetedByService) {
 			if !probesAreIdentical {
-				score.Grade = 10
+				score.Grade = scorecard.GradeAllOK
 			} else {
-				score.Grade = 7
+				score.Grade = scorecard.GradeAlmostOK
 				score.AddComment("", "Pod has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
 			}
 		} else if !hasReadinessProbe && !hasLivenessProbe {
-			score.Grade = 0
+			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
 			score.AddComment("", "Container is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
 		} else if isTargetedByService && !hasReadinessProbe {
-			score.Grade = 0
+			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
 		} else if !hasLivenessProbe {
-			score.Grade = 5
+			score.Grade = scorecard.GradeWarning
 			score.AddComment("", "Pod is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
 		}
 
