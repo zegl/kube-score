@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/zegl/kube-score/score"
+	"github.com/zegl/kube-score/scorecard"
 	"io"
 	"os"
 )
@@ -13,6 +14,8 @@ func main() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
 	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
+	okThreshold := fs.Int("threshold-ok", 10, "The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL.")
+	warningThreshold := fs.Int("threshold-warning", 5, "The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL.")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
 	fs.Parse(os.Args[1:])
@@ -78,17 +81,24 @@ Use "-" as filename to read from STDIN.`)
 		}
 
 		for _, card := range resourceScores {
-			col := color.FgGreen
-			status := "OK"
 
-			if card.Grade == 0 {
-				col = color.FgRed
-				status = "CRITICAL"
-				hasCritical = true
-			} else if card.Grade < 10 {
+			var col color.Attribute
+			var status string
+
+			if card.Grade >= scorecard.Grade(*okThreshold) {
+				// Higher than or equal to --threshold-ok
+				col = color.FgGreen
+				status = "OK"
+			} else if card.Grade >= scorecard.Grade(*warningThreshold) {
+				// Higher than or equal to --threshold-warning
 				col = color.FgYellow
 				status = "WARNING"
 				hasWarning = true
+			} else {
+				// All lower than both --threshold-ok and --threshold-warning are critical
+				col = color.FgRed
+				status = "CRITICAL"
+				hasCritical = true
 			}
 
 			color.New(col).Printf("    [%s] %s\n", status, card.Name)
