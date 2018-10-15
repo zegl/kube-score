@@ -70,5 +70,9 @@ Usage of ./kube-score:
     	Print help
   -ignore-container-cpu-limit
     	Disables the requirement of setting a container CPU limit
+  -threshold-ok int
+    	The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold is WARNING or CRITICAL. (default 10)
+  -threshold-warning int
+    	The score threshold for treating a score as WARNING. Values this threshold CRITICAL. (default 5)
   -v	Verbose output
 ```
