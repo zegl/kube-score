@@ -5,7 +5,7 @@ import (
 )
 
 func TestPodHasNoMatchingNetworkPolicy(t *testing.T) {
-	testExpectedScore(t, "networkpolicy-not-matching.yaml", "Pod NetworkPolicy", 0)
+	testExpectedScore(t, "networkpolicy-not-matching.yaml", "Pod NetworkPolicy", 1)
 }
 
 func TestPodHasMatchingNetworkPolicy(t *testing.T) {

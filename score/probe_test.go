@@ -6,7 +6,7 @@ import (
 )
 
 func TestProbesPodAllMissing(t *testing.T) {
-	comments := testExpectedScore(t, "pod-probes-all-missing.yaml", "Pod Probes", 0)
+	comments := testExpectedScore(t, "pod-probes-all-missing.yaml", "Pod Probes", 1)
 	assert.Len(t, comments, 2)
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 	assert.Equal(t, "Container is missing a livenessProbe", comments[1].Summary)
@@ -37,13 +37,13 @@ func TestProbesPodIdenticalExec(t *testing.T) {
 }
 
 func TestProbesTargetedByService(t *testing.T) {
-	comments := testExpectedScore(t, "pod-probes-targeted-by-service.yaml", "Pod Probes", 0)
+	comments := testExpectedScore(t, "pod-probes-targeted-by-service.yaml", "Pod Probes", 1)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 }
 
 func TestProbesTargetedByServiceSameNamespace(t *testing.T) {
-	comments := testExpectedScore(t, "pod-probes-targeted-by-service-same-namespace.yaml", "Pod Probes", 0)
+	comments := testExpectedScore(t, "pod-probes-targeted-by-service-same-namespace.yaml", "Pod Probes", 1)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 }

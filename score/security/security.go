@@ -47,9 +47,9 @@ func ScoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score sc
 	}
 
 	if hasPrivileged || hasWritableRootFS || hasLowUserID || hasLowGroupID {
-		score.Grade = 0
+		score.Grade = scorecard.GradeCritical
 	} else {
-		score.Grade = 10
+		score.Grade = scorecard.GradeAllOK
 	}
 
 	return

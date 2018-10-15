@@ -43,8 +43,9 @@ func ScoreServiceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(c
 		}
 
 		if hasMatch {
-			score.Grade = 10
+			score.Grade = scorecard.GradeAllOK
 		} else {
+			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "The services selector does not match any pods", "")
 		}
 

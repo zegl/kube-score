@@ -35,9 +35,18 @@ type TestScore struct {
 		Version   string
 	}
 
-	Grade    int
+	Grade    Grade
 	Comments []TestScoreComment
 }
+
+type Grade int
+
+const (
+	GradeCritical = 1
+	GradeWarning  = 5
+	GradeAlmostOK = 7
+	GradeAllOK    = 10
+)
 
 type TestScoreComment struct {
 	Path        string

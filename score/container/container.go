@@ -42,14 +42,14 @@ func ScoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) sco
 		}
 
 		if len(allContainers) == 0 {
-			score.Grade = 0
+			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "No containers defined", "")
 		} else if hasMissingLimit {
-			score.Grade = 0
+			score.Grade = scorecard.GradeCritical
 		} else if hasMissingRequest {
-			score.Grade = 5
+			score.Grade = scorecard.GradeWarning
 		} else {
-			score.Grade = 10
+			score.Grade = scorecard.GradeAllOK
 		}
 
 		return
@@ -76,9 +76,9 @@ func ScoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard
 	}
 
 	if hasTagLatest {
-		score.Grade = 0
+		score.Grade = scorecard.GradeCritical
 	} else {
-		score.Grade = 10
+		score.Grade = scorecard.GradeAllOK
 	}
 
 	return
@@ -112,9 +112,9 @@ func ScoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score sc
 	}
 
 	if hasNonAlways {
-		score.Grade = 0
+		score.Grade = scorecard.GradeCritical
 	} else {
-		score.Grade = 10
+		score.Grade = scorecard.GradeAllOK
 	}
 
 	return
