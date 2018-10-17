@@ -1,9 +1,12 @@
 package networkpolicy
 
 import (
+	ks "github.com/zegl/kube-score"
+	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ScorePodHasNetworkPolicy returns a function that tests that all pods have matching NetworkPolicies
@@ -51,6 +54,52 @@ func ScorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec
 		} else {
 			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "The pod does not have a matching network policy", "Create a NetworkPolicy that targets this pod")
+		}
+
+		return
+	}
+}
+
+func ScoreNetworkPolicyTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(networkingv1.NetworkPolicy) scorecard.TestScore {
+	return func(netpol networkingv1.NetworkPolicy) (score scorecard.TestScore) {
+		score.Name = "NetworkPolicy targets Pod"
+		score.ID = "networkpolicy-targets-pod"
+
+		hasMatch := false
+
+		for _, pod := range pods {
+			if pod.Namespace != netpol.Namespace {
+				continue
+			}
+
+			if selector, err := metav1.LabelSelectorAsSelector(&netpol.Spec.PodSelector); err == nil {
+				if selector.Matches(internal.MapLables(pod.Labels)) {
+					hasMatch = true
+					break
+				}
+			}
+		}
+
+		if !hasMatch {
+			for _, pod := range podspecers {
+				if pod.GetObjectMeta().Namespace != netpol.Namespace {
+					continue
+				}
+
+				if selector, err := metav1.LabelSelectorAsSelector(&netpol.Spec.PodSelector); err == nil {
+					if selector.Matches(internal.MapLables(pod.GetPodTemplateSpec().Labels)) {
+						hasMatch = true
+						break
+					}
+				}
+			}
+		}
+
+		if hasMatch {
+			score.Grade = scorecard.GradeAllOK
+		} else {
+			score.Grade = scorecard.GradeCritical
+			score.AddComment("", "The NetworkPolicys selector doesn't match any pods", "")
 		}
 
 		return

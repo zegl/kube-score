@@ -10,14 +10,12 @@ import (
 // could be found
 func ScoreServiceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(corev1.Service) scorecard.TestScore {
 	podsInNamespace := make(map[string][]map[string]string)
-
 	for _, pod := range pods {
 		if _, ok := podsInNamespace[pod.Namespace]; !ok {
 			podsInNamespace[pod.Namespace] = []map[string]string{}
 		}
 		podsInNamespace[pod.Namespace] = append(podsInNamespace[pod.Namespace], pod.Labels)
 	}
-
 	for _, podSpec := range podspecers {
 		if _, ok := podsInNamespace[podSpec.GetObjectMeta().Namespace]; !ok {
 			podsInNamespace[podSpec.GetObjectMeta().Namespace] = []map[string]string{}
