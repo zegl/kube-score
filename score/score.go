@@ -67,7 +67,7 @@ type score struct {
 	typeMetas            []bothMeta
 	pods                 []corev1.Pod
 	podspecers           []ks.PodSpecer
-	networkPolies        []networkingv1.NetworkPolicy
+	networkPolicies      []networkingv1.NetworkPolicy
 	services             []corev1.Service
 	podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
 	deployments          []appsv1.Deployment
@@ -193,7 +193,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 			case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 				var netpol networkingv1.NetworkPolicy
 				decode(fileContents, &netpol)
-				s.networkPolies = append(s.networkPolies, netpol)
+				s.networkPolicies = append(s.networkPolicies, netpol)
 				s.typeMetas = append(s.typeMetas, bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
 
 			case corev1.SchemeGroupVersion.WithKind("Service"):
@@ -228,7 +228,7 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 		container.ScoreContainerLimits(!s.config.IgnoreContainerCpuLimitRequirement),
 		container.ScoreContainerImageTag,
 		container.ScoreContainerImagePullPolicy,
-		networkpolicy.ScorePodHasNetworkPolicy(s.networkPolies),
+		networkpolicy.ScorePodHasNetworkPolicy(s.networkPolicies),
 		probes.ScoreContainerProbes(s.services),
 		security.ScoreContainerSecurityContext,
 	}
@@ -243,6 +243,10 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 
 	deploymentTests := []func(appsv1.Deployment) scorecard.TestScore{
 		disruptionbudget.ScoreDeploymentHas(s.podDisruptionBudgets),
+	}
+
+	netpolTests := []func(policy networkingv1.NetworkPolicy) scorecard.TestScore{
+		networkpolicy.ScoreNetworkPolicyTargetsPod(s.pods, s.podspecers),
 	}
 
 	scoreCard := scorecard.New()
@@ -294,6 +298,14 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 		for _, test := range deploymentTests {
 			score := test(deployment)
 			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, netpol := range s.networkPolicies {
+		for _, netpolTest := range netpolTests {
+			score := netpolTest(netpol)
+			score.AddMeta(netpol.TypeMeta, netpol.ObjectMeta)
 			scoreCard.Add(score)
 		}
 	}

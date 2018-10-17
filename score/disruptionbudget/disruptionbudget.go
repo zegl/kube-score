@@ -1,6 +1,7 @@
 package disruptionbudget
 
 import (
+	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -19,7 +20,7 @@ func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, 
 			panic(err)
 		}
 
-		if selector.Matches(mapLables(lables)) {
+		if selector.Matches(internal.MapLables(lables)) {
 			return true
 		}
 	}
@@ -57,15 +58,4 @@ func ScoreDeploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1
 
 		return
 	}
-}
-
-type mapLables map[string]string
-
-func (m mapLables) Has(key string) bool {
-	_, ok := m[key]
-	return ok
-}
-
-func (m mapLables) Get(key string) string {
-	return m[key]
 }

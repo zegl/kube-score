@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: testapp-netpol
+  namespace: testspace
+spec:
+  podSelector:
+    matchLabels:
+      app: not-testapp
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+  policyTypes:
+  - Egress
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  namespace: testspace
+  labels:
+    app: testapp
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:latest
