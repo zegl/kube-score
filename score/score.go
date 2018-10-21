@@ -52,9 +52,8 @@ func addToScheme(scheme *runtime.Scheme) {
 }
 
 type Configuration struct {
-	AllFiles      []io.Reader
-	VerboseOutput bool
-
+	AllFiles                           []io.Reader
+	VerboseOutput                      bool
 	IgnoreContainerCpuLimitRequirement bool
 }
 
@@ -62,31 +61,39 @@ var metaTests []func(metav1.TypeMeta) scorecard.TestScore
 var podSpecTests []func(corev1.PodTemplateSpec) scorecard.TestScore
 var serviceTests []func(corev1.Service) scorecard.TestScore
 
+type score struct {
+	config *Configuration
+
+	typeMetas            []bothMeta
+	pods                 []corev1.Pod
+	podspecers           []ks.PodSpecer
+	networkPolies        []networkingv1.NetworkPolicy
+	services             []corev1.Service
+	podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
+	deployments          []appsv1.Deployment
+	statefulsets         []appsv1.StatefulSet
+}
+
+type detectKind struct {
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+}
+
+type bothMeta struct {
+	typeMeta   metav1.TypeMeta
+	objectMeta metav1.ObjectMeta
+}
+
 // Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
 // Additional configuration and tuning parameters can be provided via the config.
 func Score(config Configuration) (*scorecard.Scorecard, error) {
-	type detectKind struct {
-		ApiVersion string `yaml:"apiVersion"`
-		Kind       string `yaml:"kind"`
+	s := &score{
+		config: &config,
 	}
-
-	type bothMeta struct {
-		typeMeta   metav1.TypeMeta
-		objectMeta metav1.ObjectMeta
-	}
-
-	var typeMetas []bothMeta
-	var pods []corev1.Pod
-	var podspecers []ks.PodSpecer
-	var networkPolies []networkingv1.NetworkPolicy
-	var services []corev1.Service
-	var podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
-	var deployments []appsv1.Deployment
-	var statefulsets []appsv1.StatefulSet
 
 	addPodSpeccer := func(ps ks.PodSpecer) {
-		podspecers = append(podspecers, ps)
-		typeMetas = append(typeMetas, bothMeta{
+		s.podspecers = append(s.podspecers, ps)
+		s.typeMetas = append(s.typeMetas, bothMeta{
 			typeMeta:   ps.GetTypeMeta(),
 			objectMeta: ps.GetObjectMeta(),
 		})
@@ -121,8 +128,8 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 			case corev1.SchemeGroupVersion.WithKind("Pod"):
 				var pod corev1.Pod
 				decode(fileContents, &pod)
-				pods = append(pods, pod)
-				typeMetas = append(typeMetas, bothMeta{pod.TypeMeta, pod.ObjectMeta})
+				s.pods = append(s.pods, pod)
+				s.typeMetas = append(s.typeMetas, bothMeta{pod.TypeMeta, pod.ObjectMeta})
 
 			case batchv1.SchemeGroupVersion.WithKind("Job"):
 				var job batchv1.Job
@@ -140,7 +147,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				addPodSpeccer(internal.Appsv1Deployment{deployment})
 
 				// TODO: Support older versions of Deployment as well?
-				deployments = append(deployments, deployment)
+				s.deployments = append(s.deployments, deployment)
 			case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment appsv1beta1.Deployment
 				decode(fileContents, &deployment)
@@ -160,7 +167,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				addPodSpeccer(internal.Appsv1StatefulSet{statefulSet})
 
 				// TODO: Support older versions of StatefulSet as well?
-				statefulsets = append(statefulsets, statefulSet)
+				s.statefulsets = append(s.statefulsets, statefulSet)
 			case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
 				var statefulSet appsv1beta1.StatefulSet
 				decode(fileContents, &statefulSet)
@@ -186,20 +193,20 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 			case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 				var netpol networkingv1.NetworkPolicy
 				decode(fileContents, &netpol)
-				networkPolies = append(networkPolies, netpol)
-				typeMetas = append(typeMetas, bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
+				s.networkPolies = append(s.networkPolies, netpol)
+				s.typeMetas = append(s.typeMetas, bothMeta{netpol.TypeMeta, netpol.ObjectMeta})
 
 			case corev1.SchemeGroupVersion.WithKind("Service"):
 				var service corev1.Service
 				decode(fileContents, &service)
-				services = append(services, service)
-				typeMetas = append(typeMetas, bothMeta{service.TypeMeta, service.ObjectMeta})
+				s.services = append(s.services, service)
+				s.typeMetas = append(s.typeMetas, bothMeta{service.TypeMeta, service.ObjectMeta})
 
 			case policyv1beta1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 				var disruptBudget policyv1beta1.PodDisruptionBudget
 				decode(fileContents, &disruptBudget)
-				podDisruptionBudgets = append(podDisruptionBudgets, disruptBudget)
-				typeMetas = append(typeMetas, bothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta})
+				s.podDisruptionBudgets = append(s.podDisruptionBudgets, disruptBudget)
+				s.typeMetas = append(s.typeMetas, bothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta})
 
 			default:
 				if config.VerboseOutput {
@@ -209,34 +216,38 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		}
 	}
 
+	return s.runTests()
+}
+
+func (s *score) runTests() (*scorecard.Scorecard, error) {
 	metaTests := []func(metav1.TypeMeta) scorecard.TestScore{
 		stable.ScoreMetaStableAvailable,
 	}
 
 	podTests := []func(corev1.PodTemplateSpec) scorecard.TestScore{
-		container.ScoreContainerLimits(!config.IgnoreContainerCpuLimitRequirement),
+		container.ScoreContainerLimits(!s.config.IgnoreContainerCpuLimitRequirement),
 		container.ScoreContainerImageTag,
 		container.ScoreContainerImagePullPolicy,
-		networkpolicy.ScorePodHasNetworkPolicy(networkPolies),
-		probes.ScoreContainerProbes(services),
+		networkpolicy.ScorePodHasNetworkPolicy(s.networkPolies),
+		probes.ScoreContainerProbes(s.services),
 		security.ScoreContainerSecurityContext,
 	}
 
 	serviceTests := []func(corev1.Service) scorecard.TestScore{
-		service.ScoreServiceTargetsPod(pods, podspecers),
+		service.ScoreServiceTargetsPod(s.pods, s.podspecers),
 	}
 
 	statefulSetTests := []func(appsv1.StatefulSet) scorecard.TestScore{
-		disruptionbudget.ScoreStatefulSetHas(podDisruptionBudgets),
+		disruptionbudget.ScoreStatefulSetHas(s.podDisruptionBudgets),
 	}
 
 	deploymentTests := []func(appsv1.Deployment) scorecard.TestScore{
-		disruptionbudget.ScoreDeploymentHas(podDisruptionBudgets),
+		disruptionbudget.ScoreDeploymentHas(s.podDisruptionBudgets),
 	}
 
 	scoreCard := scorecard.New()
 
-	for _, meta := range typeMetas {
+	for _, meta := range s.typeMetas {
 		for _, metaTest := range metaTests {
 			score := metaTest(meta.typeMeta)
 			score.AddMeta(meta.typeMeta, meta.objectMeta)
@@ -244,7 +255,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, pod := range pods {
+	for _, pod := range s.pods {
 		for _, podTest := range podTests {
 			score := podTest(corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
@@ -255,7 +266,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, podspecer := range podspecers {
+	for _, podspecer := range s.podspecers {
 		for _, podTest := range podTests {
 			score := podTest(podspecer.GetPodTemplateSpec())
 			score.AddMeta(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
@@ -263,7 +274,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, service := range services {
+	for _, service := range s.services {
 		for _, serviceTest := range serviceTests {
 			score := serviceTest(service)
 			score.AddMeta(service.TypeMeta, service.ObjectMeta)
@@ -271,7 +282,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, statefulset := range statefulsets {
+	for _, statefulset := range s.statefulsets {
 		for _, test := range statefulSetTests {
 			score := test(statefulset)
 			score.AddMeta(statefulset.TypeMeta, statefulset.ObjectMeta)
@@ -279,7 +290,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		}
 	}
 
-	for _, deployment := range deployments {
+	for _, deployment := range s.deployments {
 		for _, test := range deploymentTests {
 			score := test(deployment)
 			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)

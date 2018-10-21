@@ -27,6 +27,7 @@ func (s *Scorecard) Add(ts TestScore) {
 
 type TestScore struct {
 	Name string
+	ID   string
 
 	ResourceRef struct {
 		Kind      string

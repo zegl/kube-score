@@ -64,17 +64,12 @@ Usage: kube-score [--flag1 --flag2] file1 file2 ...
 Use "-" as filename to read from STDIN.
 
 Usage of ./kube-score:
-  -exit-one-on-warning
-    	Exit with code 1 in case of warnings
-  -help
-    	Print help
-  -ignore-container-cpu-limit
-    	Disables the requirement of setting a container CPU limit
-  -output-format string
-    	Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
-  -threshold-ok int
-    	The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL. (default 10)
-  -threshold-warning int
-    	The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive). (default 5)
-  -v	Verbose output
+      --exit-one-on-warning          Exit with code 1 in case of warnings
+      --help                         Print help
+      --ignore-container-cpu-limit   Disables the requirement of setting a container CPU limit
+      --ignore-test strings          Disable a test, can be set multiple times
+      --output-format string         Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
+      --threshold-ok int             The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL. (default 10)
+      --threshold-warning int        The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive). (default 5)
+      --v                            Verbose output
 ```

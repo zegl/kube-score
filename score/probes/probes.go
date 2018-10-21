@@ -13,6 +13,7 @@ import (
 func ScoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Pod Probes"
+		score.ID = "pod-probes"
 
 		allContainers := podTemplate.Spec.InitContainers
 		allContainers = append(allContainers, podTemplate.Spec.Containers...)

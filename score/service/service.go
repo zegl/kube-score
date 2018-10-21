@@ -27,6 +27,7 @@ func ScoreServiceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(c
 
 	return func(service corev1.Service) (score scorecard.TestScore) {
 		score.Name = "Service Targets Pod"
+		score.ID = "service-targets-pod"
 
 		hasMatch := false
 

@@ -11,6 +11,7 @@ import (
 func ScorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podSpec corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Pod NetworkPolicy"
+		score.ID = "pod-networkpolicy"
 
 		hasMatchingEgressNetpol := false
 		hasMatchingIngressNetpol := false
