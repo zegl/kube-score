@@ -230,6 +230,10 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		disruptionbudget.ScoreStatefulSetHas(podDisruptionBudgets),
 	}
 
+	deploymentTests := []func(appsv1.Deployment) scorecard.TestScore{
+		disruptionbudget.ScoreDeploymentHas(podDisruptionBudgets),
+	}
+
 	scoreCard := scorecard.New()
 
 	for _, meta := range typeMetas {
@@ -271,6 +275,14 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		for _, test := range statefulSetTests {
 			score := test(statefulset)
 			score.AddMeta(statefulset.TypeMeta, statefulset.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, deployment := range deployments {
+		for _, test := range deploymentTests {
+			score := test(deployment)
+			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
 			scoreCard.Add(score)
 		}
 	}

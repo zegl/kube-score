@@ -1,0 +1,23 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: app-budget
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: not-foo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statefulset-test-1
+spec:
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foobar
+        image: foo:bar
