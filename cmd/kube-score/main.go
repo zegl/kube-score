@@ -18,6 +18,7 @@ func main() {
 	warningThreshold := fs.Int("threshold-warning", 5, "The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive).")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
+	outputFormat := fs.String("output-format", "human", "Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
 	fs.Parse(os.Args[1:])
 
 	if *printHelp {
@@ -28,6 +29,12 @@ func main() {
 	if *okThreshold < 1 || *okThreshold > 10 ||
 		*warningThreshold < 1 || *warningThreshold > 10 {
 		fmt.Println("Error: --threshold-ok and --threshold-warning must be set to a value between 1 and 10 inclusive.")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	if *outputFormat != "human" && *outputFormat != "ci" {
+		fmt.Println("Error: --output-format must be set to: 'human' or 'ci'")
 		fs.Usage()
 		os.Exit(1)
 	}
@@ -74,17 +81,19 @@ Use "-" as filename to read from STDIN.`)
 	hasWarning := false
 	hasCritical := false
 
+	// Detect which output format we should use
+	humanOutput := *outputFormat == "human"
+
 	for _, resourceScores := range scoreCard.Scores {
-		firstCard := resourceScores[0]
-
-		p := color.New(color.FgMagenta)
-
-		p.Printf("%s/%s %s", firstCard.ResourceRef.Version, firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
-
-		if firstCard.ResourceRef.Namespace != "" {
-			p.Printf(" in %s\n", firstCard.ResourceRef.Namespace)
-		} else {
-			p.Println()
+		// Headers for each object
+		if humanOutput {
+			firstCard := resourceScores[0]
+			color.New(color.FgMagenta).Printf("%s/%s %s", firstCard.ResourceRef.Version, firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
+			if firstCard.ResourceRef.Namespace != "" {
+				color.New(color.FgMagenta).Printf(" in %s\n", firstCard.ResourceRef.Namespace)
+			} else {
+				fmt.Println()
+			}
 		}
 
 		for _, card := range resourceScores {
@@ -108,22 +117,39 @@ Use "-" as filename to read from STDIN.`)
 				hasCritical = true
 			}
 
-			color.New(col).Printf("    [%s] %s\n", status, card.Name)
+			if humanOutput {
+				color.New(col).Printf("    [%s] %s\n", status, card.Name)
 
-			for _, comment := range card.Comments {
-				fmt.Printf("        * ")
+				for _, comment := range card.Comments {
+					fmt.Printf("        * ")
 
-				if len(comment.Path) > 0 {
-					fmt.Printf("%s -> ", comment.Path)
+					if len(comment.Path) > 0 {
+						fmt.Printf("%s -> ", comment.Path)
+					}
+
+					fmt.Print(comment.Summary)
+
+					if len(comment.Description) > 0 {
+						fmt.Printf("\n             %s", comment.Description)
+					}
+
+					fmt.Println()
+				}
+			} else {
+				// "Machine" / CI friendly output
+				for _, comment := range card.Comments {
+					message := comment.Summary
+					if comment.Path != "" {
+						message = "(" + comment.Path + ") " + comment.Summary
+					}
+
+					fmt.Printf("[%s] %s: %s\n",
+						status,
+						card.HumanFriendlyRef(),
+						message,
+					)
 				}
 
-				fmt.Print(comment.Summary)
-
-				if len(comment.Description) > 0 {
-					fmt.Printf("\n             %s", comment.Description)
-				}
-
-				fmt.Println()
 			}
 		}
 	}
