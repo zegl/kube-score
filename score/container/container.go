@@ -13,6 +13,7 @@ import (
 func ScoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Container Resources"
+		score.ID = "container-resources"
 
 		pod := podTemplate.Spec
 
@@ -59,6 +60,7 @@ func ScoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) sco
 // ScoreContainerImageTag checks that no container is using the ":latest" tag
 func ScoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Image Tag"
+	score.ID = "container-image-tag"
 
 	pod := podTemplate.Spec
 
@@ -87,6 +89,7 @@ func ScoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard
 // ScoreContainerImagePullPolicy checks if the containers ImagePullPolicy is set to PullAlways
 func ScoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Image Pull Policy"
+	score.ID = "container-image-pull-policy"
 
 	pod := podTemplate.Spec
 

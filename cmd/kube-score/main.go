@@ -1,9 +1,9 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/fatih/color"
+	flag "github.com/spf13/pflag"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/scorecard"
 	"io"
@@ -19,7 +19,13 @@ func main() {
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.String("output-format", "human", "Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
+	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	fs.Parse(os.Args[1:])
+
+	fs.Usage = func() {
+		fmt.Printf("Usage of %s:\n", os.Args[0])
+		fs.PrintDefaults()
+	}
 
 	if *printHelp {
 		fs.Usage()
@@ -78,6 +84,11 @@ Use "-" as filename to read from STDIN.`)
 		panic(err)
 	}
 
+	ignoredTests := make(map[string]struct{})
+	for _, testID := range *ignoreTests {
+		ignoredTests[testID] = struct{}{}
+	}
+
 	hasWarning := false
 	hasCritical := false
 
@@ -97,6 +108,9 @@ Use "-" as filename to read from STDIN.`)
 		}
 
 		for _, card := range resourceScores {
+			if _, ok := ignoredTests[card.ID]; ok {
+				continue
+			}
 
 			var col color.Attribute
 			var status string

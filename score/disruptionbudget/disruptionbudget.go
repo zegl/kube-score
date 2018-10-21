@@ -26,6 +26,7 @@ func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, lables map[string]
 func ScoreStatefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.StatefulSet) scorecard.TestScore {
 	return func(statefulset appsv1.StatefulSet) (score scorecard.TestScore) {
 		score.Name = "StatefulSet has PodDisruptionBudget"
+		score.ID = "statefulset-has-poddisruptionbudget"
 
 		if hasMatching(budgets, statefulset.Spec.Template.Labels) {
 			score.Grade = scorecard.GradeAllOK
@@ -41,6 +42,7 @@ func ScoreStatefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv
 func ScoreDeploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Deployment) scorecard.TestScore {
 	return func(deployment appsv1.Deployment) (score scorecard.TestScore) {
 		score.Name = "Deployment has PodDisruptionBudget"
+		score.ID = "deployment-has-poddisruptionbudget"
 
 		if hasMatching(budgets, deployment.Spec.Template.Labels) {
 			score.Grade = scorecard.GradeAllOK

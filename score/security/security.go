@@ -8,6 +8,7 @@ import (
 // ScoreContainerSecurityContext checks that the recommended securityPolicy options are set
 func ScoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Security Context"
+	score.ID = "container-security-context"
 
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)

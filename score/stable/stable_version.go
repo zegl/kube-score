@@ -9,6 +9,7 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // ScoreMetaStableAvailable checks if the supplied TypeMeta is an unstable object type, that has a stable(r) replacement
 func ScoreMetaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) {
 	score.Name = "Stable version"
+	score.ID = "stable-version"
 
 	withStable := map[string]map[string]string{
 		"extensions/v1beta1": {
