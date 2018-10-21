@@ -4,6 +4,7 @@ import (
 	"bytes"
 	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/score/container"
+	"github.com/zegl/kube-score/score/disruptionbudget"
 	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/score/networkpolicy"
 	"github.com/zegl/kube-score/score/probes"
@@ -25,6 +26,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -46,6 +48,7 @@ func addToScheme(scheme *runtime.Scheme) {
 	appsv1beta2.AddToScheme(scheme)
 	batchv1.AddToScheme(scheme)
 	batchv1beta1.AddToScheme(scheme)
+	policyv1beta1.AddToScheme(scheme)
 }
 
 type Configuration struct {
@@ -77,6 +80,9 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 	var podspecers []ks.PodSpecer
 	var networkPolies []networkingv1.NetworkPolicy
 	var services []corev1.Service
+	var podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
+	var deployments []appsv1.Deployment
+	var statefulsets []appsv1.StatefulSet
 
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		podspecers = append(podspecers, ps)
@@ -132,6 +138,9 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				var deployment appsv1.Deployment
 				decode(fileContents, &deployment)
 				addPodSpeccer(internal.Appsv1Deployment{deployment})
+
+				// TODO: Support older versions of Deployment as well?
+				deployments = append(deployments, deployment)
 			case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment appsv1beta1.Deployment
 				decode(fileContents, &deployment)
@@ -149,6 +158,9 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				var statefulSet appsv1.StatefulSet
 				decode(fileContents, &statefulSet)
 				addPodSpeccer(internal.Appsv1StatefulSet{statefulSet})
+
+				// TODO: Support older versions of StatefulSet as well?
+				statefulsets = append(statefulsets, statefulSet)
 			case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
 				var statefulSet appsv1beta1.StatefulSet
 				decode(fileContents, &statefulSet)
@@ -183,6 +195,12 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				services = append(services, service)
 				typeMetas = append(typeMetas, bothMeta{service.TypeMeta, service.ObjectMeta})
 
+			case policyv1beta1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
+				var disruptBudget policyv1beta1.PodDisruptionBudget
+				decode(fileContents, &disruptBudget)
+				podDisruptionBudgets = append(podDisruptionBudgets, disruptBudget)
+				typeMetas = append(typeMetas, bothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta})
+
 			default:
 				if config.VerboseOutput {
 					log.Printf("Unknown datatype: %s", detect.Kind)
@@ -206,6 +224,10 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 
 	serviceTests := []func(corev1.Service) scorecard.TestScore{
 		service.ScoreServiceTargetsPod(pods, podspecers),
+	}
+
+	statefulSetTests := []func(appsv1.StatefulSet) scorecard.TestScore{
+		disruptionbudget.ScoreStatefulSetHas(podDisruptionBudgets),
 	}
 
 	scoreCard := scorecard.New()
@@ -241,6 +263,14 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		for _, serviceTest := range serviceTests {
 			score := serviceTest(service)
 			score.AddMeta(service.TypeMeta, service.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, statefulset := range statefulsets {
+		for _, test := range statefulSetTests {
+			score := test(statefulset)
+			score.AddMeta(statefulset.TypeMeta, statefulset.ObjectMeta)
 			scoreCard.Add(score)
 		}
 	}
