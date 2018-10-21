@@ -72,3 +72,15 @@ func (ts *TestScore) AddMeta(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 func (ts TestScore) resourceRefKey() string {
 	return ts.ResourceRef.Kind + "/" + ts.ResourceRef.Namespace + "/" + ts.ResourceRef.Name
 }
+
+func (ts TestScore) HumanFriendlyRef() string {
+	s := ts.ResourceRef.Name
+
+	if ts.ResourceRef.Namespace != "" {
+		s += "/" + ts.ResourceRef.Namespace
+	}
+
+	s += " " + ts.ResourceRef.Version + "/" + ts.ResourceRef.Kind
+
+	return s
+}
