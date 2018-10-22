@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: awesome
+data:
+  awesome.crt: |
+    -----BEGIN CERTIFICATE-----
+    TEST_DATA
+    -----END CERTIFICATE-----
+---

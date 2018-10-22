@@ -108,7 +108,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 		// Convert to unix style newlines
 		fullFile = bytes.Replace(fullFile, []byte("\r\n"), []byte("\n"), -1)
 
-		for _, fileContents := range bytes.Split(fullFile, []byte("---\n")) {
+		for _, fileContents := range bytes.Split(fullFile, []byte("\n---\n")) {
 			var detect detectKind
 			err = yaml.Unmarshal(fileContents, &detect)
 			if err != nil {
