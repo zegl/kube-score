@@ -20,8 +20,7 @@ func testFile(name string) *os.File {
 // testExpectedScoreWithConfig runs all tests, but makes sure that the test for "testcase" was executed, and that
 // the grade is set to expectedScore. The function returns the comments of "testcase".
 func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
-	config.AllFiles = []io.Reader{testFile(filename)}
-	sc, err := Score(config)
+	sc, err := testScore(config, filename)
 	assert.NoError(t, err)
 
 	for _, objectScore := range sc.Scores {
@@ -35,6 +34,11 @@ func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename st
 
 	t.Error("Was not tested")
 	return nil
+}
+
+func testScore(config Configuration, filename string) (*scorecard.Scorecard, error) {
+	config.AllFiles = []io.Reader{testFile(filename)}
+	return Score(config)
 }
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
@@ -115,4 +119,9 @@ func TestContainerSecurityContextLowGroup(t *testing.T) {
 
 func TestContainerSecurityContextHighIds(t *testing.T) {
 	testExpectedScore(t, "pod-security-context-high-ids.yaml", "Container Security Context", 10)
+}
+
+func TestConfigMapMultiDash(t *testing.T) {
+	_, err := testScore(Configuration{}, "configmap-multi-dash.yaml")
+	assert.Nil(t, err)
 }
