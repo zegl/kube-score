@@ -29,6 +29,12 @@ func ScoreServiceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(c
 		score.Name = "Service Targets Pod"
 		score.ID = "service-targets-pod"
 
+		// Services of type ExternalName does not have a selector
+		if service.Spec.Type == corev1.ServiceTypeExternalName {
+			score.Grade = scorecard.GradeAllOK
+			return
+		}
+
 		hasMatch := false
 
 		for _, podLables := range podsInNamespace[service.Namespace] {
