@@ -25,6 +25,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: pod-test-1
+  namespace: testspace
   labels:
     app: testapp
 spec:

@@ -17,6 +17,12 @@ func ScorePodHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec
 		hasMatchingIngressNetpol := false
 
 		for _, netPol := range allNetpols {
+
+			// Make sure that the pod and networkpolicy is in the same namespace
+			if podSpec.Namespace != netPol.Namespace {
+				continue
+			}
+
 			matchLabels := netPol.Spec.PodSelector.MatchLabels
 
 			for labelKey, labelVal := range matchLabels {
