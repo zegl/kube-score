@@ -41,3 +41,7 @@ func TestServiceTargetsPodDeploymentSameNamespace(t *testing.T) {
 func TestServiceTargetsPodDeploymentDifferentNamespace(t *testing.T) {
 	testExpectedScore(t, "service-target-deployment-different-namespace.yaml", "Service Targets Pod", 1)
 }
+
+func TestServiceExternalName(t *testing.T) {
+	testExpectedScore(t, "service-externalname.yaml", "Service Targets Pod", 10)
+}
