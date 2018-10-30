@@ -5,6 +5,7 @@ import (
 	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/score/container"
 	"github.com/zegl/kube-score/score/disruptionbudget"
+	"github.com/zegl/kube-score/score/ingress"
 	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/score/networkpolicy"
 	"github.com/zegl/kube-score/score/probes"
@@ -72,6 +73,7 @@ type score struct {
 	podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
 	deployments          []appsv1.Deployment
 	statefulsets         []appsv1.StatefulSet
+	ingresses            []extensionsv1beta1.Ingress
 }
 
 type detectKind struct {
@@ -208,6 +210,12 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				s.podDisruptionBudgets = append(s.podDisruptionBudgets, disruptBudget)
 				s.typeMetas = append(s.typeMetas, bothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta})
 
+			case extensionsv1beta1.SchemeGroupVersion.WithKind("Ingress"):
+				var ingress extensionsv1beta1.Ingress
+				decode(fileContents, &ingress)
+				s.ingresses = append(s.ingresses, ingress)
+				s.typeMetas = append(s.typeMetas, bothMeta{ingress.TypeMeta, ingress.ObjectMeta})
+
 			default:
 				if config.VerboseOutput {
 					log.Printf("Unknown datatype: %s", detect.Kind)
@@ -245,8 +253,12 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 		disruptionbudget.ScoreDeploymentHas(s.podDisruptionBudgets),
 	}
 
-	netpolTests := []func(policy networkingv1.NetworkPolicy) scorecard.TestScore{
+	netpolTests := []func(networkingv1.NetworkPolicy) scorecard.TestScore{
 		networkpolicy.ScoreNetworkPolicyTargetsPod(s.pods, s.podspecers),
+	}
+
+	ingressTests := []func(extensionsv1beta1.Ingress) scorecard.TestScore{
+		ingress.ScoreIngressTargetsService(s.services),
 	}
 
 	scoreCard := scorecard.New()
@@ -306,6 +318,14 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 		for _, netpolTest := range netpolTests {
 			score := netpolTest(netpol)
 			score.AddMeta(netpol.TypeMeta, netpol.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, ingress := range s.ingresses {
+		for _, ingressTest := range ingressTests {
+			score := ingressTest(ingress)
+			score.AddMeta(ingress.TypeMeta, ingress.ObjectMeta)
 			scoreCard.Add(score)
 		}
 	}
