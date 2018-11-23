@@ -57,3 +57,17 @@ func ScoreServiceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(c
 		return
 	}
 }
+
+func ScoreServiceType(service corev1.Service) (score scorecard.TestScore) {
+	score.Name = "Service Type"
+	score.ID = "service-type"
+
+	if service.Spec.Type == corev1.ServiceTypeNodePort {
+		score.Grade = scorecard.GradeWarning
+		score.AddComment("", "The service is of type NodePort", "NodePort services should be avoided as they are insecure, and can not be used together with NetworkPolicies. LoadBalancers or use of an Ingress is recommended over NodePorts.")
+		return
+	}
+
+	score.Grade = scorecard.GradeAllOK
+	return
+}

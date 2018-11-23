@@ -45,3 +45,15 @@ func TestServiceTargetsPodDeploymentDifferentNamespace(t *testing.T) {
 func TestServiceExternalName(t *testing.T) {
 	testExpectedScore(t, "service-externalname.yaml", "Service Targets Pod", 10)
 }
+
+func TestServiceTypeNodePort(t *testing.T) {
+	testExpectedScore(t, "service-type-nodeport.yaml", "Service Type", 5)
+}
+
+func TestServiceTypeClusterIP(t *testing.T) {
+	testExpectedScore(t, "service-type-clusterip.yaml", "Service Type", 10)
+}
+
+func TestServiceTypeDefault(t *testing.T) {
+	testExpectedScore(t, "service-type-default.yaml", "Service Type", 10)
+}

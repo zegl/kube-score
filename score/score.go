@@ -243,6 +243,7 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 
 	serviceTests := []func(corev1.Service) scorecard.TestScore{
 		service.ScoreServiceTargetsPod(s.pods, s.podspecers),
+		service.ScoreServiceType,
 	}
 
 	statefulSetTests := []func(appsv1.StatefulSet) scorecard.TestScore{
