@@ -21,7 +21,7 @@ require (
 	golang.org/x/text v0.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20181121071145-b7bd5f2d334c
 	k8s.io/apimachinery v0.0.0-20181121071008-d4f83ca2e260
 	k8s.io/klog v0.1.0 // indirect
