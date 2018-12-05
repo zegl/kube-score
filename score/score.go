@@ -4,6 +4,7 @@ import (
 	"bytes"
 	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/score/container"
+	"github.com/zegl/kube-score/score/cronjob"
 	"github.com/zegl/kube-score/score/disruptionbudget"
 	"github.com/zegl/kube-score/score/ingress"
 	"github.com/zegl/kube-score/score/internal"
@@ -74,6 +75,7 @@ type score struct {
 	deployments          []appsv1.Deployment
 	statefulsets         []appsv1.StatefulSet
 	ingresses            []extensionsv1beta1.Ingress
+	cronjobs             []batchv1beta1.CronJob
 }
 
 type detectKind struct {
@@ -142,6 +144,7 @@ func Score(config Configuration) (*scorecard.Scorecard, error) {
 				var cronjob batchv1beta1.CronJob
 				decode(fileContents, &cronjob)
 				addPodSpeccer(internal.Batchv1beta1CronJob{cronjob})
+				s.cronjobs = append(s.cronjobs, cronjob)
 
 			case appsv1.SchemeGroupVersion.WithKind("Deployment"):
 				var deployment appsv1.Deployment
@@ -262,6 +265,10 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 		ingress.ScoreIngressTargetsService(s.services),
 	}
 
+	cronjobTests := []func(batchv1beta1.CronJob) scorecard.TestScore{
+		cronjob.ScoreCronJobHasDeadline,
+	}
+
 	scoreCard := scorecard.New()
 
 	for _, meta := range s.typeMetas {
@@ -327,6 +334,14 @@ func (s *score) runTests() (*scorecard.Scorecard, error) {
 		for _, ingressTest := range ingressTests {
 			score := ingressTest(ingress)
 			score.AddMeta(ingress.TypeMeta, ingress.ObjectMeta)
+			scoreCard.Add(score)
+		}
+	}
+
+	for _, cjob := range s.cronjobs {
+		for _, cronjobTest := range cronjobTests {
+			score := cronjobTest(cjob)
+			score.AddMeta(cjob.TypeMeta, cjob.ObjectMeta)
 			scoreCard.Add(score)
 		}
 	}
