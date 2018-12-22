@@ -1,6 +1,8 @@
 package disruptionbudget
 
 import (
+	"github.com/zegl/kube-score"
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 
@@ -8,6 +10,11 @@ import (
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func Register(allChecks *checks.Checks, budgets kube_score.PodDisruptionBudgets) {
+	allChecks.RegisterStatefulSetCheck("statefulset-has-poddisruptionbudget", statefulSetHas(budgets.PodDisruptionBudgets()))
+	allChecks.RegisterDeploymentCheck("deployment-has-poddisruptionbudget", deploymentHas(budgets.PodDisruptionBudgets()))
+}
 
 func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, lables map[string]string) bool {
 	for _, budget := range budgets {
@@ -28,7 +35,7 @@ func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, 
 	return false
 }
 
-func ScoreStatefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.StatefulSet) scorecard.TestScore {
+func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.StatefulSet) scorecard.TestScore {
 	return func(statefulset appsv1.StatefulSet) (score scorecard.TestScore) {
 		score.Name = "StatefulSet has PodDisruptionBudget"
 		score.ID = "statefulset-has-poddisruptionbudget"
@@ -44,7 +51,7 @@ func ScoreStatefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv
 	}
 }
 
-func ScoreDeploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Deployment) scorecard.TestScore {
+func deploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Deployment) scorecard.TestScore {
 	return func(deployment appsv1.Deployment) (score scorecard.TestScore) {
 		score.Name = "Deployment has PodDisruptionBudget"
 		score.ID = "deployment-has-poddisruptionbudget"

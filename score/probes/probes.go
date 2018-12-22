@@ -1,16 +1,22 @@
 package probes
 
 import (
+	ks "github.com/zegl/kube-score"
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// ScoreContainerProbes returns a function that checks if all probes are defined correctly in the Pod.
+func Register(allChecks *checks.Checks, services ks.Services) {
+	allChecks.RegisterPodCheck("pod-probes", containerProbes(services.Services()))
+}
+
+// containerProbes returns a function that checks if all probes are defined correctly in the Pod.
 // Only one probe of each type is required on the entire pod.
 // ReadinessProbes are not required if the pod is not targeted by a Service.
 //
-// ScoreContainerProbes takes a slice of all defined Services as input.
-func ScoreContainerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec) scorecard.TestScore {
+// containerProbes takes a slice of all defined Services as input.
+func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Pod Probes"
 		score.ID = "pod-probes"

@@ -2,12 +2,18 @@ package ingress
 
 import (
 	"fmt"
+	"github.com/zegl/kube-score"
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 )
 
-func ScoreIngressTargetsService(allServices []corev1.Service) func(extensionsv1beta1.Ingress) scorecard.TestScore {
+func Register(allChecks *checks.Checks, services kube_score.Services) {
+	allChecks.RegisterIngressCheck("ingress-targets-service", ingressTargetsService(services.Services()))
+}
+
+func ingressTargetsService(allServices []corev1.Service) func(extensionsv1beta1.Ingress) scorecard.TestScore {
 	return func(ingress extensionsv1beta1.Ingress) (score scorecard.TestScore) {
 		score.Name = "Ingress targets Service"
 		score.ID = "ingress-targets-service"

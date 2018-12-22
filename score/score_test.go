@@ -1,6 +1,8 @@
 package score
 
 import (
+	"github.com/zegl/kube-score/config"
+	"github.com/zegl/kube-score/parser"
 	"github.com/zegl/kube-score/scorecard"
 	"io"
 	"os"
@@ -19,7 +21,7 @@ func testFile(name string) *os.File {
 
 // testExpectedScoreWithConfig runs all tests, but makes sure that the test for "testcase" was executed, and that
 // the grade is set to expectedScore. The function returns the comments of "testcase".
-func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
+func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
 	sc, err := testScore(config, filename)
 	assert.NoError(t, err)
 
@@ -36,13 +38,19 @@ func testExpectedScoreWithConfig(t *testing.T, config Configuration, filename st
 	return nil
 }
 
-func testScore(config Configuration, filename string) (*scorecard.Scorecard, error) {
+func testScore(config config.Configuration, filename string) (*scorecard.Scorecard, error) {
 	config.AllFiles = []io.Reader{testFile(filename)}
-	return Score(config)
+
+	parsed, err := parser.ParseFiles(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return Score(parsed, config)
 }
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
-	return testExpectedScoreWithConfig(t, Configuration{}, filename, testcase, expectedScore)
+	return testExpectedScoreWithConfig(t, config.Configuration{}, filename, testcase, expectedScore)
 }
 
 func TestPodContainerNoResources(t *testing.T) {
@@ -58,11 +66,11 @@ func TestPodContainerResourceLimitsAndRequests(t *testing.T) {
 }
 
 func TestPodContainerResourceLimitCpuNotRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement: true}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 10)
+	testExpectedScoreWithConfig(t, config.Configuration{IgnoreContainerCpuLimitRequirement: true}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 10)
 }
 
 func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, Configuration{IgnoreContainerCpuLimitRequirement: false}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 1)
+	testExpectedScoreWithConfig(t, config.Configuration{IgnoreContainerCpuLimitRequirement: false}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 1)
 }
 
 func TestDeploymentResources(t *testing.T) {
@@ -122,6 +130,6 @@ func TestContainerSecurityContextHighIds(t *testing.T) {
 }
 
 func TestConfigMapMultiDash(t *testing.T) {
-	_, err := testScore(Configuration{}, "configmap-multi-dash.yaml")
+	_, err := testScore(config.Configuration{}, "configmap-multi-dash.yaml")
 	assert.Nil(t, err)
 }

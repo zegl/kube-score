@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
+	"github.com/zegl/kube-score/config"
+	"github.com/zegl/kube-score/parser"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/scorecard"
 	"io"
@@ -75,11 +77,18 @@ Use "-" as filename to read from STDIN.`)
 		allFilePointers = append(allFilePointers, fp)
 	}
 
-	scoreCard, err := score.Score(score.Configuration{
+	cnf := config.Configuration{
 		AllFiles:                           allFilePointers,
 		VerboseOutput:                      *verboseOutput,
 		IgnoreContainerCpuLimitRequirement: *ignoreContainerCpuLimit,
-	})
+	}
+
+	parsedFiles, err := parser.ParseFiles(cnf)
+	if err != nil {
+		panic(err)
+	}
+
+	scoreCard, err := score.Score(parsedFiles, cnf)
 	if err != nil {
 		panic(err)
 	}
