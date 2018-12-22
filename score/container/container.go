@@ -1,16 +1,22 @@
 package container
 
 import (
-	"strings"
-
+	"github.com/zegl/kube-score/config"
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
-
 	corev1 "k8s.io/api/core/v1"
+	"strings"
 )
 
-// ScoreContainerLimit makes sure that the container has resource requests and limits set
-// The check for a CPU limit requirement can be enabled via the requireCpuLimit flag parameter
-func ScoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) scorecard.TestScore {
+func Register(allChecks *checks.Checks, cnf config.Configuration) {
+	allChecks.RegisterPodCheck("container-resources", containerResources(!cnf.IgnoreContainerCpuLimitRequirement))
+	allChecks.RegisterPodCheck("container-image-tag", containerImageTag)
+	allChecks.RegisterPodCheck("container-image-pull-policy", containerImagePullPolicy)
+}
+
+// containerResources makes sure that the container has resource requests and limits set
+// The check for a CPU limit requirement can be enabled via the requireCPULimit flag parameter
+func containerResources(requireCPULimit bool) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 		score.Name = "Container Resources"
 		score.ID = "container-resources"
@@ -24,7 +30,7 @@ func ScoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) sco
 		hasMissingRequest := false
 
 		for _, container := range allContainers {
-			if container.Resources.Limits.Cpu().IsZero() && requireCpuLimit {
+			if container.Resources.Limits.Cpu().IsZero() && requireCPULimit {
 				score.AddComment(container.Name, "CPU limit is not set", "Resource limits are recommended to avoid resource DDOS. Set resources.limits.cpu")
 				hasMissingLimit = true
 			}
@@ -57,8 +63,8 @@ func ScoreContainerLimits(requireCpuLimit bool) func(corev1.PodTemplateSpec) sco
 	}
 }
 
-// ScoreContainerImageTag checks that no container is using the ":latest" tag
-func ScoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+// containerImageTag checks that no container is using the ":latest" tag
+func containerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Image Tag"
 	score.ID = "container-image-tag"
 
@@ -86,8 +92,8 @@ func ScoreContainerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard
 	return
 }
 
-// ScoreContainerImagePullPolicy checks if the containers ImagePullPolicy is set to PullAlways
-func ScoreContainerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+// containerImagePullPolicy checks if the containers ImagePullPolicy is set to PullAlways
+func containerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	score.Name = "Container Image Pull Policy"
 	score.ID = "container-image-pull-policy"
 

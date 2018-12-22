@@ -1,11 +1,16 @@
 package cronjob
 
 import (
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	"k8s.io/api/batch/v1beta1"
 )
 
-func ScoreCronJobHasDeadline(job v1beta1.CronJob) (score scorecard.TestScore) {
+func Register(allChecks *checks.Checks) {
+	allChecks.RegisterCronJobCheck("cronjob-has-deadline", cronJobHasDeadline)
+}
+
+func cronJobHasDeadline(job v1beta1.CronJob) (score scorecard.TestScore) {
 	score.Name = "CronJob has deadline"
 	score.ID = "cronjob-has-deadline"
 

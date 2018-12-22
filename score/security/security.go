@@ -1,9 +1,14 @@
 package security
 
 import (
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 )
+
+func Register(allChecks *checks.Checks) {
+	allChecks.RegisterPodCheck("container-security-context", ScoreContainerSecurityContext)
+}
 
 // ScoreContainerSecurityContext checks that the recommended securityPolicy options are set
 func ScoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
