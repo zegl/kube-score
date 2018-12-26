@@ -1,7 +1,7 @@
 package score
 
 import (
-	"github.com/zegl/kube-score"
+	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/container"
@@ -18,9 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
-// Additional configuration and tuning parameters can be provided via the config.
-func Score(allObjects kube_score.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
+func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks.Checks {
 	allChecks := checks.New()
 
 	ingress.Register(allChecks, allObjects)
@@ -33,6 +31,13 @@ func Score(allObjects kube_score.AllTypes, cnf config.Configuration) (*scorecard
 	service.Register(allChecks, allObjects, allObjects)
 	stable.Register(allChecks)
 
+	return allChecks
+}
+
+// Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
+// Additional configuration and tuning parameters can be provided via the config.
+func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
+	allChecks := RegisterAllChecks(allObjects, cnf)
 	scoreCard := scorecard.New()
 
 	for _, ingress := range allObjects.Ingresses() {

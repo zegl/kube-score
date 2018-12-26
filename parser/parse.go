@@ -99,6 +99,10 @@ func (p *parsedObjects) NetworkPolicies() []networkingv1.NetworkPolicy {
 	return p.networkPolicies
 }
 
+func Empty() ks.AllTypes {
+	return &parsedObjects{}
+}
+
 func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 	s := &parsedObjects{}
 
