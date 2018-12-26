@@ -9,18 +9,15 @@ import (
 )
 
 func Register(allChecks *checks.Checks, cnf config.Configuration) {
-	allChecks.RegisterPodCheck("container-resources", containerResources(!cnf.IgnoreContainerCpuLimitRequirement))
-	allChecks.RegisterPodCheck("container-image-tag", containerImageTag)
-	allChecks.RegisterPodCheck("container-image-pull-policy", containerImagePullPolicy)
+	allChecks.RegisterPodCheck("Container Resources", containerResources(!cnf.IgnoreContainerCpuLimitRequirement))
+	allChecks.RegisterPodCheck("Container Image Tag", containerImageTag)
+	allChecks.RegisterPodCheck("Container Image Pull Policy", containerImagePullPolicy)
 }
 
 // containerResources makes sure that the container has resource requests and limits set
 // The check for a CPU limit requirement can be enabled via the requireCPULimit flag parameter
 func containerResources(requireCPULimit bool) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
-		score.Name = "Container Resources"
-		score.ID = "container-resources"
-
 		pod := podTemplate.Spec
 
 		allContainers := pod.InitContainers
@@ -65,9 +62,6 @@ func containerResources(requireCPULimit bool) func(corev1.PodTemplateSpec) score
 
 // containerImageTag checks that no container is using the ":latest" tag
 func containerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
-	score.Name = "Container Image Tag"
-	score.ID = "container-image-tag"
-
 	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers
@@ -94,9 +88,6 @@ func containerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.Test
 
 // containerImagePullPolicy checks if the containers ImagePullPolicy is set to PullAlways
 func containerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
-	score.Name = "Container Image Pull Policy"
-	score.ID = "container-image-pull-policy"
-
 	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers

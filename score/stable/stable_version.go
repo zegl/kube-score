@@ -8,14 +8,11 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterMetaCheck("stable-version", metaStableAvailable)
+	allChecks.RegisterMetaCheck("Stable version", metaStableAvailable)
 }
 
 // ScoreMetaStableAvailable checks if the supplied TypeMeta is an unstable object type, that has a stable(r) replacement
 func metaStableAvailable(meta metav1.TypeMeta) (score scorecard.TestScore) {
-	score.Name = "Stable version"
-	score.ID = "stable-version"
-
 	withStable := map[string]map[string]string{
 		"extensions/v1beta1": {
 			"Deployment": "apps/v1",

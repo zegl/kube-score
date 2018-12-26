@@ -7,13 +7,10 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterCronJobCheck("cronjob-has-deadline", cronJobHasDeadline)
+	allChecks.RegisterCronJobCheck("CronJob has deadline", cronJobHasDeadline)
 }
 
 func cronJobHasDeadline(job v1beta1.CronJob) (score scorecard.TestScore) {
-	score.Name = "CronJob has deadline"
-	score.ID = "cronjob-has-deadline"
-
 	if job.Spec.StartingDeadlineSeconds == nil {
 		score.Grade = scorecard.GradeCritical
 		score.AddComment("", "The CronJob should have startingDeadlineSeconds configured",

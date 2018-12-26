@@ -7,14 +7,11 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterPodCheck("container-security-context", ScoreContainerSecurityContext)
+	allChecks.RegisterPodCheck("Container Security Context", containerSecurityContext)
 }
 
-// ScoreContainerSecurityContext checks that the recommended securityPolicy options are set
-func ScoreContainerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
-	score.Name = "Container Security Context"
-	score.ID = "container-security-context"
-
+// containerSecurityContext checks that the recommended securityPolicy options are set
+func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)
 

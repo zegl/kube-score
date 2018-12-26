@@ -10,14 +10,11 @@ import (
 )
 
 func Register(allChecks *checks.Checks, services kube_score.Services) {
-	allChecks.RegisterIngressCheck("ingress-targets-service", ingressTargetsService(services.Services()))
+	allChecks.RegisterIngressCheck("Ingress targets Service", ingressTargetsService(services.Services()))
 }
 
 func ingressTargetsService(allServices []corev1.Service) func(extensionsv1beta1.Ingress) scorecard.TestScore {
 	return func(ingress extensionsv1beta1.Ingress) (score scorecard.TestScore) {
-		score.Name = "Ingress targets Service"
-		score.ID = "ingress-targets-service"
-
 		allRulesHaveMatches := true
 
 		for _, rule := range ingress.Spec.Rules {
