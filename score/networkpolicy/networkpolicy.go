@@ -11,17 +11,14 @@ import (
 )
 
 func Register(allChecks *checks.Checks, netpols ks.NetworkPolicies, pods ks.Pods, podspecers ks.PodSpeccers) {
-	allChecks.RegisterPodCheck("pod-networkpolicy", podHasNetworkPolicy(netpols.NetworkPolicies()))
-	allChecks.RegisterNetworkPolicyCheck("networkpolicy-targets-pod", networkPolicyTargetsPod(pods.Pods(), podspecers.PodSpeccers()))
+	allChecks.RegisterPodCheck("Pod NetworkPolicy", podHasNetworkPolicy(netpols.NetworkPolicies()))
+	allChecks.RegisterNetworkPolicyCheck("NetworkPolicy targets Pod", networkPolicyTargetsPod(pods.Pods(), podspecers.PodSpeccers()))
 }
 
 // podHasNetworkPolicy returns a function that tests that all pods have matching NetworkPolicies
 // podHasNetworkPolicy takes a list of all defined NetworkPolicies as input
 func podHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podSpec corev1.PodTemplateSpec) (score scorecard.TestScore) {
-		score.Name = "Pod NetworkPolicy"
-		score.ID = "pod-networkpolicy"
-
 		hasMatchingEgressNetpol := false
 		hasMatchingIngressNetpol := false
 
@@ -68,9 +65,6 @@ func podHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec core
 
 func networkPolicyTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(networkingv1.NetworkPolicy) scorecard.TestScore {
 	return func(netpol networkingv1.NetworkPolicy) (score scorecard.TestScore) {
-		score.Name = "NetworkPolicy targets Pod"
-		score.ID = "networkpolicy-targets-pod"
-
 		hasMatch := false
 
 		for _, pod := range pods {

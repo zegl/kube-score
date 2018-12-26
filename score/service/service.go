@@ -8,8 +8,8 @@ import (
 )
 
 func Register(allChecks *checks.Checks, pods ks.Pods, podspeccers ks.PodSpeccers) {
-	allChecks.RegisterServiceCheck("service-targets-pod", serviceTargetsPod(pods.Pods(), podspeccers.PodSpeccers()))
-	allChecks.RegisterServiceCheck("service-type", serviceType)
+	allChecks.RegisterServiceCheck("Service Targets Pod", serviceTargetsPod(pods.Pods(), podspeccers.PodSpeccers()))
+	allChecks.RegisterServiceCheck("Service Type", serviceType)
 }
 
 // serviceTargetsPod checks if a Service targets a pod and issues a critical warning if no matching pod
@@ -30,9 +30,6 @@ func serviceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(corev1
 	}
 
 	return func(service corev1.Service) (score scorecard.TestScore) {
-		score.Name = "Service Targets Pod"
-		score.ID = "service-targets-pod"
-
 		// Services of type ExternalName does not have a selector
 		if service.Spec.Type == corev1.ServiceTypeExternalName {
 			score.Grade = scorecard.GradeAllOK
@@ -65,9 +62,6 @@ func serviceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(corev1
 }
 
 func serviceType(service corev1.Service) (score scorecard.TestScore) {
-	score.Name = "Service Type"
-	score.ID = "service-type"
-
 	if service.Spec.Type == corev1.ServiceTypeNodePort {
 		score.Grade = scorecard.GradeWarning
 		score.AddComment("", "The service is of type NodePort", "NodePort services should be avoided as they are insecure, and can not be used together with NetworkPolicies. LoadBalancers or use of an Ingress is recommended over NodePorts.")

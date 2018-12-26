@@ -12,8 +12,8 @@ import (
 )
 
 func Register(allChecks *checks.Checks, budgets kube_score.PodDisruptionBudgets) {
-	allChecks.RegisterStatefulSetCheck("statefulset-has-poddisruptionbudget", statefulSetHas(budgets.PodDisruptionBudgets()))
-	allChecks.RegisterDeploymentCheck("deployment-has-poddisruptionbudget", deploymentHas(budgets.PodDisruptionBudgets()))
+	allChecks.RegisterStatefulSetCheck("StatefulSet has PodDisruptionBudget", statefulSetHas(budgets.PodDisruptionBudgets()))
+	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", deploymentHas(budgets.PodDisruptionBudgets()))
 }
 
 func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, lables map[string]string) bool {
@@ -37,9 +37,6 @@ func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, 
 
 func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.StatefulSet) scorecard.TestScore {
 	return func(statefulset appsv1.StatefulSet) (score scorecard.TestScore) {
-		score.Name = "StatefulSet has PodDisruptionBudget"
-		score.ID = "statefulset-has-poddisruptionbudget"
-
 		if hasMatching(budgets, statefulset.Namespace, statefulset.Spec.Template.Labels) {
 			score.Grade = scorecard.GradeAllOK
 		} else {
@@ -53,9 +50,6 @@ func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Sta
 
 func deploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Deployment) scorecard.TestScore {
 	return func(deployment appsv1.Deployment) (score scorecard.TestScore) {
-		score.Name = "Deployment has PodDisruptionBudget"
-		score.ID = "deployment-has-poddisruptionbudget"
-
 		if hasMatching(budgets, deployment.Namespace, deployment.Spec.Template.Labels) {
 			score.Grade = scorecard.GradeAllOK
 		} else {

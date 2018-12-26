@@ -36,77 +36,77 @@ func Score(allObjects kube_score.AllTypes, cnf config.Configuration) (*scorecard
 	scoreCard := scorecard.New()
 
 	for _, ingress := range allObjects.Ingresses() {
-		for _, ingressTest := range allChecks.Ingresses() {
-			score := ingressTest(ingress)
+		for _, test := range allChecks.Ingresses() {
+			score := test.Fn(ingress)
 			score.AddMeta(ingress.TypeMeta, ingress.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, meta := range allObjects.Metas() {
-		for _, metaTest := range allChecks.Metas() {
-			score := metaTest(meta.TypeMeta)
+		for _, test := range allChecks.Metas() {
+			score := test.Fn(meta.TypeMeta)
 			score.AddMeta(meta.TypeMeta, meta.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, pod := range allObjects.Pods() {
-		for _, podTest := range allChecks.Pods() {
-			score := podTest(corev1.PodTemplateSpec{
+		for _, test := range allChecks.Pods() {
+			score := test.Fn(corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
 				Spec:       pod.Spec,
 			})
 			score.AddMeta(pod.TypeMeta, pod.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, podspecer := range allObjects.PodSpeccers() {
-		for _, podTest := range allChecks.Pods() {
-			score := podTest(podspecer.GetPodTemplateSpec())
+		for _, test := range allChecks.Pods() {
+			score := test.Fn(podspecer.GetPodTemplateSpec())
 			score.AddMeta(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, service := range allObjects.Services() {
-		for _, serviceTest := range allChecks.Services() {
-			score := serviceTest(service)
+		for _, test := range allChecks.Services() {
+			score := test.Fn(service)
 			score.AddMeta(service.TypeMeta, service.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, statefulset := range allObjects.StatefulSets() {
 		for _, test := range allChecks.StatefulSets() {
-			score := test(statefulset)
+			score := test.Fn(statefulset)
 			score.AddMeta(statefulset.TypeMeta, statefulset.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, deployment := range allObjects.Deployments() {
 		for _, test := range allChecks.Deployments() {
-			score := test(deployment)
+			score := test.Fn(deployment)
 			score.AddMeta(deployment.TypeMeta, deployment.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, netpol := range allObjects.NetworkPolicies() {
-		for _, netpolTest := range allChecks.NetworkPolicies() {
-			score := netpolTest(netpol)
+		for _, test := range allChecks.NetworkPolicies() {
+			score := test.Fn(netpol)
 			score.AddMeta(netpol.TypeMeta, netpol.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 
 	for _, cjob := range allObjects.CronJobs() {
-		for _, cronjobTest := range allChecks.CronJobs() {
-			score := cronjobTest(cjob)
+		for _, test := range allChecks.CronJobs() {
+			score := test.Fn(cjob)
 			score.AddMeta(cjob.TypeMeta, cjob.ObjectMeta)
-			scoreCard.Add(score)
+			scoreCard.Add(score, test.Check)
 		}
 	}
 

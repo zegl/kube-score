@@ -1,6 +1,7 @@
 package scorecard
 
 import (
+	ks "github.com/zegl/kube-score"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -16,7 +17,9 @@ func New() *Scorecard {
 }
 
 // Add adds a TestScore to the Scorecard
-func (s *Scorecard) Add(ts TestScore) {
+func (s *Scorecard) Add(ts TestScore, check ks.Check) {
+	ts.Check = check
+
 	if existingScores, ok := s.Scores[ts.resourceRefKey()]; ok {
 		existingScores = append(existingScores, ts)
 		s.Scores[ts.resourceRefKey()] = existingScores
@@ -26,8 +29,7 @@ func (s *Scorecard) Add(ts TestScore) {
 }
 
 type TestScore struct {
-	Name string
-	ID   string
+	ks.Check
 
 	ResourceRef struct {
 		Kind      string

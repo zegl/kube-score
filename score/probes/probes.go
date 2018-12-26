@@ -8,7 +8,7 @@ import (
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
-	allChecks.RegisterPodCheck("pod-probes", containerProbes(services.Services()))
+	allChecks.RegisterPodCheck("Pod Probes", containerProbes(services.Services()))
 }
 
 // containerProbes returns a function that checks if all probes are defined correctly in the Pod.
@@ -18,9 +18,6 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 // containerProbes takes a slice of all defined Services as input.
 func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
-		score.Name = "Pod Probes"
-		score.ID = "pod-probes"
-
 		allContainers := podTemplate.Spec.InitContainers
 		allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
