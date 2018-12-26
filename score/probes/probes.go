@@ -8,7 +8,7 @@ import (
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
-	allChecks.RegisterPodCheck("Pod Probes", containerProbes(services.Services()))
+	allChecks.RegisterPodCheck("Pod Probes", `Makes sure that all Pods have bot a readinessProbe and a libenessProbe configured`, containerProbes(services.Services()))
 }
 
 // containerProbes returns a function that checks if all probes are defined correctly in the Pod.

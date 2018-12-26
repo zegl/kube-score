@@ -8,7 +8,7 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterMetaCheck("Stable version", metaStableAvailable)
+	allChecks.RegisterMetaCheck("Stable version", `Checks if the object is using a deprecated apiVersion`, metaStableAvailable)
 }
 
 // ScoreMetaStableAvailable checks if the supplied TypeMeta is an unstable object type, that has a stable(r) replacement

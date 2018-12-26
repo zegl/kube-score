@@ -7,7 +7,7 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterPodCheck("Container Security Context", containerSecurityContext)
+	allChecks.RegisterPodCheck("Container Security Context", `Makes sure that all pods have good securityContexts configured`, containerSecurityContext)
 }
 
 // containerSecurityContext checks that the recommended securityPolicy options are set

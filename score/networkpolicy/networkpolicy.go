@@ -11,8 +11,8 @@ import (
 )
 
 func Register(allChecks *checks.Checks, netpols ks.NetworkPolicies, pods ks.Pods, podspecers ks.PodSpeccers) {
-	allChecks.RegisterPodCheck("Pod NetworkPolicy", podHasNetworkPolicy(netpols.NetworkPolicies()))
-	allChecks.RegisterNetworkPolicyCheck("NetworkPolicy targets Pod", networkPolicyTargetsPod(pods.Pods(), podspecers.PodSpeccers()))
+	allChecks.RegisterPodCheck("Pod NetworkPolicy", `Makes sure that all Pods are targeted by a NetworkPolicy`, podHasNetworkPolicy(netpols.NetworkPolicies()))
+	allChecks.RegisterNetworkPolicyCheck("NetworkPolicy targets Pod", `Makes sure that all NetworkPolicies targets at least one Pod`, networkPolicyTargetsPod(pods.Pods(), podspecers.PodSpeccers()))
 }
 
 // podHasNetworkPolicy returns a function that tests that all pods have matching NetworkPolicies

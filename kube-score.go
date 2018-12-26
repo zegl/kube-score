@@ -11,8 +11,10 @@ import (
 )
 
 type Check struct {
-	Name string
-	ID   string
+	Name       string
+	ID         string
+	TargetType string
+	Comment    string
 }
 
 type BothMeta struct {
