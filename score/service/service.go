@@ -8,8 +8,8 @@ import (
 )
 
 func Register(allChecks *checks.Checks, pods ks.Pods, podspeccers ks.PodSpeccers) {
-	allChecks.RegisterServiceCheck("Service Targets Pod", serviceTargetsPod(pods.Pods(), podspeccers.PodSpeccers()))
-	allChecks.RegisterServiceCheck("Service Type", serviceType)
+	allChecks.RegisterServiceCheck("Service Targets Pod", `Makes sure that all Services targets a Pod`, serviceTargetsPod(pods.Pods(), podspeccers.PodSpeccers()))
+	allChecks.RegisterServiceCheck("Service Type", `Makes sure that the Service type is not NodePort`, serviceType)
 }
 
 // serviceTargetsPod checks if a Service targets a pod and issues a critical warning if no matching pod

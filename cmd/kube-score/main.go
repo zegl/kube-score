@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
@@ -50,7 +51,7 @@ kube-score [action] --flags
 
 Actions:
 	score 	Checks all files in the input, and gives them a score and recommendations
-	list	List all available score checks` + "\n\n"
+	list	Prints a cvs list of all available score checks` + "\n\n"
 
 		if displayForMoreInfo {
 			usage += `Run "kube-score [action] --help" for more information` + "\n\n"
@@ -255,7 +256,10 @@ func listChecks() {
 	}
 
 	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
+
+	output := csv.NewWriter(os.Stdout)
 	for _, c := range allChecks.All() {
-		fmt.Println(c.ID)
+		output.Write([]string{c.ID, c.TargetType, c.Comment})
 	}
+	output.Flush()
 }

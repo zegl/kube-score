@@ -12,8 +12,8 @@ import (
 )
 
 func Register(allChecks *checks.Checks, budgets kube_score.PodDisruptionBudgets) {
-	allChecks.RegisterStatefulSetCheck("StatefulSet has PodDisruptionBudget", statefulSetHas(budgets.PodDisruptionBudgets()))
-	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", deploymentHas(budgets.PodDisruptionBudgets()))
+	allChecks.RegisterStatefulSetCheck("StatefulSet has PodDisruptionBudget", `Makes sure that all StatefulSets are targeted by a PDB`, statefulSetHas(budgets.PodDisruptionBudgets()))
+	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", `Makes sure that all Deployments are targeted by a PDB`, deploymentHas(budgets.PodDisruptionBudgets()))
 }
 
 func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, lables map[string]string) bool {

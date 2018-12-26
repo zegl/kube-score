@@ -26,10 +26,12 @@ func New() *Checks {
 	}
 }
 
-func NewCheck(name string) ks.Check {
+func NewCheck(name, targetType, comment string) ks.Check {
 	return ks.Check{
-		Name: name,
-		ID:   machineFriendlyName(name),
+		Name:       name,
+		ID:         machineFriendlyName(name),
+		TargetType: targetType,
+		Comment:    comment,
 	}
 }
 
@@ -91,72 +93,80 @@ type Checks struct {
 	cronjobs        map[string]CronJobCheck
 }
 
-func (c *Checks) RegisterMetaCheck(name string, fn func(metav1.TypeMeta) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.metas[machineFriendlyName(name)] = MetaCheck{NewCheck(name), fn}
+func (c *Checks) RegisterMetaCheck(name, comment string, fn func(metav1.TypeMeta) scorecard.TestScore) {
+	ch := NewCheck(name, "all", comment)
+	c.all = append(c.all, ch)
+	c.metas[machineFriendlyName(name)] = MetaCheck{ch, fn}
 }
 
 func (c *Checks) Metas() map[string]MetaCheck {
 	return c.metas
 }
 
-func (c *Checks) RegisterPodCheck(name string, fn func(corev1.PodTemplateSpec) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.pods[machineFriendlyName(name)] = PodCheck{NewCheck(name), fn}
+func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec) scorecard.TestScore) {
+	ch := NewCheck(name, "Pod", comment)
+	c.all = append(c.all, ch)
+	c.pods[machineFriendlyName(name)] = PodCheck{ch, fn}
 }
 
 func (c *Checks) Pods() map[string]PodCheck {
 	return c.pods
 }
 
-func (c *Checks) RegisterCronJobCheck(name string, fn func(batchv1beta1.CronJob) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.cronjobs[machineFriendlyName(name)] = CronJobCheck{NewCheck(name), fn}
+func (c *Checks) RegisterCronJobCheck(name, comment string, fn func(batchv1beta1.CronJob) scorecard.TestScore) {
+	ch := NewCheck(name, "CronJob", comment)
+	c.all = append(c.all, ch)
+	c.cronjobs[machineFriendlyName(name)] = CronJobCheck{ch, fn}
 }
 
 func (c *Checks) CronJobs() map[string]CronJobCheck {
 	return c.cronjobs
 }
 
-func (c *Checks) RegisterStatefulSetCheck(name string, fn func(appsv1.StatefulSet) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.statefulsets[machineFriendlyName(name)] = StatefulSetCheck{NewCheck(name), fn}
+func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn func(appsv1.StatefulSet) scorecard.TestScore) {
+	ch := NewCheck(name, "StatefulSet", comment)
+	c.all = append(c.all, ch)
+	c.statefulsets[machineFriendlyName(name)] = StatefulSetCheck{ch, fn}
 }
 
 func (c *Checks) StatefulSets() map[string]StatefulSetCheck {
 	return c.statefulsets
 }
 
-func (c *Checks) RegisterDeploymentCheck(name string, fn func(appsv1.Deployment) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.deployments[machineFriendlyName(name)] = DeploymentCheck{NewCheck(name), fn}
+func (c *Checks) RegisterDeploymentCheck(name, comment string, fn func(appsv1.Deployment) scorecard.TestScore) {
+	ch := NewCheck(name, "Deployment", comment)
+	c.all = append(c.all, ch)
+	c.deployments[machineFriendlyName(name)] = DeploymentCheck{ch, fn}
 }
 
 func (c *Checks) Deployments() map[string]DeploymentCheck {
 	return c.deployments
 }
 
-func (c *Checks) RegisterIngressCheck(name string, fn func(extensionsv1beta1.Ingress) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.ingresses[machineFriendlyName(name)] = IngressCheck{NewCheck(name), fn}
+func (c *Checks) RegisterIngressCheck(name, comment string, fn func(extensionsv1beta1.Ingress) scorecard.TestScore) {
+	ch := NewCheck(name, "Ingress", comment)
+	c.all = append(c.all, ch)
+	c.ingresses[machineFriendlyName(name)] = IngressCheck{ch, fn}
 }
 
 func (c *Checks) Ingresses() map[string]IngressCheck {
 	return c.ingresses
 }
 
-func (c *Checks) RegisterNetworkPolicyCheck(name string, fn func(networkingv1.NetworkPolicy) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.networkpolicies[machineFriendlyName(name)] = NetworkPolicyCheck{NewCheck(name), fn}
+func (c *Checks) RegisterNetworkPolicyCheck(name, comment string, fn func(networkingv1.NetworkPolicy) scorecard.TestScore) {
+	ch := NewCheck(name, "NetworkPolicy", comment)
+	c.all = append(c.all, ch)
+	c.networkpolicies[machineFriendlyName(name)] = NetworkPolicyCheck{ch, fn}
 }
 
 func (c *Checks) NetworkPolicies() map[string]NetworkPolicyCheck {
 	return c.networkpolicies
 }
 
-func (c *Checks) RegisterServiceCheck(name string, fn func(corev1.Service) scorecard.TestScore) {
-	c.all = append(c.all, NewCheck(name))
-	c.services[machineFriendlyName(name)] = ServiceCheck{NewCheck(name), fn}
+func (c *Checks) RegisterServiceCheck(name, comment string, fn func(corev1.Service) scorecard.TestScore) {
+	ch := NewCheck(name, "Service", comment)
+	c.all = append(c.all, ch)
+	c.services[machineFriendlyName(name)] = ServiceCheck{ch, fn}
 }
 
 func (c *Checks) Services() map[string]ServiceCheck {

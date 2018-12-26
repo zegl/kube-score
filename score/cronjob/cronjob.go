@@ -7,7 +7,7 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterCronJobCheck("CronJob has deadline", cronJobHasDeadline)
+	allChecks.RegisterCronJobCheck("CronJob has deadline", `Makes sure that all CronJobs has a configured deadline`, cronJobHasDeadline)
 }
 
 func cronJobHasDeadline(job v1beta1.CronJob) (score scorecard.TestScore) {

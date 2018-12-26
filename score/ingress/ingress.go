@@ -10,7 +10,7 @@ import (
 )
 
 func Register(allChecks *checks.Checks, services kube_score.Services) {
-	allChecks.RegisterIngressCheck("Ingress targets Service", ingressTargetsService(services.Services()))
+	allChecks.RegisterIngressCheck("Ingress targets Service", `Makes sure that the Ingress targets a Service`, ingressTargetsService(services.Services()))
 }
 
 func ingressTargetsService(allServices []corev1.Service) func(extensionsv1beta1.Ingress) scorecard.TestScore {
