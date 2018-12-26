@@ -21,6 +21,8 @@ GO111MODULE=on go install github.com/zegl/kube-score/cmd/kube-score
 
 ## Checks
 
+For a full list of checks, see [README_CHECKS.md](README_CHECKS.md).
+
 * Container limits (should be set)
 * Container image tag (should not be `:latest`)
 * Container image pull policy (should be `Always`)
@@ -43,27 +45,30 @@ The input to `kube-score` should be all applications that you deploy to the same
 ### Example with Helm
 
 ```bash
-helm template my-app | kube-score -
+helm template my-app | kube-score score -
 ```
 
 ### Example with static yamls
 
 ```bash
-kube-score my-app/*.yaml
+kube-score score my-app/*.yaml
 ```
 
 ```bash
-kube-score my-app/deployment.yaml my-app/service.yaml
+kube-score score my-app/deployment.yaml my-app/service.yaml
 ```
 
 ## Configuration
 
 ```
-Usage: kube-score [--flag1 --flag2] file1 file2 ...
+Usage of kube-score:
+kube-score [action] --flags
 
-Use "-" as filename to read from STDIN.
+Actions:
+	score 	Checks all files in the input, and gives them a score and recommendations
+	list	Prints a cvs list of all available score checks
 
-Usage of ./kube-score:
+Flags for score:
       --exit-one-on-warning          Exit with code 1 in case of warnings
       --help                         Print help
       --ignore-container-cpu-limit   Disables the requirement of setting a container CPU limit
