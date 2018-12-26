@@ -14,6 +14,62 @@ import (
 
 func main() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	printHelp := fs.Bool("help", false, "Print help")
+	setDefault(fs, "", true)
+
+	// No command, flag, or file has been specified
+	if len(os.Args) == 1 {
+		fs.Usage()
+		return
+	}
+
+	switch os.Args[1] {
+	case "score":
+		scoreFiles(true)
+		return
+	case "list":
+		listChecks()
+		return
+	}
+
+	fs.Parse(os.Args[1:])
+
+	if *printHelp {
+		fs.Usage()
+		return
+	}
+
+	// Fallback to the check command
+	scoreFiles(false)
+}
+
+func setDefault(fs *flag.FlagSet, actionName string, displayForMoreInfo bool) {
+	fs.Usage = func() {
+		usage := `Usage of kube-score:
+kube-score [action] --flags
+
+Actions:
+	score 	Checks all files in the input, and gives them a score and recommendations
+	list	List all available score checks` + "\n\n"
+
+		if displayForMoreInfo {
+			usage += `Run "kube-score [action] --help" for more information` + "\n\n"
+		}
+
+		if len(actionName) > 0 {
+			usage += "Flags for " + actionName + ":"
+		}
+
+		fmt.Println(usage)
+
+		if len(actionName) > 0 {
+			fs.PrintDefaults()
+		}
+	}
+}
+
+func scoreFiles(isExplicitCommand bool) {
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
 	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
 	okThreshold := fs.Int("threshold-ok", 10, "The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL.")
@@ -22,11 +78,12 @@ func main() {
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.String("output-format", "human", "Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
-	fs.Parse(os.Args[1:])
+	setDefault(fs, "score", false)
 
-	fs.Usage = func() {
-		fmt.Printf("Usage of %s:\n", os.Args[0])
-		fs.PrintDefaults()
+	if isExplicitCommand {
+		fs.Parse(os.Args[2:])
+	} else {
+		fs.Parse(os.Args[1:])
 	}
 
 	if *printHelp {
@@ -51,7 +108,7 @@ func main() {
 	if len(filesToRead) == 0 {
 		fmt.Println(`Error: No files given as arguments.
 
-Usage: kube-score [--flag1 --flag2] file1 file2 ...
+Usage: kube-score check [--flag1 --flag2] file1 file2 ...
 
 Use "-" as filename to read from STDIN.`)
 		fmt.Println()
@@ -183,5 +240,22 @@ Use "-" as filename to read from STDIN.`)
 		os.Exit(1)
 	} else {
 		os.Exit(0)
+	}
+}
+
+func listChecks() {
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	printHelp := fs.Bool("help", false, "Print help")
+	setDefault(fs, "list", false)
+	fs.Parse(os.Args[2:])
+
+	if *printHelp {
+		fs.Usage()
+		return
+	}
+
+	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
+	for _, c := range allChecks.All() {
+		fmt.Println(c.ID)
 	}
 }

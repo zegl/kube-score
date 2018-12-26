@@ -14,6 +14,7 @@ import (
 
 func New() *Checks {
 	return &Checks{
+		all:             make([]ks.Check, 0),
 		metas:           make(map[string]MetaCheck),
 		pods:            make(map[string]PodCheck),
 		services:        make(map[string]ServiceCheck),
@@ -30,6 +31,12 @@ func NewCheck(name string) ks.Check {
 		Name: name,
 		ID:   machineFriendlyName(name),
 	}
+}
+
+func machineFriendlyName(in string) string {
+	in = strings.ToLower(in)
+	in = strings.Replace(in, " ", "-", -1)
+	return in
 }
 
 type MetaCheck struct {
@@ -73,6 +80,7 @@ type CronJobCheck struct {
 }
 
 type Checks struct {
+	all             []ks.Check
 	metas           map[string]MetaCheck
 	pods            map[string]PodCheck
 	services        map[string]ServiceCheck
@@ -83,13 +91,8 @@ type Checks struct {
 	cronjobs        map[string]CronJobCheck
 }
 
-func machineFriendlyName(in string) string {
-	in = strings.ToLower(in)
-	in = strings.Replace(in, " ", "-", -1)
-	return in
-}
-
 func (c *Checks) RegisterMetaCheck(name string, fn func(metav1.TypeMeta) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.metas[machineFriendlyName(name)] = MetaCheck{NewCheck(name), fn}
 }
 
@@ -98,6 +101,7 @@ func (c *Checks) Metas() map[string]MetaCheck {
 }
 
 func (c *Checks) RegisterPodCheck(name string, fn func(corev1.PodTemplateSpec) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.pods[machineFriendlyName(name)] = PodCheck{NewCheck(name), fn}
 }
 
@@ -106,6 +110,7 @@ func (c *Checks) Pods() map[string]PodCheck {
 }
 
 func (c *Checks) RegisterCronJobCheck(name string, fn func(batchv1beta1.CronJob) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.cronjobs[machineFriendlyName(name)] = CronJobCheck{NewCheck(name), fn}
 }
 
@@ -114,6 +119,7 @@ func (c *Checks) CronJobs() map[string]CronJobCheck {
 }
 
 func (c *Checks) RegisterStatefulSetCheck(name string, fn func(appsv1.StatefulSet) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.statefulsets[machineFriendlyName(name)] = StatefulSetCheck{NewCheck(name), fn}
 }
 
@@ -122,6 +128,7 @@ func (c *Checks) StatefulSets() map[string]StatefulSetCheck {
 }
 
 func (c *Checks) RegisterDeploymentCheck(name string, fn func(appsv1.Deployment) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.deployments[machineFriendlyName(name)] = DeploymentCheck{NewCheck(name), fn}
 }
 
@@ -130,6 +137,7 @@ func (c *Checks) Deployments() map[string]DeploymentCheck {
 }
 
 func (c *Checks) RegisterIngressCheck(name string, fn func(extensionsv1beta1.Ingress) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.ingresses[machineFriendlyName(name)] = IngressCheck{NewCheck(name), fn}
 }
 
@@ -138,6 +146,7 @@ func (c *Checks) Ingresses() map[string]IngressCheck {
 }
 
 func (c *Checks) RegisterNetworkPolicyCheck(name string, fn func(networkingv1.NetworkPolicy) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.networkpolicies[machineFriendlyName(name)] = NetworkPolicyCheck{NewCheck(name), fn}
 }
 
@@ -146,9 +155,14 @@ func (c *Checks) NetworkPolicies() map[string]NetworkPolicyCheck {
 }
 
 func (c *Checks) RegisterServiceCheck(name string, fn func(corev1.Service) scorecard.TestScore) {
+	c.all = append(c.all, NewCheck(name))
 	c.services[machineFriendlyName(name)] = ServiceCheck{NewCheck(name), fn}
 }
 
 func (c *Checks) Services() map[string]ServiceCheck {
 	return c.services
+}
+
+func (c *Checks) All() []ks.Check {
+	return c.all
 }
