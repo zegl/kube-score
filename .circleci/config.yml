@@ -8,6 +8,18 @@ jobs:
     - checkout
     - run: go test -v github.com/zegl/kube-score/...
 
+  # This step is identical to docker-hub-release, except for the push commad
+  docker-test:
+    docker:
+    - image: docker:18.06
+    working_directory: /go/app
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+          version: 18.05.0-ce
+      - checkout
+      - run: docker build -t zegl/kube-score:latest .
+
   docker-hub-release:
     docker:
     - image: docker:18.06
@@ -26,6 +38,7 @@ workflows:
   build-and-release:
     jobs:
     - test
+    - docker-test
     - docker-hub-release:
         filters:
           branches:
