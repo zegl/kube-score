@@ -5,6 +5,8 @@ ENV CGO_ENABLED=0
 ADD "go.*" /go/app/
 ADD "*.go" /go/app/
 ADD cmd /go/app/cmd/
+ADD config /go/app/config
+ADD parser /go/app/parser
 ADD score /go/app/score/
 ADD scorecard /go/app/scorecard/
 
