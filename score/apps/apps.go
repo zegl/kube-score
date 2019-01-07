@@ -2,14 +2,16 @@ package apps
 
 import (
 	"github.com/zegl/kube-score/score/checks"
+	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node", deploymentHasAntiAffinity)
-	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node", statefulsetHasAntiAffinity)
+	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
+	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
 }
 
 func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.TestScore) {
@@ -26,7 +28,9 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 		return
 	}
 
-	if hasPodAntiAffinity(affinity) {
+	lables := internal.MapLables(deployment.Spec.Template.GetObjectMeta().GetLabels())
+
+	if hasPodAntiAffinity(lables, affinity) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}
@@ -50,7 +54,9 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 		return
 	}
 
-	if hasPodAntiAffinity(affinity) {
+	lables := internal.MapLables(statefulset.Spec.Template.GetObjectMeta().GetLabels())
+
+	if hasPodAntiAffinity(lables, affinity) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}
@@ -60,16 +66,24 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 	return
 }
 
-func hasPodAntiAffinity(affinity *corev1.Affinity) bool {
+func hasPodAntiAffinity(selfLables internal.MapLables, affinity *corev1.Affinity) bool {
 	for _, pref := range affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
 		if pref.PodAffinityTerm.TopologyKey == "kubernetes.io/hostname" {
-			return true
+			if selector, err := metav1.LabelSelectorAsSelector(pref.PodAffinityTerm.LabelSelector); err == nil {
+				if selector.Matches(internal.MapLables(selfLables)) {
+					return true
+				}
+			}
 		}
 	}
 
-	for _, pref := range affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution {
-		if pref.TopologyKey == "kubernetes.io/hostname" {
-			return true
+	for _, req := range affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution {
+		if req.TopologyKey == "kubernetes.io/hostname" {
+			if selector, err := metav1.LabelSelectorAsSelector(req.LabelSelector); err == nil {
+				if selector.Matches(internal.MapLables(selfLables)) {
+					return true
+				}
+			}
 		}
 	}
 

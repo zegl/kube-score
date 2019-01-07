@@ -15,11 +15,8 @@ spec:
           - weight: 100
             podAffinityTerm:
               labelSelector:
-                matchExpressions:
-                - key: security 
-                  operator: In 
-                  values:
-                  - S2
+                matchLabels:
+                  app: foo
               topologyKey: kubernetes.io/hostname
       containers:
       - name: foobar

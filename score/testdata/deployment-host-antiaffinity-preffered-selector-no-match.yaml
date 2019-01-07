@@ -1,7 +1,7 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: statefulset-preffered-anti-affinity
+  name: deployment-preffered-anti-affinity
 spec:
   replicas: 10
   template:
@@ -15,11 +15,8 @@ spec:
           - weight: 100
             podAffinityTerm:
               labelSelector:
-                matchExpressions:
-                - key: app 
-                  operator: In 
-                  values:
-                  - foo
+                matchLabels:
+                  app: not-foo
               topologyKey: kubernetes.io/hostname
       containers:
       - name: foobar
