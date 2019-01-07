@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-required-anti-affinity
+spec:
+  replicas: 10
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      replicas: 10
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+           - topologyKey: "kubernetes.io/hostname"
+             labelSelector:
+               matchLabels:
+                app: foo
+      containers:
+      - name: foobar
+        image: foo:bar
