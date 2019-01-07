@@ -22,9 +22,14 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 		return
 	}
 
+	warn := func() {
+		score.Grade = scorecard.GradeWarning
+		score.AddComment("", "Deployment does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a deployment from beeing scheduled on the same node. This increases availability in case the node becomes unavailable.")
+	}
+
 	affinity := deployment.Spec.Template.Spec.Affinity
 	if affinity == nil || affinity.PodAntiAffinity == nil {
-		score.Grade = scorecard.GradeWarning
+		warn()
 		return
 	}
 
@@ -35,8 +40,7 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 		return
 	}
 
-	score.Grade = scorecard.GradeWarning
-	score.AddComment("", "Deployment does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a deployment from beeing scheduled on the same node. This increases availability in case the node becomes unavailable.")
+	warn()
 	return
 }
 
@@ -48,9 +52,14 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 		return
 	}
 
+	warn := func() {
+		score.Grade = scorecard.GradeWarning
+		score.AddComment("", "StatefulSet does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a statefulset from beeing scheduled on the same node. This increases availability in case the node becomes unavailable.")
+	}
+
 	affinity := statefulset.Spec.Template.Spec.Affinity
 	if affinity == nil || affinity.PodAntiAffinity == nil {
-		score.Grade = scorecard.GradeWarning
+		warn()
 		return
 	}
 
@@ -61,8 +70,7 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 		return
 	}
 
-	score.Grade = scorecard.GradeWarning
-	score.AddComment("", "StatefulSet does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a statefulset from beeing scheduled on the same node. This increases availability in case the node becomes unavailable.")
+	warn()
 	return
 }
 
