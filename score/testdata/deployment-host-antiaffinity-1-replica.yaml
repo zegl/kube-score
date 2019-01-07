@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-host-antiaffinity-1-replica
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foobar
+        image: foo:bar
