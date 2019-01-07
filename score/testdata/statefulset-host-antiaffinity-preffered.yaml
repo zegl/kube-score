@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-preffered-anti-affinity
+spec:
+  replicas: 10
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: security 
+                  operator: In 
+                  values:
+                  - S2
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: foobar
+        image: foo:bar

@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-host-antiaffinity-1-replica
+spec:
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foobar
+        image: foo:bar
