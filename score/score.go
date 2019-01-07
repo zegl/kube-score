@@ -3,6 +3,7 @@ package score
 import (
 	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/config"
+	"github.com/zegl/kube-score/score/apps"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/container"
 	"github.com/zegl/kube-score/score/cronjob"
@@ -30,6 +31,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	security.Register(allChecks)
 	service.Register(allChecks, allObjects, allObjects)
 	stable.Register(allChecks)
+	apps.Register(allChecks)
 
 	return allChecks
 }
