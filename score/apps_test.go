@@ -8,6 +8,14 @@ func TestDeploymentHasPodAntiAffinityPreffered(t *testing.T) {
 	testExpectedScore(t, "deployment-host-antiaffinity-preffered.yaml", "Deployment has host PodAntiAffinity", 10)
 }
 
+func TestDeploymentHasPodAntiAffinityPrefferedNoSelectorMatch(t *testing.T) {
+	testExpectedScore(t, "deployment-host-antiaffinity-preffered-selector-no-match.yaml", "Deployment has host PodAntiAffinity", 5)
+}
+
+func TestDeploymentHasPodAntiAffinityPrefferedSelectorExpression(t *testing.T) {
+	testExpectedScore(t, "deployment-host-antiaffinity-preffered-selector-expression.yaml", "Deployment has host PodAntiAffinity", 10)
+}
+
 func TestDeploymentHasPodAntiAffinityRequired(t *testing.T) {
 	testExpectedScore(t, "deployment-host-antiaffinity-required.yaml", "Deployment has host PodAntiAffinity", 10)
 }
