@@ -37,6 +37,12 @@ func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, 
 
 func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.StatefulSet) scorecard.TestScore {
 	return func(statefulset appsv1.StatefulSet) (score scorecard.TestScore) {
+		if statefulset.Spec.Replicas != nil && *statefulset.Spec.Replicas < 2 {
+			score.Grade = scorecard.GradeAllOK
+			score.AddComment("", "Skipped", "Skipped because the statefulset has less than 2 replicas")
+			return
+		}
+
 		if hasMatching(budgets, statefulset.Namespace, statefulset.Spec.Template.Labels) {
 			score.Grade = scorecard.GradeAllOK
 		} else {
@@ -50,6 +56,12 @@ func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Sta
 
 func deploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Deployment) scorecard.TestScore {
 	return func(deployment appsv1.Deployment) (score scorecard.TestScore) {
+		if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas < 2 {
+			score.Grade = scorecard.GradeAllOK
+			score.AddComment("", "Skipped", "Skipped because the deployment has less than 2 replicas")
+			return
+		}
+
 		if hasMatching(budgets, deployment.Namespace, deployment.Spec.Template.Labels) {
 			score.Grade = scorecard.GradeAllOK
 		} else {
