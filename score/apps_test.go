@@ -43,3 +43,7 @@ func TestStatefulSetHasPodAntiAffinityNotSet(t *testing.T) {
 func TestStatefulSetHasPodAntiAffinityOneReplica(t *testing.T) {
 	testExpectedScore(t, "statefulset-host-antiaffinity-1-replica.yaml", "StatefulSet has host PodAntiAffinity", 10)
 }
+
+func TestStatefulSetHasPodAntiAffinityUndefinedReplicas(t *testing.T) {
+	testExpectedScore(t, "statefulset-host-antiaffinity-undefined-replicas.yaml", "StatefulSet has host PodAntiAffinity", 5)
+}

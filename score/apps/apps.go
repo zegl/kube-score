@@ -16,7 +16,9 @@ func Register(allChecks *checks.Checks) {
 
 func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.TestScore) {
 	// Ignore if the deployment only has a single replica
-	if deployment.Spec.Replicas == nil || *deployment.Spec.Replicas < 2 {
+	// If replicas is not explicitly set, we'll still warn if the anti affinity is missing
+	// as that might indicate use of a Horizontal Pod Autoscaler
+	if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas < 2 {
 		score.Grade = scorecard.GradeAllOK
 		score.AddComment("", "Skipped", "Skipped because the deployment has less than 2 replicas")
 		return
@@ -46,7 +48,9 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 
 func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard.TestScore) {
 	// Ignore if the statefulset only has a single replica
-	if statefulset.Spec.Replicas == nil || *statefulset.Spec.Replicas < 2 {
+	// If replicas is not explicitly set, we'll still warn if the anti affinity is missing
+	// as that might indicate use of a Horizontal Pod Autoscaler
+	if statefulset.Spec.Replicas != nil && *statefulset.Spec.Replicas < 2 {
 		score.Grade = scorecard.GradeAllOK
 		score.AddComment("", "Skipped", "Skipped because the statefulset has less than 2 replicas")
 		return
