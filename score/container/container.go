@@ -93,28 +93,23 @@ func containerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scoreca
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
 
-	hasNonAlways := false
+	// Default to AllOK
+	score.Grade = scorecard.GradeAllOK
 
 	for _, container := range allContainers {
+		tag := containerTag(container.Image)
+
+		// If the pull policy is not set, and the tag is either empty or latest
+		// kubernetes will default to always pull the image
+		if container.ImagePullPolicy == corev1.PullPolicy("") && (tag == "" || tag == "latest") {
+			continue
+		}
 
 		// No defined pull policy
-		if container.ImagePullPolicy == corev1.PullPolicy("") {
-			tag := containerTag(container.Image)
-			if tag != "" && tag != "latest" {
-				hasNonAlways = true
-			}
-		} else {
-			if container.ImagePullPolicy != corev1.PullAlways {
-				score.AddComment(container.Name, "ImagePullPolicy is not set to Always", "It's recommended to always set the ImagePullPolicy to Always, to make sure that the imagePullSecrets are always correct, and to always get the image you want.")
-				hasNonAlways = true
-			}
+		if container.ImagePullPolicy != corev1.PullAlways || container.ImagePullPolicy == corev1.PullPolicy("") {
+			score.AddComment(container.Name, "ImagePullPolicy is not set to Always", "It's recommended to always set the ImagePullPolicy to Always, to make sure that the imagePullSecrets are always correct, and to always get the image you want.")
+			score.Grade = scorecard.GradeCritical
 		}
-	}
-
-	if hasNonAlways {
-		score.Grade = scorecard.GradeCritical
-	} else {
-		score.Grade = scorecard.GradeAllOK
 	}
 
 	return
