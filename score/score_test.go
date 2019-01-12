@@ -133,3 +133,18 @@ func TestConfigMapMultiDash(t *testing.T) {
 	_, err := testScore(config.Configuration{}, "configmap-multi-dash.yaml")
 	assert.Nil(t, err)
 }
+
+func TestAnnotationIgnore(t *testing.T) {
+	s, err := testScore(config.Configuration{}, "ignore-annotation-service.yaml")
+	assert.Nil(t, err)
+	assert.Len(t, s.Objects, 1)
+
+	for _, o := range s.Objects {
+		for _, c := range o.Checks {
+			if c.ID == "service-type" {
+				t.Error("service-type was tested")
+			}
+		}
+		assert.Equal(t, "node-port-service-with-ignore", o.ObjectMeta.Name)
+	}
+}

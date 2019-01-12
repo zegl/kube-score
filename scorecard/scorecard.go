@@ -3,6 +3,11 @@ package scorecard
 import (
 	ks "github.com/zegl/kube-score"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
+)
+
+const (
+	ignoredChecksAnnotation = "kube-score/ignore"
 )
 
 type Scorecard struct {
@@ -28,6 +33,8 @@ func (s *Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.Object
 		return object
 	}
 
+	o.setIgnoredTests()
+
 	s.Objects[o.resourceRefKey()] = o
 	return o
 }
@@ -36,6 +43,18 @@ type ScoredObject struct {
 	TypeMeta   metav1.TypeMeta
 	ObjectMeta metav1.ObjectMeta
 	Checks     []TestScore
+
+	ignoredChecks map[string]struct{}
+}
+
+func (so *ScoredObject) setIgnoredTests() {
+	ignoredMap := make(map[string]struct{})
+	if ignoredCSV, ok := so.ObjectMeta.Annotations[ignoredChecksAnnotation]; ok {
+		for _, ignored := range strings.Split(ignoredCSV, ",") {
+			ignoredMap[strings.TrimSpace(ignored)] = struct{}{}
+		}
+	}
+	so.ignoredChecks = ignoredMap
 }
 
 func (so ScoredObject) resourceRefKey() string {
@@ -52,6 +71,11 @@ func (so ScoredObject) HumanFriendlyRef() string {
 }
 
 func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
+	// This test is ignored, don't save it
+	if _, ok := so.ignoredChecks[check.ID]; ok {
+		return
+	}
+
 	ts.Check = check
 	so.Checks = append(so.Checks, ts)
 }
