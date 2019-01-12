@@ -6,40 +6,61 @@ import (
 )
 
 type Scorecard struct {
-	Scores map[string][]TestScore
+	Objects map[string]*ScoredObject
 }
 
 // New creates and initializes a new Scorecard
 func New() *Scorecard {
 	return &Scorecard{
-		Scores: make(map[string][]TestScore),
+		Objects: make(map[string]*ScoredObject),
 	}
 }
 
-// Add adds a TestScore to the Scorecard
-func (s *Scorecard) Add(ts TestScore, check ks.Check) {
-	ts.Check = check
-
-	if existingScores, ok := s.Scores[ts.resourceRefKey()]; ok {
-		existingScores = append(existingScores, ts)
-		s.Scores[ts.resourceRefKey()] = existingScores
-	} else {
-		s.Scores[ts.resourceRefKey()] = []TestScore{ts}
+func (s *Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *ScoredObject {
+	o := &ScoredObject{
+		TypeMeta:   typeMeta,
+		ObjectMeta: objectMeta,
+		Checks:     make([]TestScore, 0),
 	}
+
+	// If this object already exists, return the previous version
+	if object, ok := s.Objects[o.resourceRefKey()]; ok {
+		return object
+	}
+
+	s.Objects[o.resourceRefKey()] = o
+	return o
+}
+
+type ScoredObject struct {
+	TypeMeta   metav1.TypeMeta
+	ObjectMeta metav1.ObjectMeta
+	Checks     []TestScore
+}
+
+func (so ScoredObject) resourceRefKey() string {
+	return so.TypeMeta.Kind + "/" + so.TypeMeta.APIVersion + "/" + so.ObjectMeta.Namespace + "/" + so.ObjectMeta.Name
+}
+
+func (so ScoredObject) HumanFriendlyRef() string {
+	s := so.ObjectMeta.Name
+	if so.ObjectMeta.Namespace != "" {
+		s += "/" + so.ObjectMeta.Namespace
+	}
+	s += " " + so.TypeMeta.APIVersion + "/" + so.TypeMeta.Kind
+	return s
+}
+
+func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
+	ts.Check = check
+	so.Checks = append(so.Checks, ts)
 }
 
 type TestScore struct {
 	ks.Check
-
-	ResourceRef struct {
-		Kind      string
-		Name      string
-		Namespace string
-		Version   string
-	}
-
-	Grade    Grade
-	Comments []TestScoreComment
+	Grade        Grade
+	Comments     []TestScoreComment
+	IgnoredTests []string
 }
 
 type Grade int
@@ -63,27 +84,4 @@ func (ts *TestScore) AddComment(path, summary, description string) {
 		Summary:     summary,
 		Description: description,
 	})
-}
-
-func (ts *TestScore) AddMeta(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) {
-	ts.ResourceRef.Name = objectMeta.Name
-	ts.ResourceRef.Namespace = objectMeta.Namespace
-	ts.ResourceRef.Kind = typeMeta.Kind
-	ts.ResourceRef.Version = typeMeta.APIVersion
-}
-
-func (ts TestScore) resourceRefKey() string {
-	return ts.ResourceRef.Kind + "/" + ts.ResourceRef.Namespace + "/" + ts.ResourceRef.Name
-}
-
-func (ts TestScore) HumanFriendlyRef() string {
-	s := ts.ResourceRef.Name
-
-	if ts.ResourceRef.Namespace != "" {
-		s += "/" + ts.ResourceRef.Namespace
-	}
-
-	s += " " + ts.ResourceRef.Version + "/" + ts.ResourceRef.Kind
-
-	return s
 }
