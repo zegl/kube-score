@@ -25,8 +25,8 @@ func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, file
 	sc, err := testScore(config, filename)
 	assert.NoError(t, err)
 
-	for _, objectScore := range sc.Scores {
-		for _, s := range objectScore {
+	for _, objectScore := range sc.Objects {
+		for _, s := range objectScore.Checks {
 			if s.Name == testcase {
 				assert.Equal(t, expectedScore, s.Grade)
 				return s.Comments

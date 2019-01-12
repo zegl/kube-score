@@ -162,19 +162,18 @@ Use "-" as filename to read from STDIN.`)
 	// Detect which output format we should use
 	humanOutput := *outputFormat == "human"
 
-	for _, resourceScores := range scoreCard.Scores {
+	for _, scoredObject := range scoreCard.Objects {
 		// Headers for each object
 		if humanOutput {
-			firstCard := resourceScores[0]
-			color.New(color.FgMagenta).Printf("%s/%s %s", firstCard.ResourceRef.Version, firstCard.ResourceRef.Kind, firstCard.ResourceRef.Name)
-			if firstCard.ResourceRef.Namespace != "" {
-				color.New(color.FgMagenta).Printf(" in %s\n", firstCard.ResourceRef.Namespace)
+			color.New(color.FgMagenta).Printf("%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
+			if scoredObject.ObjectMeta.Namespace != "" {
+				color.New(color.FgMagenta).Printf(" in %s\n", scoredObject.ObjectMeta.Namespace)
 			} else {
 				fmt.Println()
 			}
 		}
 
-		for _, card := range resourceScores {
+		for _, card := range scoredObject.Checks {
 			if _, ok := ignoredTests[card.ID]; ok {
 				continue
 			}
@@ -226,7 +225,7 @@ Use "-" as filename to read from STDIN.`)
 
 					fmt.Printf("[%s] %s: %s\n",
 						status,
-						card.HumanFriendlyRef(),
+						scoredObject.HumanFriendlyRef(),
 						message,
 					)
 				}
