@@ -11,7 +11,7 @@ Pre-built releases can be downloaded from the [Github Releases page](https://git
 
 ### Building from source
 
-`kube-score` requires [go](https://golang.org/) `1.11` or later. To install `kube-score` into your local gobin, run the following commands:
+`kube-score` requires [Go](https://golang.org/) `1.11` or later. To install `kube-score` into your local gobin, run the following commands:
 
 ```bash
 go get github.com/zegl/kube-score
