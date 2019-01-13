@@ -78,3 +78,32 @@ Flags for score:
       --threshold-warning int        The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive). (default 5)
       --v                            Verbose output
 ```
+
+### Ignoring a test
+
+Tests can be ignored in the whole run of the program, with the `--ignore-test` flag.
+
+A test can also be ignored on a per-object basis, by adding the annotation `kube-score/ignore` to the object.
+The value should be a comma separated string of the [test IDs](README_CHECKS.md).
+
+Example:
+
+Testing this object will temporarily disable the `service-type` test, which warns against using services of type NodePort.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-port-service-with-ignore
+  namespace: foospace
+  annotations:
+    kube-score/ignore: service-type
+spec:
+  selector:
+    app: my-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: NodePort
+```
