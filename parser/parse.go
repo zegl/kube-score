@@ -116,31 +116,54 @@ func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 		fullFile = bytes.Replace(fullFile, []byte("\r\n"), []byte("\n"), -1)
 
 		for _, fileContents := range bytes.Split(fullFile, []byte("\n---\n")) {
-			var detect detectKind
-			err = yaml.Unmarshal(fileContents, &detect)
+			err := detectAndDecode(cnf, s, fileContents)
 			if err != nil {
 				return nil, err
 			}
-
-			detectedVersion := schema.FromAPIVersionAndKind(detect.ApiVersion, detect.Kind)
-			decodeItem(cnf, s, detectedVersion, fileContents)
 		}
 	}
 
 	return s, nil
 }
 
+func detectAndDecode(cnf config.Configuration, s *parsedObjects, raw []byte) error {
+	var detect detectKind
+	err := yaml.Unmarshal(raw, &detect)
+	if err != nil {
+		return err
+	}
+
+	detectedVersion := schema.FromAPIVersionAndKind(detect.ApiVersion, detect.Kind)
+
+	// Parse lists and their items recursively
+	if detectedVersion == corev1.SchemeGroupVersion.WithKind("List") {
+		var list corev1.List
+		decode(raw, &list)
+		for _, listItem := range list.Items {
+			err := detectAndDecode(cnf, s, listItem.Raw)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	decodeItem(cnf, s, detectedVersion, raw)
+
+	return nil
+}
+
+func decode(data []byte, object runtime.Object) {
+	deserializer := codecs.UniversalDeserializer()
+	if _, _, err := deserializer.Decode(data, nil, object); err != nil {
+		panic(err)
+	}
+}
+
 func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileContents []byte) {
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		s.podspecers = append(s.podspecers, ps)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ps.GetTypeMeta(), ps.GetObjectMeta()})
-	}
-
-	decode := func(data []byte, object runtime.Object) {
-		deserializer := codecs.UniversalDeserializer()
-		if _, _, err := deserializer.Decode(data, nil, object); err != nil {
-			panic(err)
-		}
 	}
 
 	switch detectedVersion {

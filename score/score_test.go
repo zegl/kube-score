@@ -148,3 +148,25 @@ func TestAnnotationIgnore(t *testing.T) {
 		assert.Equal(t, "node-port-service-with-ignore", o.ObjectMeta.Name)
 	}
 }
+
+func TestList(t *testing.T) {
+	s, err := testScore(config.Configuration{}, "list.yaml")
+	assert.Nil(t, err)
+	assert.Len(t, s.Objects, 2)
+
+	hasService := false
+	hasDeployment := false
+
+	for _, obj := range s.Objects {
+		if obj.ObjectMeta.Name == "list-service-test" {
+			hasService = true
+		}
+		if obj.ObjectMeta.Name == "list-deployment-test" {
+			hasDeployment = true
+		}
+		assert.Condition(t, func() bool { return len(obj.Checks) > 2 })
+	}
+
+	assert.True(t, hasService)
+	assert.True(t, hasDeployment)
+}
