@@ -90,10 +90,10 @@ type TestScore struct {
 type Grade int
 
 const (
-	GradeCritical = 1
-	GradeWarning  = 5
-	GradeAlmostOK = 7
-	GradeAllOK    = 10
+	GradeCritical Grade = 1
+	GradeWarning  Grade = 5
+	GradeAlmostOK Grade = 7
+	GradeAllOK    Grade = 10
 )
 
 type TestScoreComment struct {
