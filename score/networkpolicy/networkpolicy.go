@@ -1,7 +1,7 @@
 package networkpolicy
 
 import (
-	ks "github.com/zegl/kube-score"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"

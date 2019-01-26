@@ -1,7 +1,7 @@
 package checks
 
 import (
-	ks "github.com/zegl/kube-score"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"

@@ -2,14 +2,14 @@ package ingress
 
 import (
 	"fmt"
-	"github.com/zegl/kube-score"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 )
 
-func Register(allChecks *checks.Checks, services kube_score.Services) {
+func Register(allChecks *checks.Checks, services ks.Services) {
 	allChecks.RegisterIngressCheck("Ingress targets Service", `Makes sure that the Ingress targets a Service`, ingressTargetsService(services.Services()))
 }
 

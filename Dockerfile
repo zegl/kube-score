@@ -6,9 +6,10 @@ ADD "go.*" /go/app/
 ADD "*.go" /go/app/
 ADD cmd /go/app/cmd/
 ADD config /go/app/config
+ADD domain /go/app/domain
 ADD parser /go/app/parser
-ADD score /go/app/score/
-ADD scorecard /go/app/scorecard/
+ADD score /go/app/score
+ADD scorecard /go/app/scorecard
 
 RUN go build github.com/zegl/kube-score/cmd/kube-score
 

@@ -2,8 +2,8 @@ package parser
 
 import (
 	"bytes"
-	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser/internal"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
