@@ -1,7 +1,7 @@
 package probes
 
 import (
-	ks "github.com/zegl/kube-score"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"

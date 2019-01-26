@@ -1,7 +1,7 @@
 package scorecard
 
 import (
-	ks "github.com/zegl/kube-score"
+	ks "github.com/zegl/kube-score/domain"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 )
