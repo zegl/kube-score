@@ -1,8 +1,8 @@
 package score
 
 import (
-	ks "github.com/zegl/kube-score"
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/apps"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/container"
