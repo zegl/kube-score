@@ -38,7 +38,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 
 // Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
 // Additional configuration and tuning parameters can be provided via the config.
-func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
+func Score(allObjects ks.AllTypes, cnf config.Configuration) (scorecard.Scorecard, error) {
 	allChecks := RegisterAllChecks(allObjects, cnf)
 	scoreCard := scorecard.New()
 
