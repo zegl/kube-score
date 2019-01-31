@@ -10,18 +10,14 @@ const (
 	ignoredChecksAnnotation = "kube-score/ignore"
 )
 
-type Scorecard struct {
-	Objects map[string]*ScoredObject
-}
+type Scorecard map[string]*ScoredObject
 
 // New creates and initializes a new Scorecard
-func New() *Scorecard {
-	return &Scorecard{
-		Objects: make(map[string]*ScoredObject),
-	}
+func New() Scorecard {
+	return make(Scorecard)
 }
 
-func (s *Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *ScoredObject {
+func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *ScoredObject {
 	o := &ScoredObject{
 		TypeMeta:   typeMeta,
 		ObjectMeta: objectMeta,
@@ -29,13 +25,13 @@ func (s *Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.Object
 	}
 
 	// If this object already exists, return the previous version
-	if object, ok := s.Objects[o.resourceRefKey()]; ok {
+	if object, ok := s[o.resourceRefKey()]; ok {
 		return object
 	}
 
 	o.setIgnoredTests()
 
-	s.Objects[o.resourceRefKey()] = o
+	s[o.resourceRefKey()] = o
 	return o
 }
 
@@ -81,10 +77,9 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
 }
 
 type TestScore struct {
-	ks.Check
+	Check ks.Check
 	Grade        Grade
 	Comments     []TestScoreComment
-	IgnoredTests []string
 }
 
 type Grade int

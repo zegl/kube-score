@@ -162,7 +162,7 @@ Use "-" as filename to read from STDIN.`)
 	// Detect which output format we should use
 	humanOutput := *outputFormat == "human"
 
-	for _, scoredObject := range scoreCard.Objects {
+	for _, scoredObject := range scoreCard {
 		// Headers for each object
 		if humanOutput {
 			color.New(color.FgMagenta).Printf("%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
@@ -174,7 +174,7 @@ Use "-" as filename to read from STDIN.`)
 		}
 
 		for _, card := range scoredObject.Checks {
-			if _, ok := ignoredTests[card.ID]; ok {
+			if _, ok := ignoredTests[card.Check.ID]; ok {
 				continue
 			}
 
@@ -198,7 +198,7 @@ Use "-" as filename to read from STDIN.`)
 			}
 
 			if humanOutput {
-				color.New(col).Printf("    [%s] %s\n", status, card.Name)
+				color.New(col).Printf("    [%s] %s\n", status, card.Check.Name)
 
 				for _, comment := range card.Comments {
 					fmt.Printf("        * ")

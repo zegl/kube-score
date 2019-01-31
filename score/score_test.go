@@ -25,9 +25,9 @@ func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, file
 	sc, err := testScore(config, filename)
 	assert.NoError(t, err)
 
-	for _, objectScore := range sc.Objects {
+	for _, objectScore := range sc {
 		for _, s := range objectScore.Checks {
-			if s.Name == testcase {
+			if s.Check.Name == testcase {
 				assert.Equal(t, expectedScore, s.Grade)
 				return s.Comments
 			}
@@ -38,7 +38,7 @@ func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, file
 	return nil
 }
 
-func testScore(config config.Configuration, filename string) (*scorecard.Scorecard, error) {
+func testScore(config config.Configuration, filename string) (scorecard.Scorecard, error) {
 	config.AllFiles = []io.Reader{testFile(filename)}
 
 	parsed, err := parser.ParseFiles(config)
@@ -137,11 +137,11 @@ func TestConfigMapMultiDash(t *testing.T) {
 func TestAnnotationIgnore(t *testing.T) {
 	s, err := testScore(config.Configuration{}, "ignore-annotation-service.yaml")
 	assert.Nil(t, err)
-	assert.Len(t, s.Objects, 1)
+	assert.Len(t, s, 1)
 
-	for _, o := range s.Objects {
+	for _, o := range s {
 		for _, c := range o.Checks {
-			if c.ID == "service-type" {
+			if c.Check.ID == "service-type" {
 				t.Error("service-type was tested")
 			}
 		}
@@ -152,12 +152,12 @@ func TestAnnotationIgnore(t *testing.T) {
 func TestList(t *testing.T) {
 	s, err := testScore(config.Configuration{}, "list.yaml")
 	assert.Nil(t, err)
-	assert.Len(t, s.Objects, 2)
+	assert.Len(t, s, 2)
 
 	hasService := false
 	hasDeployment := false
 
-	for _, obj := range s.Objects {
+	for _, obj := range s {
 		if obj.ObjectMeta.Name == "list-service-test" {
 			hasService = true
 		}
