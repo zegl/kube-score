@@ -21,6 +21,7 @@ func (s Appsv1StatefulSet) GetObjectMeta() metav1.ObjectMeta {
 }
 
 func (s Appsv1StatefulSet) GetPodTemplateSpec() corev1.PodTemplateSpec {
+	s.Spec.Template.ObjectMeta.Namespace = s.ObjectMeta.Namespace
 	return s.Spec.Template
 }
 
@@ -37,6 +38,7 @@ func (s Appsv1beta1StatefulSet) GetObjectMeta() metav1.ObjectMeta {
 }
 
 func (s Appsv1beta1StatefulSet) GetPodTemplateSpec() corev1.PodTemplateSpec {
+	s.Spec.Template.ObjectMeta.Namespace = s.ObjectMeta.Namespace
 	return s.Spec.Template
 }
 
@@ -53,5 +55,6 @@ func (s Appsv1beta2StatefulSet) GetObjectMeta() metav1.ObjectMeta {
 }
 
 func (s Appsv1beta2StatefulSet) GetPodTemplateSpec() corev1.PodTemplateSpec {
+	s.Spec.Template.ObjectMeta.Namespace = s.ObjectMeta.Namespace
 	return s.Spec.Template
 }

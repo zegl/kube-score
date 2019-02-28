@@ -31,3 +31,8 @@ func TestNetworkPolicyTargetsPodInDeployment(t *testing.T) {
 func TestNetworkPolicyTargetsPodNotMatching(t *testing.T) {
 	testExpectedScore(t, "networkpolicy-targets-pod-not-matching.yaml", "NetworkPolicy targets Pod", 1)
 }
+
+func TestNetworkPolicyNamespaceMatching(t *testing.T) {
+	testExpectedScore(t, "networkpolicy-deployment-matching.yaml", "NetworkPolicy targets Pod", 10)
+	testExpectedScore(t, "networkpolicy-deployment-matching.yaml", "Pod NetworkPolicy", 10)
+}
