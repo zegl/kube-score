@@ -6,7 +6,8 @@ jobs:
     working_directory: /go/app
     steps:
     - checkout
-    - run: go test -v github.com/zegl/kube-score/...
+    - run: go test -race -coverprofile=coverage.txt -covermode=atomic -coverpkg github.com/zegl/kube-score/... -v github.com/zegl/kube-score/...
+    - run: bash <(curl -s https://codecov.io/bash)
 
   # This step is identical to docker-hub-release, except for the push commad
   docker-test:
