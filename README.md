@@ -1,4 +1,6 @@
-# kube-score
+# kube-score ― Kubernetes object analysis
+
+![](https://i.imgur.com/BTtsu06.jpg)
 
 `kube-score` is a tool that does static code analysis of your Kubernetes object definitions.
 The output is a list of recommendations of what you can improve to make your application more secure and resiliant.
@@ -11,13 +13,7 @@ Pre-built releases can be downloaded from the [Github Releases page](https://git
 
 ### Building from source
 
-`kube-score` requires [Go](https://golang.org/) `1.11` or later. To install `kube-score` into your local gobin, run the following commands:
-
-```bash
-go get github.com/zegl/kube-score
-cd $GOPATH/src/github.com/zegl/kube-score/
-GO111MODULE=on go install github.com/zegl/kube-score/cmd/kube-score
-```
+`kube-score` requires [Go](https://golang.org/) 1.11 or later to build . Run `go install github.com/zegl/kube-score/cmd/kube-score` and the latest version will be installed automatically. You can also clone the repo, and run `go build github.com/zegl/kube-score/cmd/kube-score` from the checked out directory.
 
 ## Checks
 
@@ -40,7 +36,7 @@ For a full list of checks, see [README_CHECKS.md](README_CHECKS.md).
 `kube-score` can run in your CI/CD environment and will exit with exit code 1 if a critical error has been found.
 The trigger level can be changed to warning with the `--exit-one-on-warning` argument.
 
-The input to `kube-score` should be all applications that you deploy to the same namespace for the best result.
+The input to `kube-score` should be all applications/objects that you deploy to the same namespace for the best result.
 
 ### Example with Helm
 
