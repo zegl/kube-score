@@ -1,23 +1,18 @@
 # kube-score
 
+<p align="center"><img src="https://user-images.githubusercontent.com/47952/56085330-6c0a2480-5e41-11e9-89ba-0cfddd7714a8.png" height="200"></p>
+
+---
+
 `kube-score` is a tool that performs static code analysis of your Kubernetes object definitions.
+
 The output is a list of recommendations of what you can improve to make your application more secure and resilient.
+
+You can test kube-score out in the browser with the [online demo](https://kube-score.com).
 
 ## Installation
 
-### Download
-
-Pre-built releases can be downloaded from the [Github Releases page](https://github.com/zegl/kube-score/releases), or from [Docker Hub](https://hub.docker.com/r/zegl/kube-score/).
-
-### Building from source
-
-`kube-score` requires [Go](https://golang.org/) `1.11` or later. To install `kube-score` into your local gobin, run the following commands:
-
-```bash
-go get github.com/zegl/kube-score
-cd $GOPATH/src/github.com/zegl/kube-score/
-GO111MODULE=on go install github.com/zegl/kube-score/cmd/kube-score
-```
+Pre-built releases can be downloaded from the [GitHub releases](https://github.com/zegl/kube-score/releases), or from [Docker Hub](https://hub.docker.com/r/zegl/kube-score/).
 
 ## Checks
 
@@ -106,4 +101,16 @@ spec:
     port: 80
     targetPort: 8080
   type: NodePort
+```
+
+## Building from source
+
+`kube-score` requires [Go](https://golang.org/) `1.11` or later to build. Clone this repository, and then:
+
+```bash
+# Build the project
+go build github.com/zegl/kube-score/cmd/kube-score
+
+# Run all tests
+go test -v github.com/zegl/kube-score/...
 ```
