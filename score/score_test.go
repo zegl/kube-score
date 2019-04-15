@@ -126,26 +126,6 @@ func TestPodContainerPullPolicyAlways(t *testing.T) {
 	testExpectedScore(t, "pod-image-pullpolicy-always.yaml", "Container Image Pull Policy", 10)
 }
 
-func TestContainerSecurityContextPrivilegied(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 1)
-}
-
-func TestContainerSecurityContextNonPrivilegied(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-non-privilegied.yaml", "Container Security Context", 10)
-}
-
-func TestContainerSecurityContextLowUser(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 1)
-}
-
-func TestContainerSecurityContextLowGroup(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 1)
-}
-
-func TestContainerSecurityContextHighIds(t *testing.T) {
-	testExpectedScore(t, "pod-security-context-high-ids.yaml", "Container Security Context", 10)
-}
-
 func TestConfigMapMultiDash(t *testing.T) {
 	_, err := testScore(config.Configuration{
 		AllFiles: []io.Reader{testFile("configmap-multi-dash.yaml")},

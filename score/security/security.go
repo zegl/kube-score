@@ -33,22 +33,22 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scoreca
 
 		if sec.Privileged == nil || *sec.Privileged {
 			hasPrivileged = true
-			score.AddComment(container.Name, "The container is privileged", "Set securityContext.Privileged to false")
+			score.AddComment(container.Name, "The container is privileged", "Set securityContext.privileged to false")
 		}
 
 		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false  {
 			hasWritableRootFS = true
-			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.ReadOnlyFileSystem to true")
+			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.readOnlyRootFilesystem to true")
 		}
 
 		if sec.RunAsUser == nil || *sec.RunAsUser < 10000 {
 			hasLowUserID = true
-			score.AddComment(container.Name, "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsUser to a value > 10000")
+			score.AddComment(container.Name, "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsUser to a value > 10000")
 		}
 
 		if sec.RunAsGroup == nil || *sec.RunAsGroup < 10000 {
 			hasLowGroupID = true
-			score.AddComment(container.Name, "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsGroup to a value > 10000")
+			score.AddComment(container.Name, "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsGroup to a value > 10000")
 		}
 	}
 
