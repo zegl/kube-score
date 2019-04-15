@@ -8,3 +8,6 @@ spec:
     image: foo/bar:latest
     securityContext:
       privileged: False
+      runAsUser: 30000
+      runAsGroup: 30000
+      readOnlyRootFilesystem: True

@@ -51,7 +51,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The pod has a container with a writable root filesystem",
-				Description: "Set securityContext.ReadOnlyFileSystem to true",
+				Description: "Set securityContext.readOnlyRootFilesystem to true",
 			},
 		},
 		{
@@ -62,7 +62,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The pod has a container with a writable root filesystem",
-				Description: "Set securityContext.ReadOnlyFileSystem to true",
+				Description: "Set securityContext.readOnlyRootFilesystem to true",
 			},
 		},
 
@@ -73,7 +73,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container is privileged",
-				Description: "Set securityContext.Privileged to false",
+				Description: "Set securityContext.privileged to false",
 			},
 		},
 		// Context is non nul, but has all null values
@@ -83,7 +83,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The pod has a container with a writable root filesystem",
-				Description: "Set securityContext.ReadOnlyFileSystem to true",
+				Description: "Set securityContext.readOnlyRootFilesystem to true",
 			},
 		},
 		// Context is non nul, but has all null values
@@ -93,7 +93,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container is running with a low user ID",
-				Description: "A userid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsUser to a value > 10000",
+				Description: "A userid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsUser to a value > 10000",
 			},
 		},
 		// Context is non nul, but has all null values
@@ -103,7 +103,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container running with a low group ID",
-				Description: "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsGroup to a value > 10000",
+				Description: "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsGroup to a value > 10000",
 			},
 		},
 	}
@@ -139,4 +139,21 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			assert.Contains(test, comments, *tc.expectedComment, "caseID=%d", caseID)
 		}
 	}
+}
+
+func TestContainerSecurityContextPrivilegied(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 1)
+}
+
+func TestContainerSecurityContextLowUser(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 1)
+}
+
+func TestContainerSecurityContextLowGroup(t *testing.T) {
+	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 1)
+}
+
+func TestContainerSecurityContextAllGood(t *testing.T) {
+	c := testExpectedScore(t, "pod-security-context-all-good.yaml", "Container Security Context", 10)
+	assert.Empty(t, c)
 }
