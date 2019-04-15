@@ -15,6 +15,7 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scoreca
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
+	noContextSet := false
 	hasPrivileged := false
 	hasWritableRootFS := false
 	hasLowUserID := false
@@ -23,33 +24,35 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scoreca
 	for _, container := range allContainers {
 
 		if container.SecurityContext == nil {
+			noContextSet = true
+			score.AddComment(container.Name, "Container has no configured security context", "Set securityContext to run the container is a more secure context.")
 			continue
 		}
 
 		sec := container.SecurityContext
 
-		if sec.Privileged != nil && *sec.Privileged {
+		if sec.Privileged == nil || *sec.Privileged {
 			hasPrivileged = true
 			score.AddComment(container.Name, "The container is privileged", "Set securityContext.Privileged to false")
 		}
 
-		if sec.ReadOnlyRootFilesystem != nil && *sec.ReadOnlyRootFilesystem == false {
+		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false  {
 			hasWritableRootFS = true
 			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.ReadOnlyFileSystem to true")
 		}
 
-		if sec.RunAsUser != nil && *sec.RunAsUser < 10000 {
+		if sec.RunAsUser == nil || *sec.RunAsUser < 10000 {
 			hasLowUserID = true
 			score.AddComment(container.Name, "The container is running with a low user ID", "A userid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsUser to a value > 10000")
 		}
 
-		if sec.RunAsGroup != nil && *sec.RunAsGroup < 10000 {
+		if sec.RunAsGroup == nil || *sec.RunAsGroup < 10000 {
 			hasLowGroupID = true
 			score.AddComment(container.Name, "The container running with a low group ID", "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.RunAsGroup to a value > 10000")
 		}
 	}
 
-	if hasPrivileged || hasWritableRootFS || hasLowUserID || hasLowGroupID {
+	if noContextSet || hasPrivileged || hasWritableRootFS || hasLowUserID || hasLowGroupID {
 		score.Grade = scorecard.GradeCritical
 	} else {
 		score.Grade = scorecard.GradeAllOK

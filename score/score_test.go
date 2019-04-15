@@ -1,12 +1,13 @@
 package score
 
 import (
-	"github.com/zegl/kube-score/config"
-	"github.com/zegl/kube-score/parser"
-	"github.com/zegl/kube-score/scorecard"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/zegl/kube-score/config"
+	"github.com/zegl/kube-score/parser"
+	"github.com/zegl/kube-score/scorecard"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -21,8 +22,8 @@ func testFile(name string) *os.File {
 
 // testExpectedScoreWithConfig runs all tests, but makes sure that the test for "testcase" was executed, and that
 // the grade is set to expectedScore. The function returns the comments of "testcase".
-func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
-	sc, err := testScore(config, filename)
+func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
+	sc, err := testScore(config)
 	assert.NoError(t, err)
 
 	for _, objectScore := range sc {
@@ -38,9 +39,7 @@ func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, file
 	return nil
 }
 
-func testScore(config config.Configuration, filename string) (scorecard.Scorecard, error) {
-	config.AllFiles = []io.Reader{testFile(filename)}
-
+func testScore(config config.Configuration) (scorecard.Scorecard, error) {
 	parsed, err := parser.ParseFiles(config)
 	if err != nil {
 		return nil, err
@@ -50,7 +49,19 @@ func testScore(config config.Configuration, filename string) (scorecard.Scorecar
 }
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
-	return testExpectedScoreWithConfig(t, config.Configuration{}, filename, testcase, expectedScore)
+	return testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles: []io.Reader{testFile(filename)},
+	}, testcase, expectedScore)
+}
+
+func testExpectedScoreReader(t *testing.T, content io.Reader, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
+	return testExpectedScoreWithConfig(
+		t, config.Configuration{
+			AllFiles: []io.Reader{content},
+		},
+		testcase,
+		expectedScore,
+	)
 }
 
 func TestPodContainerNoResources(t *testing.T) {
@@ -66,11 +77,17 @@ func TestPodContainerResourceLimitsAndRequests(t *testing.T) {
 }
 
 func TestPodContainerResourceLimitCpuNotRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, config.Configuration{IgnoreContainerCpuLimitRequirement: true}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 10)
+	testExpectedScoreWithConfig(t, config.Configuration{
+		IgnoreContainerCpuLimitRequirement: true,
+		AllFiles:                           []io.Reader{testFile("pod-test-resources-limits-and-requests-no-cpu-limit.yaml")},
+	}, "Container Resources", 10)
 }
 
 func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
-	testExpectedScoreWithConfig(t, config.Configuration{IgnoreContainerCpuLimitRequirement: false}, "pod-test-resources-limits-and-requests-no-cpu-limit.yaml", "Container Resources", 1)
+	testExpectedScoreWithConfig(t, config.Configuration{
+		IgnoreContainerCpuLimitRequirement: false,
+		AllFiles:                           []io.Reader{testFile("pod-test-resources-limits-and-requests-no-cpu-limit.yaml")},
+	}, "Container Resources", 1)
 }
 
 func TestDeploymentResources(t *testing.T) {
@@ -130,12 +147,16 @@ func TestContainerSecurityContextHighIds(t *testing.T) {
 }
 
 func TestConfigMapMultiDash(t *testing.T) {
-	_, err := testScore(config.Configuration{}, "configmap-multi-dash.yaml")
+	_, err := testScore(config.Configuration{
+		AllFiles: []io.Reader{testFile("configmap-multi-dash.yaml")},
+	})
 	assert.Nil(t, err)
 }
 
 func TestAnnotationIgnore(t *testing.T) {
-	s, err := testScore(config.Configuration{}, "ignore-annotation-service.yaml")
+	s, err := testScore(config.Configuration{
+		AllFiles: []io.Reader{testFile("ignore-annotation-service.yaml")},
+	})
 	assert.Nil(t, err)
 	assert.Len(t, s, 1)
 
@@ -150,7 +171,9 @@ func TestAnnotationIgnore(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	s, err := testScore(config.Configuration{}, "list.yaml")
+	s, err := testScore(config.Configuration{
+		AllFiles: []io.Reader{testFile("list.yaml")},
+	})
 	assert.Nil(t, err)
 	assert.Len(t, s, 2)
 
