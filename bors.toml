@@ -1,0 +1,2 @@
+status = [ 'ci/circleci: test', 'ci/circleci: docker-test' ]
+delete_merged_branches = true
