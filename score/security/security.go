@@ -11,7 +11,7 @@ func Register(allChecks *checks.Checks) {
 }
 
 // containerSecurityContext checks that the recommended securityPolicy options are set
-func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerSecurityContext(podTemplate corev1.PodTemplateSpec, kind string) (score scorecard.TestScore) {
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
@@ -36,7 +36,7 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scoreca
 			score.AddComment(container.Name, "The container is privileged", "Set securityContext.privileged to false")
 		}
 
-		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false  {
+		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false {
 			hasWritableRootFS = true
 			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.readOnlyRootFilesystem to true")
 		}

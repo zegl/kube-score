@@ -1,11 +1,12 @@
 package container
 
 import (
+	"strings"
+
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
 )
 
 func Register(allChecks *checks.Checks, cnf config.Configuration) {
@@ -16,8 +17,8 @@ func Register(allChecks *checks.Checks, cnf config.Configuration) {
 
 // containerResources makes sure that the container has resource requests and limits set
 // The check for a CPU limit requirement can be enabled via the requireCPULimit flag parameter
-func containerResources(requireCPULimit bool) func(corev1.PodTemplateSpec) scorecard.TestScore {
-	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerResources(requireCPULimit bool) func(corev1.PodTemplateSpec, string) scorecard.TestScore {
+	return func(podTemplate corev1.PodTemplateSpec, kind string) (score scorecard.TestScore) {
 		pod := podTemplate.Spec
 
 		allContainers := pod.InitContainers
@@ -61,7 +62,7 @@ func containerResources(requireCPULimit bool) func(corev1.PodTemplateSpec) score
 }
 
 // containerImageTag checks that no container is using the ":latest" tag
-func containerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerImageTag(podTemplate corev1.PodTemplateSpec, king string) (score scorecard.TestScore) {
 	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers
@@ -87,7 +88,7 @@ func containerImageTag(podTemplate corev1.PodTemplateSpec) (score scorecard.Test
 }
 
 // containerImagePullPolicy checks if the containers ImagePullPolicy is set to PullAlways
-func containerImagePullPolicy(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerImagePullPolicy(podTemplate corev1.PodTemplateSpec, kind string) (score scorecard.TestScore) {
 	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers

@@ -16,8 +16,13 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 // ReadinessProbes are not required if the pod is not targeted by a Service.
 //
 // containerProbes takes a slice of all defined Services as input.
-func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec) scorecard.TestScore {
-	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, string) scorecard.TestScore {
+	return func(podTemplate corev1.PodTemplateSpec, kind string) (score scorecard.TestScore) {
+		if kind == "CronJob" {
+			score.Grade = scorecard.GradeAllOK
+			return score
+		}
+
 		allContainers := podTemplate.Spec.InitContainers
 		allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
