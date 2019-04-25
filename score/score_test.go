@@ -90,6 +90,14 @@ func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
 	}, "Container Resources", 1)
 }
 
+func TestPodContainerResourceNoLimitRequired(t *testing.T) {
+	testExpectedScoreWithConfig(t, config.Configuration{
+		IgnoreContainerCpuLimitRequirement:    true,
+		IgnoreContainerMemoryLimitRequirement: true,
+		AllFiles:                              []io.Reader{testFile("pod-test-resources-no-limits.yaml")},
+	}, "Container Resources", 10)
+}
+
 func TestDeploymentResources(t *testing.T) {
 	testExpectedScore(t, "deployment-test-resources.yaml", "Container Resources", 5)
 }
