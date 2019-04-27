@@ -4,6 +4,7 @@ import (
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Register(allChecks *checks.Checks) {
@@ -11,7 +12,7 @@ func Register(allChecks *checks.Checks) {
 }
 
 // containerSecurityContext checks that the recommended securityPolicy options are set
-func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerSecurityContext(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
@@ -36,7 +37,7 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec) (score scoreca
 			score.AddComment(container.Name, "The container is privileged", "Set securityContext.privileged to false")
 		}
 
-		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false  {
+		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false {
 			hasWritableRootFS = true
 			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.readOnlyRootFilesystem to true")
 		}

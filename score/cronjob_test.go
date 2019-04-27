@@ -11,3 +11,7 @@ func TestCronJobHasDeadline(t *testing.T) {
 func TestCronJobNotHasDeadline(t *testing.T) {
 	testExpectedScore(t, "cronjob-deadline-not-set.yaml", "CronJob has deadline", 1)
 }
+
+func TestProbesPodCronMissingReady(t *testing.T) {
+	testExpectedScore(t, "cronjob-deadline-not-set.yaml", "Pod Probes", 10)
+}

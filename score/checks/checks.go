@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"strings"
+
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 	appsv1 "k8s.io/api/apps/v1"
@@ -9,7 +11,6 @@ import (
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func New() *Checks {
@@ -48,7 +49,7 @@ type MetaCheck struct {
 
 type PodCheck struct {
 	ks.Check
-	Fn func(corev1.PodTemplateSpec) scorecard.TestScore
+	Fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore
 }
 
 type ServiceCheck struct {
@@ -103,7 +104,7 @@ func (c *Checks) Metas() map[string]MetaCheck {
 	return c.metas
 }
 
-func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec) scorecard.TestScore) {
+func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore) {
 	ch := NewCheck(name, "Pod", comment)
 	c.all = append(c.all, ch)
 	c.pods[machineFriendlyName(name)] = PodCheck{ch, fn}

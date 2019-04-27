@@ -5,6 +5,7 @@ import (
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
@@ -16,8 +17,13 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 // ReadinessProbes are not required if the pod is not targeted by a Service.
 //
 // containerProbes takes a slice of all defined Services as input.
-func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec) scorecard.TestScore {
-	return func(podTemplate corev1.PodTemplateSpec) (score scorecard.TestScore) {
+func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore {
+	return func(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+		if typeMeta.Kind == "CronJob" && typeMeta.GroupVersionKind().Group == "batch" {
+			score.Grade = scorecard.GradeAllOK
+			return score
+		}
+
 		allContainers := podTemplate.Spec.InitContainers
 		allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
