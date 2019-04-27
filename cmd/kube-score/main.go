@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/fatih/color"
-	flag "github.com/spf13/pflag"
 	"io"
 	"os"
+
+	"github.com/fatih/color"
+	flag "github.com/spf13/pflag"
 
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/parser"
@@ -73,6 +74,7 @@ func scoreFiles() error {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
 	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
+	ignoreContainerMemoryLimit := fs.Bool("ignore-container-memory-limit", false, "Disables the requirement of setting a container memory limit")
 	okThreshold := fs.Int("threshold-ok", 10, "The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL.")
 	warningThreshold := fs.Int("threshold-warning", 5, "The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive).")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
@@ -130,9 +132,10 @@ Use "-" as filename to read from STDIN.`)
 	}
 
 	cnf := config.Configuration{
-		AllFiles:                           allFilePointers,
-		VerboseOutput:                      *verboseOutput,
-		IgnoreContainerCpuLimitRequirement: *ignoreContainerCpuLimit,
+		AllFiles:                              allFilePointers,
+		VerboseOutput:                         *verboseOutput,
+		IgnoreContainerCpuLimitRequirement:    *ignoreContainerCpuLimit,
+		IgnoreContainerMemoryLimitRequirement: *ignoreContainerMemoryLimit,
 	}
 
 	parsedFiles, err := parser.ParseFiles(cnf)
