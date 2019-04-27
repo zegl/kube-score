@@ -30,16 +30,15 @@ func main() {
 			_, _ = fmt.Fprintf(os.Stderr, "Failed to score files: %v", err)
 			os.Exit(1)
 		}
-		return
 	case "list":
 		listChecks()
-		return
+	case "version":
+		cmdVersion()
 	case "help":
 		fallthrough
 	default:
 		fs.Usage()
 		os.Exit(1)
-		return
 	}
 }
 
@@ -51,6 +50,7 @@ kube-score [action] --flags
 Actions:
 	score	Checks all files in the input, and gives them a score and recommendations
 	list	Prints a CSV list of all available score checks
+	version	Print the version of kube-score
 	help	Print this message` + "\n\n"
 
 		if displayForMoreInfo {
