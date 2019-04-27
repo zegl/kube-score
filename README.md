@@ -114,3 +114,7 @@ go build github.com/zegl/kube-score/cmd/kube-score
 # Run all tests
 go test -v github.com/zegl/kube-score/...
 ```
+
+## Contributing?
+
+Do you want to help out? Take a look at the [Contributing Guidelines](./.github/CONTRIBUTING.md) for more info. 🤩

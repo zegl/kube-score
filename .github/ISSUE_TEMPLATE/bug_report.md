@@ -4,21 +4,19 @@ about: Create a report to help us improve
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**Which version of kube-score are you using?**
 
-**To Reproduce**
+> kube-score version: [e.g. 0.3.0]
 
-```
-Insert a YAML document that triggers the incorrect behaviour
-```
+**What did you do?**
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+> A complete description of the steps you took to trigger the incorrect behaviour.
+> Include Kubernetes object YAML/JSON if you have it
 
-**Version**
-kube-score version: [e.g. 0.3.0]
+**What did you expect to see?**
 
+> A clear and concise description of what you expected to happen.
 
-**Additional context**
-Add any other context about the problem here.
+**What did you see instead?**
+
+> A description of what happened, include logs and program output
