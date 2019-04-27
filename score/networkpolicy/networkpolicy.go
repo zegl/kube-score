@@ -17,8 +17,8 @@ func Register(allChecks *checks.Checks, netpols ks.NetworkPolicies, pods ks.Pods
 
 // podHasNetworkPolicy returns a function that tests that all pods have matching NetworkPolicies
 // podHasNetworkPolicy takes a list of all defined NetworkPolicies as input
-func podHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec corev1.PodTemplateSpec, kind string) scorecard.TestScore {
-	return func(podSpec corev1.PodTemplateSpec, kind string) (score scorecard.TestScore) {
+func podHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) scorecard.TestScore {
+	return func(podSpec corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
 		hasMatchingEgressNetpol := false
 		hasMatchingIngressNetpol := false
 

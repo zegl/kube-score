@@ -62,7 +62,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (scorecard.Scorecar
 			score := test.Fn(corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
 				Spec:       pod.Spec,
-			}, pod.TypeMeta.Kind)
+			}, pod.TypeMeta)
 			o.Add(score, test.Check)
 		}
 	}
@@ -70,7 +70,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (scorecard.Scorecar
 	for _, podspecer := range allObjects.PodSpeccers() {
 		o := scoreCard.NewObject(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
 		for _, test := range allChecks.Pods() {
-			score := test.Fn(podspecer.GetPodTemplateSpec(), podspecer.GetTypeMeta().Kind)
+			score := test.Fn(podspecer.GetPodTemplateSpec(), podspecer.GetTypeMeta())
 			o.Add(score, test.Check)
 		}
 	}

@@ -49,7 +49,7 @@ type MetaCheck struct {
 
 type PodCheck struct {
 	ks.Check
-	Fn func(corev1.PodTemplateSpec, string) scorecard.TestScore
+	Fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore
 }
 
 type ServiceCheck struct {
@@ -104,7 +104,7 @@ func (c *Checks) Metas() map[string]MetaCheck {
 	return c.metas
 }
 
-func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec, string) scorecard.TestScore) {
+func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore) {
 	ch := NewCheck(name, "Pod", comment)
 	c.all = append(c.all, ch)
 	c.pods[machineFriendlyName(name)] = PodCheck{ch, fn}
