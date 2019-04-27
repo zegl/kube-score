@@ -8,8 +8,6 @@ import (
 
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
-	"io"
-	"os"
 
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/parser"
