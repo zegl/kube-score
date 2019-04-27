@@ -38,7 +38,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 
 // Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
 // Additional configuration and tuning parameters can be provided via the config.
-func Score(allObjects ks.AllTypes, cnf config.Configuration) (scorecard.Scorecard, error) {
+func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
 	allChecks := RegisterAllChecks(allObjects, cnf)
 	scoreCard := scorecard.New()
 
@@ -85,14 +85,22 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (scorecard.Scorecar
 	for _, statefulset := range allObjects.StatefulSets() {
 		o := scoreCard.NewObject(statefulset.TypeMeta, statefulset.ObjectMeta)
 		for _, test := range allChecks.StatefulSets() {
-			o.Add(test.Fn(statefulset), test.Check)
+			res, err := test.Fn(statefulset)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(res, test.Check)
 		}
 	}
 
 	for _, deployment := range allObjects.Deployments() {
 		o := scoreCard.NewObject(deployment.TypeMeta, deployment.ObjectMeta)
 		for _, test := range allChecks.Deployments() {
-			o.Add(test.Fn(deployment), test.Check)
+			res, err := test.Fn(deployment)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(res, test.Check)
 		}
 	}
 
@@ -110,5 +118,5 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (scorecard.Scorecar
 		}
 	}
 
-	return scoreCard, nil
+	return &scoreCard, nil
 }

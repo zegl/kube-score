@@ -113,7 +113,8 @@ func TestStatefulsetHasAntiAffinity(t *testing.T) {
 			},
 		}
 
-		score := statefulsetHasAntiAffinity(s)
+		score, err := statefulsetHasAntiAffinity(s)
+		assert.Nil(t, err)
 		assert.Equal(t, tc.expectedGrade, score.Grade, "caseID=%d", caseID)
 	}
 }
@@ -136,7 +137,8 @@ func TestDeploymentHasAntiAffinity(t *testing.T) {
 			},
 		}
 
-		score := deploymentHasAntiAffinity(s)
+		score, err := deploymentHasAntiAffinity(s)
+		assert.Nil(t, err)
 		assert.Equal(t, tc.expectedGrade, score.Grade, "caseID=%d", caseID)
 	}
 }

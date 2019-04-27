@@ -45,7 +45,12 @@ func testScore(config config.Configuration) (scorecard.Scorecard, error) {
 		return nil, err
 	}
 
-	return Score(parsed, config)
+	card, err := Score(parsed, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return *card, err
 }
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {

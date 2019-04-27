@@ -17,7 +17,8 @@ func TestStatefulSetReplicas(t *testing.T) {
 	fn := statefulSetHas(nil)
 
 	for replicas, expected := range cases {
-		res := fn(appsv1.StatefulSet{Spec: appsv1.StatefulSetSpec{Replicas: replicas}})
+		res, err := fn(appsv1.StatefulSet{Spec: appsv1.StatefulSetSpec{Replicas: replicas}})
+		assert.Nil(t, err)
 
 		if replicas == nil {
 			assert.Equal(t, expected, res.Grade, "replicas=nil")
@@ -37,7 +38,8 @@ func TestDeploymentReplicas(t *testing.T) {
 	fn := deploymentHas(nil)
 
 	for replicas, expected := range cases {
-		res := fn(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Replicas: replicas}})
+		res, err := fn(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Replicas: replicas}})
+		assert.Nil(t, err)
 
 		if replicas == nil {
 			assert.Equal(t, expected, res.Grade, "replicas=nil")
