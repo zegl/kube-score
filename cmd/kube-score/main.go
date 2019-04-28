@@ -140,12 +140,12 @@ Use "-" as filename to read from STDIN.`)
 
 	parsedFiles, err := parser.ParseFiles(cnf)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	scoreCard, err := score.Score(parsedFiles, cnf)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	ignoredTests := make(map[string]struct{})
@@ -159,7 +159,7 @@ Use "-" as filename to read from STDIN.`)
 	// Detect which output format we should use
 	humanOutput := *outputFormat == "human"
 
-	for _, scoredObject := range scoreCard {
+	for _, scoredObject := range *scoreCard {
 		// Headers for each object
 		if humanOutput {
 			color.New(color.FgMagenta).Printf("%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)

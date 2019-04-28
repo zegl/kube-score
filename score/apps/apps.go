@@ -14,7 +14,7 @@ func Register(allChecks *checks.Checks) {
 	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
 }
 
-func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.TestScore) {
+func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.TestScore, err error) {
 	// Ignore if the deployment only has a single replica
 	// If replicas is not explicitly set, we'll still warn if the anti affinity is missing
 	// as that might indicate use of a Horizontal Pod Autoscaler
@@ -46,7 +46,7 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 	return
 }
 
-func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard.TestScore) {
+func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard.TestScore, err error) {
 	// Ignore if the statefulset only has a single replica
 	// If replicas is not explicitly set, we'll still warn if the anti affinity is missing
 	// as that might indicate use of a Horizontal Pod Autoscaler

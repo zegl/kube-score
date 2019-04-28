@@ -59,12 +59,12 @@ type ServiceCheck struct {
 
 type StatefulSetCheck struct {
 	ks.Check
-	Fn func(appsv1.StatefulSet) scorecard.TestScore
+	Fn func(appsv1.StatefulSet) (scorecard.TestScore, error)
 }
 
 type DeploymentCheck struct {
 	ks.Check
-	Fn func(appsv1.Deployment) scorecard.TestScore
+	Fn func(appsv1.Deployment) (scorecard.TestScore, error)
 }
 
 type NetworkPolicyCheck struct {
@@ -124,7 +124,7 @@ func (c *Checks) CronJobs() map[string]CronJobCheck {
 	return c.cronjobs
 }
 
-func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn func(appsv1.StatefulSet) scorecard.TestScore) {
+func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn func(appsv1.StatefulSet) (scorecard.TestScore, error)) {
 	ch := NewCheck(name, "StatefulSet", comment)
 	c.all = append(c.all, ch)
 	c.statefulsets[machineFriendlyName(name)] = StatefulSetCheck{ch, fn}
@@ -134,7 +134,7 @@ func (c *Checks) StatefulSets() map[string]StatefulSetCheck {
 	return c.statefulsets
 }
 
-func (c *Checks) RegisterDeploymentCheck(name, comment string, fn func(appsv1.Deployment) scorecard.TestScore) {
+func (c *Checks) RegisterDeploymentCheck(name, comment string, fn func(appsv1.Deployment) (scorecard.TestScore, error)) {
 	ch := NewCheck(name, "Deployment", comment)
 	c.all = append(c.all, ch)
 	c.deployments[machineFriendlyName(name)] = DeploymentCheck{ch, fn}
