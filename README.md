@@ -12,7 +12,11 @@ You can test kube-score out in the browser with the [online demo](https://kube-s
 
 ## Installation
 
-Pre-built releases can be downloaded from the [GitHub releases](https://github.com/zegl/kube-score/releases), or from [Docker Hub](https://hub.docker.com/r/zegl/kube-score/).
+Pre-built releases can be downloaded from the [GitHub releases](https://github.com/zegl/kube-score/releases), from [Docker Hub](https://hub.docker.com/r/zegl/kube-score/), or with homebrew:
+
+```bash 
+brew install kube-score/tap/kube-score
+```
 
 ## Checks
 
