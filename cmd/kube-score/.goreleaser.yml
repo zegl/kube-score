@@ -1,3 +1,5 @@
+project_name: kube-score
+
 builds:
 - env:
   - CGO_ENABLED=0
@@ -15,9 +17,21 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
+    format: binary
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
+
+brew:
+  name: kube-score
+  github:
+    owner: kube-score
+    name: homebrew-tap
+  url_template: "https://github.com/zegl/kube-score/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+  homepage: "https://kube-score.com/"
