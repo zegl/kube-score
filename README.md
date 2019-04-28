@@ -43,7 +43,7 @@ The input to `kube-score` should be all applications that you deploy to the same
 helm template my-app | kube-score score -
 ```
 
-### Example with static yamls
+### Example with static YAMLs
 
 ```bash
 kube-score score my-app/*.yaml
@@ -60,18 +60,21 @@ Usage of kube-score:
 kube-score [action] --flags
 
 Actions:
-	score 	Checks all files in the input, and gives them a score and recommendations
-	list	Prints a cvs list of all available score checks
+	score	Checks all files in the input, and gives them a score and recommendations
+	list	Prints a CSV list of all available score checks
+	version	Print the version of kube-score
+	help	Print this message
 
 Flags for score:
-      --exit-one-on-warning          Exit with code 1 in case of warnings
-      --help                         Print help
-      --ignore-container-cpu-limit   Disables the requirement of setting a container CPU limit
-      --ignore-test strings          Disable a test, can be set multiple times
-      --output-format string         Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
-      --threshold-ok int             The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL. (default 10)
-      --threshold-warning int        The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive). (default 5)
-      --v                            Verbose output
+      --exit-one-on-warning             Exit with code 1 in case of warnings
+      --help                            Print help
+      --ignore-container-cpu-limit      Disables the requirement of setting a container CPU limit
+      --ignore-container-memory-limit   Disables the requirement of setting a container memory limit
+      --ignore-test strings             Disable a test, can be set multiple times
+      --output-format string            Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
+      --threshold-ok int                The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL. (default 10)
+      --threshold-warning int           The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive). (default 5)
+      --v                               Verbose output
 ```
 
 ### Ignoring a test
