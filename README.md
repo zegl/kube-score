@@ -2,6 +2,8 @@
 
 <p align="center"><img src="https://user-images.githubusercontent.com/47952/56085330-6c0a2480-5e41-11e9-89ba-0cfddd7714a8.png" height="200"></p>
 
+[![Join #kube-score on the Kubernetes Slack](https://img.shields.io/badge/Slack-kubernetes%2Fkube--score-blue.svg)](https://slack.k8s.io/)
+
 ---
 
 `kube-score` is a tool that performs static code analysis of your Kubernetes object definitions.
