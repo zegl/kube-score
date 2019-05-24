@@ -19,7 +19,7 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 // containerProbes takes a slice of all defined Services as input.
 func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-		if typeMeta.Kind == "CronJob" && typeMeta.GroupVersionKind().Group == "batch" {
+		if typeMeta.Kind == "CronJob" && typeMeta.GroupVersionKind().Group == "batch" || typeMeta.Kind == "Job" && typeMeta.GroupVersionKind().Group == "batch" {
 			score.Grade = scorecard.GradeAllOK
 			return score
 		}
