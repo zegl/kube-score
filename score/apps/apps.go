@@ -26,7 +26,7 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 
 	warn := func() {
 		score.Grade = scorecard.GradeWarning
-		score.AddComment("", "Deployment does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a deployment from beeing scheduled on the same node. This increases availability in case the node becomes unavailable.")
+		score.AddComment("", "Deployment does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a deployment from being scheduled on the same node. This increases availability in case the node becomes unavailable.")
 	}
 
 	affinity := deployment.Spec.Template.Spec.Affinity
@@ -58,7 +58,7 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 
 	warn := func() {
 		score.Grade = scorecard.GradeWarning
-		score.AddComment("", "StatefulSet does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a statefulset from beeing scheduled on the same node. This increases availability in case the node becomes unavailable.")
+		score.AddComment("", "StatefulSet does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a statefulset from being scheduled on the same node. This increases availability in case the node becomes unavailable.")
 	}
 
 	affinity := statefulset.Spec.Template.Spec.Affinity
