@@ -17,3 +17,4 @@
 | stable-version | all | Checks if the object is using a deprecated apiVersion | 
 | deployment-has-host-podantiaffinity | Deployment | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | 
 | statefulset-has-host-podantiaffinity | StatefulSet | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | 
+| label-values | all | Validates Label Values | 
