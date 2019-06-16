@@ -3,14 +3,15 @@ package checks
 import (
 	"strings"
 
-	ks "github.com/zegl/kube-score/domain"
-	"github.com/zegl/kube-score/scorecard"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	ks "github.com/zegl/kube-score/domain"
+	"github.com/zegl/kube-score/scorecard"
 )
 
 func New() *Checks {
@@ -44,7 +45,7 @@ func machineFriendlyName(in string) string {
 
 type MetaCheck struct {
 	ks.Check
-	Fn func(metav1.TypeMeta) scorecard.TestScore
+	Fn func(ks.BothMeta) scorecard.TestScore
 }
 
 type PodCheck struct {
@@ -94,7 +95,7 @@ type Checks struct {
 	cronjobs        map[string]CronJobCheck
 }
 
-func (c *Checks) RegisterMetaCheck(name, comment string, fn func(metav1.TypeMeta) scorecard.TestScore) {
+func (c *Checks) RegisterMetaCheck(name, comment string, fn func(meta ks.BothMeta) scorecard.TestScore) {
 	ch := NewCheck(name, "all", comment)
 	c.all = append(c.all, ch)
 	c.metas[machineFriendlyName(name)] = MetaCheck{ch, fn}

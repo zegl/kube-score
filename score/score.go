@@ -9,6 +9,7 @@ import (
 	"github.com/zegl/kube-score/score/cronjob"
 	"github.com/zegl/kube-score/score/disruptionbudget"
 	"github.com/zegl/kube-score/score/ingress"
+	"github.com/zegl/kube-score/score/meta"
 	"github.com/zegl/kube-score/score/networkpolicy"
 	"github.com/zegl/kube-score/score/probes"
 	"github.com/zegl/kube-score/score/security"
@@ -32,6 +33,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	service.Register(allChecks, allObjects, allObjects)
 	stable.Register(allChecks)
 	apps.Register(allChecks)
+	meta.Register(allChecks)
 
 	return allChecks
 }
@@ -52,7 +54,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, meta := range allObjects.Metas() {
 		o := scoreCard.NewObject(meta.TypeMeta, meta.ObjectMeta)
 		for _, test := range allChecks.Metas() {
-			o.Add(test.Fn(meta.TypeMeta), test.Check)
+			o.Add(test.Fn(meta), test.Check)
 		}
 	}
 
