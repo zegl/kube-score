@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
@@ -81,7 +82,7 @@ func scoreFiles() error {
 	warningThreshold := fs.Int("threshold-warning", 5, "The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive).")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
-	outputFormat := fs.String("output-format", "human", "Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
+	outputFormat := fs.String("output-format", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	setDefault(fs, "score", false)
 
@@ -101,9 +102,9 @@ func scoreFiles() error {
 		return fmt.Errorf("Error: --threshold-ok and --threshold-warning must be set to a value between 1 and 10 inclusive.")
 	}
 
-	if *outputFormat != "human" && *outputFormat != "ci" {
+	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" {
 		fs.Usage()
-		return fmt.Errorf("Error: --output-format must be set to: 'human' or 'ci'")
+		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json' or 'ci'")
 	}
 
 	filesToRead := fs.Args()
@@ -166,7 +167,13 @@ Use "-" as filename to read from STDIN.`)
 
 	var r io.Reader
 
-	if *outputFormat == "human" {
+	if *outputFormat == "json" {
+		// TODO: Don't print tests that should be ignored, this is best solved by not executing those tests.
+		d, _ := json.MarshalIndent(scoreCard, "", "    ")
+		w := bytes.NewBufferString("")
+		w.WriteString(string(d))
+		r = w
+	} else if *outputFormat == "human" {
 		r = outputHuman(scoreCard, *okThreshold, *warningThreshold, ignoredTests)
 	} else {
 		r = outputCi(scoreCard, *okThreshold, *warningThreshold, ignoredTests)
