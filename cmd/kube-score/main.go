@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
+	"io"
+	"io/ioutil"
+	"os"
+	"sort"
 
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/parser"
@@ -79,7 +82,7 @@ func scoreFiles() error {
 	warningThreshold := fs.Int("threshold-warning", 5, "The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive).")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
-	outputFormat := fs.String("output-format", "human", "Set to 'human' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
+	outputFormat := fs.String("output-format", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	setDefault(fs, "score", false)
 
@@ -99,9 +102,9 @@ func scoreFiles() error {
 		return fmt.Errorf("Error: --threshold-ok and --threshold-warning must be set to a value between 1 and 10 inclusive.")
 	}
 
-	if *outputFormat != "human" && *outputFormat != "ci" {
+	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" {
 		fs.Usage()
-		return fmt.Errorf("Error: --output-format must be set to: 'human' or 'ci'")
+		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json' or 'ci'")
 	}
 
 	filesToRead := fs.Args()
@@ -153,92 +156,32 @@ Use "-" as filename to read from STDIN.`)
 		ignoredTests[testID] = struct{}{}
 	}
 
-	hasWarning := false
-	hasCritical := false
-
-	// Detect which output format we should use
-	humanOutput := *outputFormat == "human"
-
-	for _, scoredObject := range *scoreCard {
-		// Headers for each object
-		if humanOutput {
-			color.New(color.FgMagenta).Printf("%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
-			if scoredObject.ObjectMeta.Namespace != "" {
-				color.New(color.FgMagenta).Printf(" in %s\n", scoredObject.ObjectMeta.Namespace)
-			} else {
-				fmt.Println()
-			}
-		}
-
-		for _, card := range scoredObject.Checks {
-			if _, ok := ignoredTests[card.Check.ID]; ok {
-				continue
-			}
-
-			var col color.Attribute
-			var status string
-
-			if card.Grade >= scorecard.Grade(*okThreshold) {
-				// Higher than or equal to --threshold-ok
-				col = color.FgGreen
-				status = "OK"
-			} else if card.Grade >= scorecard.Grade(*warningThreshold) {
-				// Higher than or equal to --threshold-warning
-				col = color.FgYellow
-				status = "WARNING"
-				hasWarning = true
-			} else {
-				// All lower than both --threshold-ok and --threshold-warning are critical
-				col = color.FgRed
-				status = "CRITICAL"
-				hasCritical = true
-			}
-
-			if humanOutput {
-				color.New(col).Printf("    [%s] %s\n", status, card.Check.Name)
-
-				for _, comment := range card.Comments {
-					fmt.Printf("        * ")
-
-					if len(comment.Path) > 0 {
-						fmt.Printf("%s -> ", comment.Path)
-					}
-
-					fmt.Print(comment.Summary)
-
-					if len(comment.Description) > 0 {
-						fmt.Printf("\n             %s", comment.Description)
-					}
-
-					fmt.Println()
-				}
-			} else {
-				// "Machine" / CI friendly output
-				for _, comment := range card.Comments {
-					message := comment.Summary
-					if comment.Path != "" {
-						message = "(" + comment.Path + ") " + comment.Summary
-					}
-
-					fmt.Printf("[%s] %s: %s\n",
-						status,
-						scoredObject.HumanFriendlyRef(),
-						message,
-					)
-				}
-
-			}
-		}
-	}
-
-	if hasCritical {
-		os.Exit(1)
-	} else if hasWarning && *exitOneOnWarning {
-		os.Exit(1)
+	var exitCode int
+	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
+		exitCode = 1
+	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.Grade(*warningThreshold)) {
+		exitCode = 1
 	} else {
-		os.Exit(0)
+		exitCode = 0
 	}
 
+	var r io.Reader
+
+	if *outputFormat == "json" {
+		// TODO: Don't print tests that should be ignored, this is best solved by not executing those tests.
+		d, _ := json.MarshalIndent(scoreCard, "", "    ")
+		w := bytes.NewBufferString("")
+		w.WriteString(string(d))
+		r = w
+	} else if *outputFormat == "human" {
+		r = outputHuman(scoreCard, *okThreshold, *warningThreshold, ignoredTests)
+	} else {
+		r = outputCi(scoreCard, *okThreshold, *warningThreshold, ignoredTests)
+	}
+
+	output, _ := ioutil.ReadAll(r)
+	fmt.Print(string(output))
+	os.Exit(exitCode)
 	return nil
 }
 
@@ -260,4 +203,133 @@ func listChecks() {
 		output.Write([]string{c.ID, c.TargetType, c.Comment})
 	}
 	output.Flush()
+}
+
+func statusString(grade scorecard.Grade, okThreshold, warningThreshold int) string {
+	if grade >= scorecard.Grade(okThreshold) {
+		// Higher than or equal to --threshold-ok
+		return "OK"
+	} else if grade >= scorecard.Grade(warningThreshold) {
+		// Higher than or equal to --threshold-warning
+		return "WARNING"
+	} else {
+		// All lower than both --threshold-ok and --threshold-warning are critical
+		return "CRITICAL"
+	}
+}
+
+func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int, ignoredTests map[string]struct{}) io.Reader {
+	// Print the items sorted by scorecard key
+	var keys []string
+	for k := range *scoreCard {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	w := bytes.NewBufferString("")
+
+	for _, key := range keys {
+		scoredObject := (*scoreCard)[key]
+
+		// Headers for each object
+		color.New(color.FgMagenta).Fprintf(w, "%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
+		if scoredObject.ObjectMeta.Namespace != "" {
+			color.New(color.FgMagenta).Fprintf(w, " in %s\n", scoredObject.ObjectMeta.Namespace)
+		} else {
+			fmt.Fprintln(w)
+		}
+
+		for _, card := range scoredObject.Checks {
+			if _, ok := ignoredTests[card.Check.ID]; ok {
+				continue
+			}
+
+			r := outputHumanStep(card, okThreshold, warningThreshold)
+			io.Copy(w, r)
+		}
+
+	}
+
+	return w
+}
+
+func outputHumanStep(card scorecard.TestScore, okThreshold, warningThreshold int) io.Reader {
+	var col color.Attribute
+
+	if card.Grade >= scorecard.Grade(okThreshold) {
+		// Higher than or equal to --threshold-ok
+		col = color.FgGreen
+	} else if card.Grade >= scorecard.Grade(warningThreshold) {
+		// Higher than or equal to --threshold-warning
+		col = color.FgYellow
+	} else {
+		// All lower than both --threshold-ok and --threshold-warning are critical
+		col = color.FgRed
+	}
+
+	w := bytes.NewBufferString("")
+
+	color.New(col).Fprintf(w, "    [%s] %s\n", statusString(card.Grade, okThreshold, warningThreshold), card.Check.Name)
+
+	for _, comment := range card.Comments {
+		fmt.Fprintf(w, "        * ")
+
+		if len(comment.Path) > 0 {
+			fmt.Fprintf(w, "%s -> ", comment.Path)
+		}
+
+		fmt.Fprint(w, comment.Summary)
+
+		if len(comment.Description) > 0 {
+			fmt.Fprintf(w, "\n             %s", comment.Description)
+		}
+
+		fmt.Fprintln(w)
+	}
+
+	return w
+}
+
+// "Machine" / CI friendly output
+func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int, ignoredTests map[string]struct{}) io.Reader {
+	w := bytes.NewBufferString("")
+
+	// Print the items sorted by scorecard key
+	var keys []string
+	for k := range *scoreCard {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		scoredObject := (*scoreCard)[key]
+
+		for _, card := range scoredObject.Checks {
+			if _, ok := ignoredTests[card.Check.ID]; ok {
+				continue
+			}
+
+			if len(card.Comments) == 0 {
+				fmt.Fprintf(w, "[%s] %s\n",
+					statusString(card.Grade, okThreshold, warningThreshold),
+					scoredObject.HumanFriendlyRef(),
+				)
+			}
+
+			for _, comment := range card.Comments {
+				message := comment.Summary
+				if comment.Path != "" {
+					message = "(" + comment.Path + ") " + comment.Summary
+				}
+
+				fmt.Fprintf(w, "[%s] %s: %s\n",
+					statusString(card.Grade, okThreshold, warningThreshold),
+					scoredObject.HumanFriendlyRef(),
+					message,
+				)
+			}
+		}
+	}
+
+	return w
 }
