@@ -35,6 +35,17 @@ func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 	return o
 }
 
+func (s Scorecard) AnyBelowOrEqualToGrade(threshold Grade) bool {
+	for _, o := range s {
+		for _, s := range o.Checks {
+			if s.Grade <= threshold {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 type ScoredObject struct {
 	TypeMeta   metav1.TypeMeta
 	ObjectMeta metav1.ObjectMeta
