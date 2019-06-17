@@ -29,7 +29,9 @@ func ingressTargetsService(allServices []corev1.Service) func(extensionsv1beta1.
 
 					if service.Name == path.Backend.ServiceName {
 						for _, servicePort := range service.Spec.Ports {
-							if servicePort.Port == path.Backend.ServicePort.IntVal {
+							if path.Backend.ServicePort.IntVal > 0 && servicePort.Port == path.Backend.ServicePort.IntVal {
+								pathHasMatch = true
+							} else if servicePort.Name == path.Backend.ServicePort.StrVal {
 								pathHasMatch = true
 							}
 						}
