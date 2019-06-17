@@ -157,9 +157,9 @@ Use "-" as filename to read from STDIN.`)
 	}
 
 	var exitCode int
-	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
+	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical, ignoredTests) {
 		exitCode = 1
-	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.Grade(*warningThreshold)) {
+	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.Grade(*warningThreshold), ignoredTests) {
 		exitCode = 1
 	} else {
 		exitCode = 0
