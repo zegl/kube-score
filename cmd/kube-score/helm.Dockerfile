@@ -16,4 +16,4 @@ RUN apk update && \
     apk add bash
 COPY --from=downloader /linux-amd64/helm /usr/bin/helm
 COPY kube-score /usr/bin/kube-score
-ENTRYPOINT ["/kube-score"]
+ENTRYPOINT ["/usr/bin/kube-score"]
