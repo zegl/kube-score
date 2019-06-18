@@ -21,7 +21,7 @@ import (
 )
 
 func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks.Checks {
-	allChecks := checks.New()
+	allChecks := checks.New(cnf)
 
 	ingress.Register(allChecks, allObjects)
 	cronjob.Register(allChecks)

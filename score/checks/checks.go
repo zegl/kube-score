@@ -10,12 +10,15 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func New() *Checks {
+func New(cnf config.Configuration) *Checks {
 	return &Checks{
+		cnf: cnf,
+
 		all:             make([]ks.Check, 0),
 		metas:           make(map[string]MetaCheck),
 		pods:            make(map[string]PodCheck),
@@ -93,10 +96,22 @@ type Checks struct {
 	networkpolicies map[string]NetworkPolicyCheck
 	ingresses       map[string]IngressCheck
 	cronjobs        map[string]CronJobCheck
+
+	cnf config.Configuration
+}
+
+func (c Checks) isIgnored(id string) bool {
+	_, ok := c.cnf.IgnoredTests[id]
+	return ok
 }
 
 func (c *Checks) RegisterMetaCheck(name, comment string, fn func(meta ks.BothMeta) scorecard.TestScore) {
 	ch := NewCheck(name, "all", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.metas[machineFriendlyName(name)] = MetaCheck{ch, fn}
 }
@@ -107,6 +122,11 @@ func (c *Checks) Metas() map[string]MetaCheck {
 
 func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore) {
 	ch := NewCheck(name, "Pod", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.pods[machineFriendlyName(name)] = PodCheck{ch, fn}
 }
@@ -117,6 +137,11 @@ func (c *Checks) Pods() map[string]PodCheck {
 
 func (c *Checks) RegisterCronJobCheck(name, comment string, fn func(batchv1beta1.CronJob) scorecard.TestScore) {
 	ch := NewCheck(name, "CronJob", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.cronjobs[machineFriendlyName(name)] = CronJobCheck{ch, fn}
 }
@@ -127,6 +152,11 @@ func (c *Checks) CronJobs() map[string]CronJobCheck {
 
 func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn func(appsv1.StatefulSet) (scorecard.TestScore, error)) {
 	ch := NewCheck(name, "StatefulSet", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.statefulsets[machineFriendlyName(name)] = StatefulSetCheck{ch, fn}
 }
@@ -137,6 +167,11 @@ func (c *Checks) StatefulSets() map[string]StatefulSetCheck {
 
 func (c *Checks) RegisterDeploymentCheck(name, comment string, fn func(appsv1.Deployment) (scorecard.TestScore, error)) {
 	ch := NewCheck(name, "Deployment", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.deployments[machineFriendlyName(name)] = DeploymentCheck{ch, fn}
 }
@@ -147,6 +182,11 @@ func (c *Checks) Deployments() map[string]DeploymentCheck {
 
 func (c *Checks) RegisterIngressCheck(name, comment string, fn func(extensionsv1beta1.Ingress) scorecard.TestScore) {
 	ch := NewCheck(name, "Ingress", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.ingresses[machineFriendlyName(name)] = IngressCheck{ch, fn}
 }
@@ -157,6 +197,11 @@ func (c *Checks) Ingresses() map[string]IngressCheck {
 
 func (c *Checks) RegisterNetworkPolicyCheck(name, comment string, fn func(networkingv1.NetworkPolicy) scorecard.TestScore) {
 	ch := NewCheck(name, "NetworkPolicy", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.networkpolicies[machineFriendlyName(name)] = NetworkPolicyCheck{ch, fn}
 }
@@ -167,6 +212,11 @@ func (c *Checks) NetworkPolicies() map[string]NetworkPolicyCheck {
 
 func (c *Checks) RegisterServiceCheck(name, comment string, fn func(corev1.Service) scorecard.TestScore) {
 	ch := NewCheck(name, "Service", comment)
+
+	if c.isIgnored(ch.ID) {
+		return
+	}
+
 	c.all = append(c.all, ch)
 	c.services[machineFriendlyName(name)] = ServiceCheck{ch, fn}
 }
