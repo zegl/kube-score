@@ -14,11 +14,3 @@ workflows:
   build-and-release:
     jobs:
     - test
-    - docker-test
-    - docker-hub-release:
-        filters:
-          branches:
-            only:
-            - master
-        requires:
-          - test
