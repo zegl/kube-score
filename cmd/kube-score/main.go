@@ -169,7 +169,6 @@ Use "-" as filename to read from STDIN.`)
 	var r io.Reader
 
 	if *outputFormat == "json" {
-		// TODO: Don't print tests that should be ignored, this is best solved by not executing those tests.
 		d, _ := json.MarshalIndent(scoreCard, "", "    ")
 		w := bytes.NewBufferString("")
 		w.WriteString(string(d))
