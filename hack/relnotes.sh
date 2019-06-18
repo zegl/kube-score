@@ -30,5 +30,6 @@ git log ${PREV_RELEASE}...HEAD | rg -o "Co-authored-by: (.*?) <" --replace "\$1"
 echo
 echo "# Download"
 echo "* Download the binaries from the GitHub release page"
-echo "* Download the image from Docker Hub: zegl/kube-score:${CURRENT_TAG/v/}"
-echo "* Download from homebrew: brew install kube-score/tap/kube-score"
+echo "* Download the image from Docker Hub: \`zegl/kube-score:${CURRENT_TAG}\`"
+echo "* Download the image from Docker Hub with Helm pre-installed: \`zegl/kube-score:${CURRENT_TAG}-helm\`"
+echo "* Download from homebrew: \`brew install kube-score/tap/kube-score\`"

@@ -1,2 +1,2 @@
-status = [ 'ci/circleci: test', 'ci/circleci: docker-test' ]
+status = [ 'ci/circleci: test' ]
 delete_merged_branches = true

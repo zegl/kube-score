@@ -9,12 +9,30 @@ builds:
   - windows
   goarch:
   - amd64
+
 archives:
   - id: binary
     format: binary
 
   # A release in archive format is needed for the homebrew release
   - id: default
+
+dockers:
+- goos: linux
+  goarch: amd64
+  binaries:
+  - kube-score
+  image_templates:
+  - "zegl/kube-score:{{ .Tag }}"
+  dockerfile: Dockerfile
+
+- goos: linux
+  goarch: amd64
+  binaries:
+  - kube-score
+  image_templates:
+  - "zegl/kube-score:{{ .Tag }}-helm"
+  dockerfile: helm.Dockerfile
 
 checksum:
   name_template: 'checksums.txt'
@@ -25,11 +43,13 @@ snapshot:
 changelog:
   sort: asc
 
-brew:
-  name: kube-score
-  github:
-    owner: kube-score
-    name: homebrew-tap
-  folder: Formula
-  url_template: "https://github.com/zegl/kube-score/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-  homepage: "https://kube-score.com/"
+brews:
+  - name: kube-score
+    github:
+      owner: kube-score
+      name: homebrew-tap
+    folder: Formula
+    url_template: "https://github.com/zegl/kube-score/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    homepage: "https://kube-score.com/"
+    install: |
+      bin.install "program"
