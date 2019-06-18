@@ -63,10 +63,8 @@ func TestCiOutput(t *testing.T) {
 		},
 	}
 
-	ignoredTests := make(map[string]struct{})
-
 	// Defaults
-	r := outputCi(card, 10, 5, ignoredTests)
+	r := outputCi(card, 10, 5)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `[WARNING] foo/foofoo v1/Testing: (a) summary
@@ -75,7 +73,7 @@ func TestCiOutput(t *testing.T) {
 `, string(all))
 
 	// OK at 9 or higher
-	r = outputCi(card, 9, 5, ignoredTests)
+	r = outputCi(card, 9, 5)
 	all, err = ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `[OK] foo/foofoo v1/Testing: (a) summary
@@ -84,7 +82,7 @@ func TestCiOutput(t *testing.T) {
 `, string(all))
 
 	// OK at 8 or higher
-	r = outputCi(card, 8, 5, ignoredTests)
+	r = outputCi(card, 8, 5)
 	all, err = ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `[OK] foo/foofoo v1/Testing: (a) summary
@@ -146,10 +144,8 @@ func TestHumanOutput(t *testing.T) {
 		},
 	}
 
-	ignoredTests := make(map[string]struct{})
-
 	// Defaults
-	r := outputHuman(card, 10, 5, ignoredTests)
+	r := outputHuman(card, 10, 5)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo
@@ -163,7 +159,7 @@ v1/Testing bar-no-namespace
 `, string(all))
 
 	// OK at 9 or higher
-	r = outputHuman(card, 9, 5, ignoredTests)
+	r = outputHuman(card, 9, 5)
 	all, err = ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo
@@ -177,7 +173,7 @@ v1/Testing bar-no-namespace
 `, string(all))
 
 	// OK at 8 or higher
-	r = outputHuman(card, 8, 5, ignoredTests)
+	r = outputHuman(card, 8, 5)
 	all, err = ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo

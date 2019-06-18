@@ -1,9 +1,10 @@
 package scorecard
 
 import (
-	ks "github.com/zegl/kube-score/domain"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+
+	ks "github.com/zegl/kube-score/domain"
 )
 
 const (
@@ -35,13 +36,9 @@ func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 	return o
 }
 
-func (s Scorecard) AnyBelowOrEqualToGrade(threshold Grade, ignoredTests map[string]struct{}) bool {
+func (s Scorecard) AnyBelowOrEqualToGrade(threshold Grade) bool {
 	for _, o := range s {
 		for _, s := range o.Checks {
-			if _, ok := ignoredTests[s.Check.ID]; ok {
-				continue
-			}
-
 			if s.Grade <= threshold {
 				return true
 			}
@@ -92,9 +89,9 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
 }
 
 type TestScore struct {
-	Check ks.Check
-	Grade        Grade
-	Comments     []TestScoreComment
+	Check    ks.Check
+	Grade    Grade
+	Comments []TestScoreComment
 }
 
 type Grade int

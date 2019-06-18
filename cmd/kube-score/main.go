@@ -134,11 +134,17 @@ Use "-" as filename to read from STDIN.`)
 		allFilePointers = append(allFilePointers, fp)
 	}
 
+	ignoredTests := make(map[string]struct{})
+	for _, testID := range *ignoreTests {
+		ignoredTests[testID] = struct{}{}
+	}
+
 	cnf := config.Configuration{
 		AllFiles:                              allFilePointers,
 		VerboseOutput:                         *verboseOutput,
 		IgnoreContainerCpuLimitRequirement:    *ignoreContainerCpuLimit,
 		IgnoreContainerMemoryLimitRequirement: *ignoreContainerMemoryLimit,
+		IgnoredTests:                          ignoredTests,
 	}
 
 	parsedFiles, err := parser.ParseFiles(cnf)
@@ -151,15 +157,10 @@ Use "-" as filename to read from STDIN.`)
 		return err
 	}
 
-	ignoredTests := make(map[string]struct{})
-	for _, testID := range *ignoreTests {
-		ignoredTests[testID] = struct{}{}
-	}
-
 	var exitCode int
-	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical, ignoredTests) {
+	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
 		exitCode = 1
-	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.Grade(*warningThreshold), ignoredTests) {
+	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.Grade(*warningThreshold)) {
 		exitCode = 1
 	} else {
 		exitCode = 0
@@ -168,15 +169,14 @@ Use "-" as filename to read from STDIN.`)
 	var r io.Reader
 
 	if *outputFormat == "json" {
-		// TODO: Don't print tests that should be ignored, this is best solved by not executing those tests.
 		d, _ := json.MarshalIndent(scoreCard, "", "    ")
 		w := bytes.NewBufferString("")
 		w.WriteString(string(d))
 		r = w
 	} else if *outputFormat == "human" {
-		r = outputHuman(scoreCard, *okThreshold, *warningThreshold, ignoredTests)
+		r = outputHuman(scoreCard, *okThreshold, *warningThreshold)
 	} else {
-		r = outputCi(scoreCard, *okThreshold, *warningThreshold, ignoredTests)
+		r = outputCi(scoreCard, *okThreshold, *warningThreshold)
 	}
 
 	output, _ := ioutil.ReadAll(r)
@@ -218,7 +218,7 @@ func statusString(grade scorecard.Grade, okThreshold, warningThreshold int) stri
 	}
 }
 
-func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int, ignoredTests map[string]struct{}) io.Reader {
+func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int) io.Reader {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
@@ -240,10 +240,6 @@ func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold i
 		}
 
 		for _, card := range scoredObject.Checks {
-			if _, ok := ignoredTests[card.Check.ID]; ok {
-				continue
-			}
-
 			r := outputHumanStep(card, okThreshold, warningThreshold)
 			io.Copy(w, r)
 		}
@@ -291,7 +287,7 @@ func outputHumanStep(card scorecard.TestScore, okThreshold, warningThreshold int
 }
 
 // "Machine" / CI friendly output
-func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int, ignoredTests map[string]struct{}) io.Reader {
+func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int) io.Reader {
 	w := bytes.NewBufferString("")
 
 	// Print the items sorted by scorecard key
@@ -305,10 +301,6 @@ func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int,
 		scoredObject := (*scoreCard)[key]
 
 		for _, card := range scoredObject.Checks {
-			if _, ok := ignoredTests[card.Check.ID]; ok {
-				continue
-			}
-
 			if len(card.Comments) == 0 {
 				fmt.Fprintf(w, "[%s] %s\n",
 					statusString(card.Grade, okThreshold, warningThreshold),

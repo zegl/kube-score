@@ -7,4 +7,5 @@ type Configuration struct {
 	VerboseOutput                         bool
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool
+	IgnoredTests                          map[string]struct{}
 }
