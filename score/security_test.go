@@ -28,7 +28,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "Container has no configured security context",
-				Description: "Set securityContext to run the container is a more secure context.",
+				Description: "Set securityContext to run the container in a more secure context.",
 			},
 		},
 		// All required variables set correctly
