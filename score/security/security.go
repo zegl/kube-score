@@ -26,7 +26,7 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec, typeMeta metav
 
 		if container.SecurityContext == nil {
 			noContextSet = true
-			score.AddComment(container.Name, "Container has no configured security context", "Set securityContext to run the container is a more secure context.")
+			score.AddComment(container.Name, "Container has no configured security context", "Set securityContext to run the container in a more secure context.")
 			continue
 		}
 
