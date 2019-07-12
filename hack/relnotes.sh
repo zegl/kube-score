@@ -14,7 +14,7 @@ echo "# Changes";
 RELNOTE_MERGES=$(git log ${PREV_RELEASE}...HEAD --grep RELNOTE --oneline --merges)
 while read -r line; do
     COMMIT=$(echo "$line" | awk '{print $1}')
-    git show "$COMMIT" | rg -o '^\s+([0-9]+):(.*?)\s+RELNOTE:(.*?)\s+```' --multiline-dotall --multiline --replace "* #\$1 \$3";
+    git show "$COMMIT" | rg -o '^\s+([0-9]+):(.*?)\s+RELNOTE:(.*?)\s+```' --multiline-dotall --multiline --replace "* #\$1 \$3" || true;
 done <<< "$RELNOTE_MERGES"
 
 #
