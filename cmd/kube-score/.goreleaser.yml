@@ -52,4 +52,4 @@ brews:
     url_template: "https://github.com/zegl/kube-score/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     homepage: "https://kube-score.com/"
     install: |
-      bin.install "program"
+      bin.install "kube-score"
