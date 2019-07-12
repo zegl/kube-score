@@ -1,10 +1,11 @@
 package security
 
 import (
-	"github.com/zegl/kube-score/score/checks"
-	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/zegl/kube-score/score/checks"
+	"github.com/zegl/kube-score/scorecard"
 )
 
 func Register(allChecks *checks.Checks) {
@@ -22,15 +23,31 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec, typeMeta metav
 	hasLowUserID := false
 	hasLowGroupID := false
 
+	podSecurityContext := podTemplate.Spec.SecurityContext
+
 	for _, container := range allContainers {
 
-		if container.SecurityContext == nil {
+		if container.SecurityContext == nil && podSecurityContext == nil {
 			noContextSet = true
 			score.AddComment(container.Name, "Container has no configured security context", "Set securityContext to run the container is a more secure context.")
 			continue
 		}
 
 		sec := container.SecurityContext
+
+		if sec == nil {
+			sec = &corev1.SecurityContext{}
+		}
+
+		// Forward values from PodSecurityContext to the (container level) SecurityContext if not set
+		if podSecurityContext != nil {
+			if sec.RunAsGroup == nil {
+				sec.RunAsGroup = podSecurityContext.RunAsGroup
+			}
+			if sec.RunAsUser == nil {
+				sec.RunAsUser = podSecurityContext.RunAsUser
+			}
+		}
 
 		if sec.Privileged == nil || *sec.Privileged {
 			hasPrivileged = true

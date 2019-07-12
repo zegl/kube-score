@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+  labels:
+    app: test
+spec:
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      securityContext:
+        runAsGroup: 20000
+        runAsUser: 20000
+      containers:
+        - name: test
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
