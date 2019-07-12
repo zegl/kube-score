@@ -12,12 +12,13 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
+func TestPodSecurityContext(test *testing.T) {
 	b := func(b bool) *bool { return &b }
 	i := func(i int64) *int64 { return &i }
 
 	tests := []struct {
 		ctx             *corev1.SecurityContext
+		podCtx          *corev1.PodSecurityContext
 		expectedGrade   scorecard.Grade
 		expectedComment *scorecard.TestScoreComment
 	}{
@@ -106,6 +107,40 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 				Description: "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsGroup to a value > 10000",
 			},
 		},
+		// PodSecurityContext is set, assert that the values are inherited
+		{
+			ctx: &corev1.SecurityContext{
+				ReadOnlyRootFilesystem: b(true),
+				RunAsNonRoot:           b(true),
+				Privileged:             b(false),
+			},
+			podCtx: &corev1.PodSecurityContext{
+				RunAsUser:  i(20000),
+				RunAsGroup: i(20000),
+			},
+			expectedGrade: 10,
+		},
+		// PodSecurityContext is set, assert that the values are inherited
+		// The container ctx has invalid values
+		{
+			ctx: &corev1.SecurityContext{
+				ReadOnlyRootFilesystem: b(true),
+				RunAsNonRoot:           b(true),
+				Privileged:             b(false),
+				RunAsUser:              i(4),
+				RunAsGroup:             i(5),
+			},
+			podCtx: &corev1.PodSecurityContext{
+				RunAsUser:  i(20000),
+				RunAsGroup: i(20000),
+			},
+			expectedGrade: 1,
+			expectedComment: &scorecard.TestScoreComment{
+				Path:        "foobar",
+				Summary:     "The container running with a low group ID",
+				Description: "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsGroup to a value > 10000",
+			},
+		},
 	}
 
 	for caseID, tc := range tests {
@@ -119,6 +154,7 @@ func TestSecurityExplicitlyWritableRootFs(test *testing.T) {
 			Spec: appsv1.StatefulSetSpec{
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
+						SecurityContext: tc.podCtx,
 						Containers: []corev1.Container{
 							{
 								Name:            "foobar",
@@ -151,6 +187,10 @@ func TestContainerSecurityContextLowUser(t *testing.T) {
 
 func TestContainerSecurityContextLowGroup(t *testing.T) {
 	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 1)
+}
+
+func TestPodSecurityContextInherited(t *testing.T) {
+	testExpectedScore(t, "security-inherit-pod-security-context.yaml", "Container Security Context", 10)
 }
 
 func TestContainerSecurityContextAllGood(t *testing.T) {
