@@ -4,7 +4,15 @@ set -euo pipefail
 
 # Dependencies: rg (ripgrep), jq
 
-PREV_RELEASE=v0.7.1
+if [ "$#" -ne 1 ]; then
+    echo "Unexpected number of arguments"
+    echo
+    echo "Usage:"
+    echo "  $0 previous-release-tag"
+    exit 1;
+fi
+
+PREV_RELEASE=$1
 CURRENT_TAG=$(git tag -l --points-at HEAD);
 
 #
