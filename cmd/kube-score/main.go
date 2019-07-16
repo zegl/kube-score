@@ -83,6 +83,7 @@ func scoreFiles() error {
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.String("output-format", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
+	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	setDefault(fs, "score", false)
 
@@ -134,10 +135,8 @@ Use "-" as filename to read from STDIN.`)
 		allFilePointers = append(allFilePointers, fp)
 	}
 
-	ignoredTests := make(map[string]struct{})
-	for _, testID := range *ignoreTests {
-		ignoredTests[testID] = struct{}{}
-	}
+	ignoredTests := listToStructMap(ignoreTests)
+	enabledOptionalTests := listToStructMap(optionalTests)
 
 	cnf := config.Configuration{
 		AllFiles:                              allFilePointers,
@@ -145,6 +144,7 @@ Use "-" as filename to read from STDIN.`)
 		IgnoreContainerCpuLimitRequirement:    *ignoreContainerCpuLimit,
 		IgnoreContainerMemoryLimitRequirement: *ignoreContainerMemoryLimit,
 		IgnoredTests:                          ignoredTests,
+		EnabledOptionalTests:                  enabledOptionalTests,
 	}
 
 	parsedFiles, err := parser.ParseFiles(cnf)
@@ -200,7 +200,11 @@ func listChecks() {
 
 	output := csv.NewWriter(os.Stdout)
 	for _, c := range allChecks.All() {
-		output.Write([]string{c.ID, c.TargetType, c.Comment})
+		optionalString := "default"
+		if c.Optional {
+			optionalString = "optional"
+		}
+		output.Write([]string{c.ID, c.TargetType, c.Comment, optionalString})
 	}
 	output.Flush()
 }
@@ -324,4 +328,12 @@ func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int)
 	}
 
 	return w
+}
+
+func listToStructMap(items *[]string) map[string]struct{} {
+	structMap := make(map[string]struct{})
+	for _, testID := range *items {
+		structMap[testID] = struct{}{}
+	}
+	return structMap
 }

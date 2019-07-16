@@ -15,6 +15,7 @@ type Check struct {
 	ID         string
 	TargetType string
 	Comment    string
+	Optional   bool
 }
 
 type BothMeta struct {

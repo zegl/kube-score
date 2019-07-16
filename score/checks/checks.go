@@ -31,12 +31,13 @@ func New(cnf config.Configuration) *Checks {
 	}
 }
 
-func NewCheck(name, targetType, comment string) ks.Check {
+func NewCheck(name, targetType, comment string, optional bool) ks.Check {
 	return ks.Check{
 		Name:       name,
 		ID:         machineFriendlyName(name),
 		TargetType: targetType,
 		Comment:    comment,
+		Optional:   optional,
 	}
 }
 
@@ -46,44 +47,52 @@ func machineFriendlyName(in string) string {
 	return in
 }
 
+type MetaCheckFn = func(ks.BothMeta) scorecard.TestScore
 type MetaCheck struct {
 	ks.Check
-	Fn func(ks.BothMeta) scorecard.TestScore
+	Fn MetaCheckFn
 }
 
+type PodCheckFn = func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore
 type PodCheck struct {
 	ks.Check
-	Fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore
+	Fn PodCheckFn
 }
 
+type ServiceCheckFn = func(corev1.Service) scorecard.TestScore
 type ServiceCheck struct {
 	ks.Check
-	Fn func(corev1.Service) scorecard.TestScore
+	Fn ServiceCheckFn
 }
 
+type StatefulSetCheckFn = func(appsv1.StatefulSet) (scorecard.TestScore, error)
 type StatefulSetCheck struct {
 	ks.Check
-	Fn func(appsv1.StatefulSet) (scorecard.TestScore, error)
+	Fn StatefulSetCheckFn
 }
 
+type DeploymentCheckFn = func(appsv1.Deployment) (scorecard.TestScore, error)
 type DeploymentCheck struct {
 	ks.Check
-	Fn func(appsv1.Deployment) (scorecard.TestScore, error)
+	Fn DeploymentCheckFn
 }
 
+type NetworkPolicyCheckFn = func(networkingv1.NetworkPolicy) scorecard.TestScore
 type NetworkPolicyCheck struct {
 	ks.Check
-	Fn func(networkingv1.NetworkPolicy) scorecard.TestScore
+	Fn NetworkPolicyCheckFn
 }
 
+type IngressCheckFn = func(extensionsv1beta1.Ingress) scorecard.TestScore
 type IngressCheck struct {
 	ks.Check
-	Fn func(extensionsv1beta1.Ingress) scorecard.TestScore
+	Fn IngressCheckFn
 }
 
+type CronJobCheckFn = func(batchv1beta1.CronJob) scorecard.TestScore
 type CronJobCheck struct {
 	ks.Check
-	Fn func(batchv1beta1.CronJob) scorecard.TestScore
+	Fn CronJobCheckFn
 }
 
 type Checks struct {
@@ -105,120 +114,197 @@ func (c Checks) isIgnored(id string) bool {
 	return ok
 }
 
-func (c *Checks) RegisterMetaCheck(name, comment string, fn func(meta ks.BothMeta) scorecard.TestScore) {
-	ch := NewCheck(name, "all", comment)
-
-	if c.isIgnored(ch.ID) {
-		return
+func (c Checks) isEnabled(check ks.Check) bool {
+	if c.isIgnored(check.ID) {
+		return false
 	}
 
-	c.all = append(c.all, ch)
-	c.metas[machineFriendlyName(name)] = MetaCheck{ch, fn}
+	if !check.Optional {
+		return true
+	}
+
+	_, ok := c.cnf.EnabledOptionalTests[check.ID]
+	return ok
+}
+
+func (c *Checks) RegisterMetaCheck(name, comment string, fn MetaCheckFn) {
+	ch := NewCheck(name, "all", comment, false)
+	c.registerMetaCheck(MetaCheck{ch, fn})
+}
+
+func (c *Checks) RegisterOptionalMetaCheck(name, comment string, fn MetaCheckFn) {
+	ch := NewCheck(name, "all", comment, true)
+	c.registerMetaCheck(MetaCheck{ch, fn})
+}
+
+func (c *Checks) registerMetaCheck(ch MetaCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
+		return
+	}
+	c.metas[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) Metas() map[string]MetaCheck {
 	return c.metas
 }
 
-func (c *Checks) RegisterPodCheck(name, comment string, fn func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore) {
-	ch := NewCheck(name, "Pod", comment)
+func (c *Checks) RegisterPodCheck(name, comment string, fn PodCheckFn) {
+	ch := NewCheck(name, "Pod", comment, false)
+	c.registerPodCheck(PodCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalPodCheck(name, comment string, fn PodCheckFn) {
+	ch := NewCheck(name, "Pod", comment, true)
+	c.registerPodCheck(PodCheck{ch, fn})
+}
+
+func (c *Checks) registerPodCheck(ch PodCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.pods[machineFriendlyName(name)] = PodCheck{ch, fn}
+	c.pods[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) Pods() map[string]PodCheck {
 	return c.pods
 }
 
-func (c *Checks) RegisterCronJobCheck(name, comment string, fn func(batchv1beta1.CronJob) scorecard.TestScore) {
-	ch := NewCheck(name, "CronJob", comment)
+func (c *Checks) RegisterCronJobCheck(name, comment string, fn CronJobCheckFn) {
+	ch := NewCheck(name, "CronJob", comment, false)
+	c.registerCronJobCheck(CronJobCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalCronJobCheck(name, comment string, fn CronJobCheckFn) {
+	ch := NewCheck(name, "CronJob", comment, true)
+	c.registerCronJobCheck(CronJobCheck{ch, fn})
+}
+
+func (c *Checks) registerCronJobCheck(ch CronJobCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.cronjobs[machineFriendlyName(name)] = CronJobCheck{ch, fn}
+	c.cronjobs[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) CronJobs() map[string]CronJobCheck {
 	return c.cronjobs
 }
 
-func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn func(appsv1.StatefulSet) (scorecard.TestScore, error)) {
-	ch := NewCheck(name, "StatefulSet", comment)
+func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn StatefulSetCheckFn) {
+	ch := NewCheck(name, "StatefulSet", comment, false)
+	c.registerStatefulSetCheck(StatefulSetCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalStatefulSetCheck(name, comment string, fn StatefulSetCheckFn) {
+	ch := NewCheck(name, "StatefulSet", comment, true)
+	c.registerStatefulSetCheck(StatefulSetCheck{ch, fn})
+}
+
+func (c *Checks) registerStatefulSetCheck(ch StatefulSetCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.statefulsets[machineFriendlyName(name)] = StatefulSetCheck{ch, fn}
+	c.statefulsets[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) StatefulSets() map[string]StatefulSetCheck {
 	return c.statefulsets
 }
 
-func (c *Checks) RegisterDeploymentCheck(name, comment string, fn func(appsv1.Deployment) (scorecard.TestScore, error)) {
-	ch := NewCheck(name, "Deployment", comment)
+func (c *Checks) RegisterDeploymentCheck(name, comment string, fn DeploymentCheckFn) {
+	ch := NewCheck(name, "Deployment", comment, false)
+	c.registerDeploymentCheck(DeploymentCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalDeploymentCheck(name, comment string, fn DeploymentCheckFn) {
+	ch := NewCheck(name, "Deployment", comment, true)
+	c.registerDeploymentCheck(DeploymentCheck{ch, fn})
+}
+
+func (c *Checks) registerDeploymentCheck(ch DeploymentCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.deployments[machineFriendlyName(name)] = DeploymentCheck{ch, fn}
+	c.deployments[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) Deployments() map[string]DeploymentCheck {
 	return c.deployments
 }
 
-func (c *Checks) RegisterIngressCheck(name, comment string, fn func(extensionsv1beta1.Ingress) scorecard.TestScore) {
-	ch := NewCheck(name, "Ingress", comment)
+func (c *Checks) RegisterIngressCheck(name, comment string, fn IngressCheckFn) {
+	ch := NewCheck(name, "Ingress", comment, false)
+	c.registerIngressCheck(IngressCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalIngressCheck(name, comment string, fn IngressCheckFn) {
+	ch := NewCheck(name, "Ingress", comment, true)
+	c.registerIngressCheck(IngressCheck{ch, fn})
+}
+
+func (c *Checks) registerIngressCheck(ch IngressCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.ingresses[machineFriendlyName(name)] = IngressCheck{ch, fn}
+	c.ingresses[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) Ingresses() map[string]IngressCheck {
 	return c.ingresses
 }
 
-func (c *Checks) RegisterNetworkPolicyCheck(name, comment string, fn func(networkingv1.NetworkPolicy) scorecard.TestScore) {
-	ch := NewCheck(name, "NetworkPolicy", comment)
+func (c *Checks) RegisterNetworkPolicyCheck(name, comment string, fn NetworkPolicyCheckFn) {
+	ch := NewCheck(name, "NetworkPolicy", comment, false)
+	c.registerNetworkPolicyCheck(NetworkPolicyCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalNetworkPolicyCheck(name, comment string, fn NetworkPolicyCheckFn) {
+	ch := NewCheck(name, "NetworkPolicy", comment, true)
+	c.registerNetworkPolicyCheck(NetworkPolicyCheck{ch, fn})
+}
+
+func (c *Checks) registerNetworkPolicyCheck(ch NetworkPolicyCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.networkpolicies[machineFriendlyName(name)] = NetworkPolicyCheck{ch, fn}
+	c.networkpolicies[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) NetworkPolicies() map[string]NetworkPolicyCheck {
 	return c.networkpolicies
 }
 
-func (c *Checks) RegisterServiceCheck(name, comment string, fn func(corev1.Service) scorecard.TestScore) {
-	ch := NewCheck(name, "Service", comment)
+func (c *Checks) RegisterServiceCheck(name, comment string, fn ServiceCheckFn) {
+	ch := NewCheck(name, "Service", comment, false)
+	c.registerServiceCheck(ServiceCheck{ch, fn})
+}
 
-	if c.isIgnored(ch.ID) {
+func (c *Checks) RegisterOptionalServiceCheck(name, comment string, fn ServiceCheckFn) {
+	ch := NewCheck(name, "Service", comment, true)
+	c.registerServiceCheck(ServiceCheck{ch, fn})
+}
+
+func (c *Checks) registerServiceCheck(ch ServiceCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
 		return
 	}
-
-	c.all = append(c.all, ch)
-	c.services[machineFriendlyName(name)] = ServiceCheck{ch, fn}
+	c.services[machineFriendlyName(ch.Name)] = ch
 }
 
 func (c *Checks) Services() map[string]ServiceCheck {
