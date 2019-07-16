@@ -4,8 +4,21 @@ set -euo pipefail
 
 # Dependencies: rg (ripgrep), jq
 
-PREV_RELEASE=v0.7.1
+if [ "$#" -ne 1 ]; then
+    echo "Unexpected number of arguments"
+    echo
+    echo "Usage:"
+    echo "  $0 previous-release-tag"
+    exit 1;
+fi
+
+PREV_RELEASE=$1
 CURRENT_TAG=$(git tag -l --points-at HEAD);
+
+if [ "$(echo "$CURRENT_TAG" | wc -l)" -ne 1 ]; then
+    echo "Could not detect version. HEAD should have exactly one tag.";
+    exit 1;
+fi
 
 #
 # Generate list of changes based on RELNOTES in commits
