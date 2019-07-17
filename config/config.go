@@ -8,4 +8,5 @@ type Configuration struct {
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool
 	IgnoredTests                          map[string]struct{}
+	EnabledOptionalTests                  map[string]struct{}
 }
