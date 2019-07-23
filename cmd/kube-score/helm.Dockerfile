@@ -13,6 +13,6 @@ RUN apt-get update && \
 FROM alpine:3.4
 RUN apk update && \
     apk upgrade && \
-    apk add bash
+    apk add bash ca-certificates
 COPY --from=downloader /linux-amd64/helm /usr/bin/helm
 COPY kube-score /usr/bin/kube-score
