@@ -12,6 +12,7 @@ import (
 	"github.com/zegl/kube-score/score/meta"
 	"github.com/zegl/kube-score/score/networkpolicy"
 	"github.com/zegl/kube-score/score/probes"
+	"github.com/zegl/kube-score/score/revisionHistoryLimit"
 	"github.com/zegl/kube-score/score/security"
 	"github.com/zegl/kube-score/score/service"
 	"github.com/zegl/kube-score/score/stable"
@@ -29,6 +30,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	disruptionbudget.Register(allChecks, allObjects)
 	networkpolicy.Register(allChecks, allObjects, allObjects, allObjects)
 	probes.Register(allChecks, allObjects)
+	revisionHistoryLimit.Register(allChecks)
 	security.Register(allChecks)
 	service.Register(allChecks, allObjects, allObjects)
 	stable.Register(allChecks)
