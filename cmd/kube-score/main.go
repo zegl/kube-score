@@ -78,8 +78,6 @@ func scoreFiles() error {
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
 	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
 	ignoreContainerMemoryLimit := fs.Bool("ignore-container-memory-limit", false, "Disables the requirement of setting a container memory limit")
-	okThreshold := fs.Int("threshold-ok", 10, "The score threshold for treating an score as OK. Must be between 1 and 10 (inclusive). Scores graded below this threshold are WARNING or CRITICAL.")
-	warningThreshold := fs.Int("threshold-warning", 5, "The score threshold for treating a score as WARNING. Grades below this threshold are CRITICAL. Must be between 1 and 10 (inclusive).")
 	verboseOutput := fs.Bool("v", false, "Verbose output")
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.String("output-format", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
@@ -95,12 +93,6 @@ func scoreFiles() error {
 	if *printHelp {
 		fs.Usage()
 		return nil
-	}
-
-	if *okThreshold < 1 || *okThreshold > 10 ||
-		*warningThreshold < 1 || *warningThreshold > 10 {
-		fs.Usage()
-		return fmt.Errorf("Error: --threshold-ok and --threshold-warning must be set to a value between 1 and 10 inclusive.")
 	}
 
 	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" {
@@ -160,7 +152,7 @@ Use "-" as filename to read from STDIN.`)
 	var exitCode int
 	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
 		exitCode = 1
-	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.Grade(*warningThreshold)) {
+	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeWarning) {
 		exitCode = 1
 	} else {
 		exitCode = 0
@@ -174,9 +166,9 @@ Use "-" as filename to read from STDIN.`)
 		w.WriteString(string(d))
 		r = w
 	} else if *outputFormat == "human" {
-		r = outputHuman(scoreCard, *okThreshold, *warningThreshold)
+		r = outputHuman(scoreCard)
 	} else {
-		r = outputCi(scoreCard, *okThreshold, *warningThreshold)
+		r = outputCi(scoreCard)
 	}
 
 	output, _ := ioutil.ReadAll(r)
@@ -209,20 +201,7 @@ func listChecks() {
 	output.Flush()
 }
 
-func statusString(grade scorecard.Grade, okThreshold, warningThreshold int) string {
-	if grade >= scorecard.Grade(okThreshold) {
-		// Higher than or equal to --threshold-ok
-		return "OK"
-	} else if grade >= scorecard.Grade(warningThreshold) {
-		// Higher than or equal to --threshold-warning
-		return "WARNING"
-	} else {
-		// All lower than both --threshold-ok and --threshold-warning are critical
-		return "CRITICAL"
-	}
-}
-
-func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int) io.Reader {
+func outputHuman(scoreCard *scorecard.Scorecard) io.Reader {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
@@ -244,7 +223,7 @@ func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold i
 		}
 
 		for _, card := range scoredObject.Checks {
-			r := outputHumanStep(card, okThreshold, warningThreshold)
+			r := outputHumanStep(card)
 			io.Copy(w, r)
 		}
 
@@ -253,13 +232,13 @@ func outputHuman(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold i
 	return w
 }
 
-func outputHumanStep(card scorecard.TestScore, okThreshold, warningThreshold int) io.Reader {
+func outputHumanStep(card scorecard.TestScore) io.Reader {
 	var col color.Attribute
 
-	if card.Grade >= scorecard.Grade(okThreshold) {
+	if card.Grade >= scorecard.GradeAllOK {
 		// Higher than or equal to --threshold-ok
 		col = color.FgGreen
-	} else if card.Grade >= scorecard.Grade(warningThreshold) {
+	} else if card.Grade >= scorecard.GradeWarning {
 		// Higher than or equal to --threshold-warning
 		col = color.FgYellow
 	} else {
@@ -269,7 +248,7 @@ func outputHumanStep(card scorecard.TestScore, okThreshold, warningThreshold int
 
 	w := bytes.NewBufferString("")
 
-	color.New(col).Fprintf(w, "    [%s] %s\n", statusString(card.Grade, okThreshold, warningThreshold), card.Check.Name)
+	color.New(col).Fprintf(w, "    [%s] %s\n", card.Grade.String(), card.Check.Name)
 
 	for _, comment := range card.Comments {
 		fmt.Fprintf(w, "        * ")
@@ -291,7 +270,7 @@ func outputHumanStep(card scorecard.TestScore, okThreshold, warningThreshold int
 }
 
 // "Machine" / CI friendly output
-func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int) io.Reader {
+func outputCi(scoreCard *scorecard.Scorecard) io.Reader {
 	w := bytes.NewBufferString("")
 
 	// Print the items sorted by scorecard key
@@ -307,7 +286,7 @@ func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int)
 		for _, card := range scoredObject.Checks {
 			if len(card.Comments) == 0 {
 				fmt.Fprintf(w, "[%s] %s\n",
-					statusString(card.Grade, okThreshold, warningThreshold),
+					card.Grade.String(),
 					scoredObject.HumanFriendlyRef(),
 				)
 			}
@@ -319,7 +298,7 @@ func outputCi(scoreCard *scorecard.Scorecard, okThreshold, warningThreshold int)
 				}
 
 				fmt.Fprintf(w, "[%s] %s: %s\n",
-					statusString(card.Grade, okThreshold, warningThreshold),
+					card.Grade.String(),
 					scoredObject.HumanFriendlyRef(),
 					message,
 				)

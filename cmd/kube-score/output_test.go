@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
@@ -26,7 +27,7 @@ func TestCiOutput(t *testing.T) {
 					Check: domain.Check{
 						Name: "TestingA",
 					},
-					Grade: scorecard.Grade(9),
+					Grade: scorecard.GradeWarning,
 					Comments: []scorecard.TestScoreComment{
 						{
 							Path:        "a",
@@ -57,36 +58,18 @@ func TestCiOutput(t *testing.T) {
 					Check: domain.Check{
 						Name: "TestingA",
 					},
-					Grade: scorecard.Grade(9),
+					Grade: scorecard.GradeAllOK,
 				},
 			},
 		},
 	}
 
 	// Defaults
-	r := outputCi(card, 10, 5)
+	r := outputCi(card)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `[WARNING] foo/foofoo v1/Testing: (a) summary
 [WARNING] foo/foofoo v1/Testing: summary
-[WARNING] bar-no-namespace v1/Testing
-`, string(all))
-
-	// OK at 9 or higher
-	r = outputCi(card, 9, 5)
-	all, err = ioutil.ReadAll(r)
-	assert.Nil(t, err)
-	assert.Equal(t, `[OK] foo/foofoo v1/Testing: (a) summary
-[OK] foo/foofoo v1/Testing: summary
-[OK] bar-no-namespace v1/Testing
-`, string(all))
-
-	// OK at 8 or higher
-	r = outputCi(card, 8, 5)
-	all, err = ioutil.ReadAll(r)
-	assert.Nil(t, err)
-	assert.Equal(t, `[OK] foo/foofoo v1/Testing: (a) summary
-[OK] foo/foofoo v1/Testing: summary
 [OK] bar-no-namespace v1/Testing
 `, string(all))
 }
@@ -107,7 +90,7 @@ func TestHumanOutput(t *testing.T) {
 					Check: domain.Check{
 						Name: "TestingA",
 					},
-					Grade: scorecard.Grade(9),
+					Grade: scorecard.GradeWarning,
 					Comments: []scorecard.TestScoreComment{
 						{
 							Path:        "a",
@@ -138,14 +121,14 @@ func TestHumanOutput(t *testing.T) {
 					Check: domain.Check{
 						Name: "TestingA",
 					},
-					Grade: scorecard.Grade(9),
+					Grade: scorecard.GradeAllOK,
 				},
 			},
 		},
 	}
 
 	// Defaults
-	r := outputHuman(card, 10, 5)
+	r := outputHuman(card)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo
@@ -155,34 +138,7 @@ func TestHumanOutput(t *testing.T) {
         * summary
              description
 v1/Testing bar-no-namespace
-    [WARNING] TestingA
-`, string(all))
-
-	// OK at 9 or higher
-	r = outputHuman(card, 9, 5)
-	all, err = ioutil.ReadAll(r)
-	assert.Nil(t, err)
-	assert.Equal(t, `v1/Testing foo in foofoo
-    [OK] TestingA
-        * a -> summary
-             description
-        * summary
-             description
-v1/Testing bar-no-namespace
     [OK] TestingA
 `, string(all))
 
-	// OK at 8 or higher
-	r = outputHuman(card, 8, 5)
-	all, err = ioutil.ReadAll(r)
-	assert.Nil(t, err)
-	assert.Equal(t, `v1/Testing foo in foofoo
-    [OK] TestingA
-        * a -> summary
-             description
-        * summary
-             description
-v1/Testing bar-no-namespace
-    [OK] TestingA
-`, string(all))
 }
