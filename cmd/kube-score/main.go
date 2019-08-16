@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/parser"
@@ -78,7 +79,7 @@ func scoreFiles() error {
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
 	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
 	ignoreContainerMemoryLimit := fs.Bool("ignore-container-memory-limit", false, "Disables the requirement of setting a container memory limit")
-	verboseOutput := fs.Bool("v", false, "Verbose output")
+	verboseOutput := fs.CountP("verbose", "v", "Enable verbose output, can be set multiple times for increased verbosity.")
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.String("output-format", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
@@ -166,7 +167,7 @@ Use "-" as filename to read from STDIN.`)
 		w.WriteString(string(d))
 		r = w
 	} else if *outputFormat == "human" {
-		r = outputHuman(scoreCard)
+		r = outputHuman(scoreCard, *verboseOutput)
 	} else {
 		r = outputCi(scoreCard)
 	}
@@ -201,7 +202,7 @@ func listChecks() {
 	output.Flush()
 }
 
-func outputHuman(scoreCard *scorecard.Scorecard) io.Reader {
+func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int) io.Reader {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
@@ -223,21 +224,33 @@ func outputHuman(scoreCard *scorecard.Scorecard) io.Reader {
 		}
 
 		for _, card := range scoredObject.Checks {
-			r := outputHumanStep(card)
+			r := outputHumanStep(card, verboseOutput)
 			io.Copy(w, r)
 		}
-
 	}
 
 	return w
 }
 
-func outputHumanStep(card scorecard.TestScore) io.Reader {
+func outputHumanStep(card scorecard.TestScore, verboseOutput int) io.Reader {
+	w := bytes.NewBufferString("")
+
+	// Only print skipped items if verbosity is at least 2
+	if card.Skipped && verboseOutput < 2 {
+		return w
+	}
+
 	var col color.Attribute
 
-	if card.Grade >= scorecard.GradeAllOK {
+	if card.Skipped || card.Grade >= scorecard.GradeAllOK {
 		// Higher than or equal to --threshold-ok
 		col = color.FgGreen
+
+		// If verbose output is disabled, skip OK items in the output
+		if verboseOutput == 0 {
+			return w
+		}
+
 	} else if card.Grade >= scorecard.GradeWarning {
 		// Higher than or equal to --threshold-warning
 		col = color.FgYellow
@@ -246,9 +259,11 @@ func outputHumanStep(card scorecard.TestScore) io.Reader {
 		col = color.FgRed
 	}
 
-	w := bytes.NewBufferString("")
-
-	color.New(col).Fprintf(w, "    [%s] %s\n", card.Grade.String(), card.Check.Name)
+	if card.Skipped {
+		color.New(col).Fprintf(w, "    [SKIPPED] %s\n", card.Check.Name)
+	} else {
+		color.New(col).Fprintf(w, "    [%s] %s\n", card.Grade.String(), card.Check.Name)
+	}
 
 	for _, comment := range card.Comments {
 		fmt.Fprintf(w, "        * ")
@@ -260,7 +275,7 @@ func outputHumanStep(card scorecard.TestScore) io.Reader {
 		fmt.Fprint(w, comment.Summary)
 
 		if len(comment.Description) > 0 {
-			fmt.Fprintf(w, "\n             %s", comment.Description)
+			fmt.Fprintf(w, "\n%s%s", strings.Repeat(" ", 12), comment.Description)
 		}
 
 		fmt.Fprintln(w)
@@ -285,10 +300,16 @@ func outputCi(scoreCard *scorecard.Scorecard) io.Reader {
 
 		for _, card := range scoredObject.Checks {
 			if len(card.Comments) == 0 {
-				fmt.Fprintf(w, "[%s] %s\n",
-					card.Grade.String(),
-					scoredObject.HumanFriendlyRef(),
-				)
+				if card.Skipped {
+					fmt.Fprintf(w, "[SKIPPED] %s\n",
+						scoredObject.HumanFriendlyRef(),
+					)
+				} else {
+					fmt.Fprintf(w, "[%s] %s\n",
+						card.Grade.String(),
+						scoredObject.HumanFriendlyRef(),
+					)
+				}
 			}
 
 			for _, comment := range card.Comments {
@@ -297,11 +318,18 @@ func outputCi(scoreCard *scorecard.Scorecard) io.Reader {
 					message = "(" + comment.Path + ") " + comment.Summary
 				}
 
-				fmt.Fprintf(w, "[%s] %s: %s\n",
-					card.Grade.String(),
-					scoredObject.HumanFriendlyRef(),
-					message,
-				)
+				if card.Skipped {
+					fmt.Fprintf(w, "[SKIPPED] %s: %s\n",
+						scoredObject.HumanFriendlyRef(),
+						message,
+					)
+				} else {
+					fmt.Fprintf(w, "[%s] %s: %s\n",
+						card.Grade.String(),
+						scoredObject.HumanFriendlyRef(),
+						message,
+					)
+				}
 			}
 		}
 	}

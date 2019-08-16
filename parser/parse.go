@@ -258,7 +258,7 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta})
 
 	default:
-		if cnf.VerboseOutput {
+		if cnf.VerboseOutput > 1 {
 			log.Printf("Unknown datatype: %s", detectedVersion.String())
 		}
 	}
