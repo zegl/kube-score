@@ -8,6 +8,7 @@ import (
 	"github.com/zegl/kube-score/score/container"
 	"github.com/zegl/kube-score/score/cronjob"
 	"github.com/zegl/kube-score/score/disruptionbudget"
+	"github.com/zegl/kube-score/score/hpa"
 	"github.com/zegl/kube-score/score/ingress"
 	"github.com/zegl/kube-score/score/meta"
 	"github.com/zegl/kube-score/score/networkpolicy"
@@ -34,6 +35,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	stable.Register(allChecks)
 	apps.Register(allChecks)
 	meta.Register(allChecks)
+	hpa.Register(allChecks, allObjects.Metas())
 
 	return allChecks
 }
@@ -117,6 +119,13 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 		o := scoreCard.NewObject(cjob.TypeMeta, cjob.ObjectMeta)
 		for _, test := range allChecks.CronJobs() {
 			o.Add(test.Fn(cjob), test.Check)
+		}
+	}
+
+	for _, hpa := range allObjects.HorizontalPodAutoscalers() {
+		o := scoreCard.NewObject(hpa.TypeMeta, hpa.ObjectMeta)
+		for _, test := range allChecks.HorizontalPodAutoscalers() {
+			o.Add(test.Fn(hpa), test.Check)
 		}
 	}
 

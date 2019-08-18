@@ -1,6 +1,7 @@
 package checks
 
 import (
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -19,15 +20,16 @@ func New(cnf config.Configuration) *Checks {
 	return &Checks{
 		cnf: cnf,
 
-		all:             make([]ks.Check, 0),
-		metas:           make(map[string]MetaCheck),
-		pods:            make(map[string]PodCheck),
-		services:        make(map[string]ServiceCheck),
-		statefulsets:    make(map[string]StatefulSetCheck),
-		deployments:     make(map[string]DeploymentCheck),
-		networkpolicies: make(map[string]NetworkPolicyCheck),
-		ingresses:       make(map[string]IngressCheck),
-		cronjobs:        make(map[string]CronJobCheck),
+		all:                      make([]ks.Check, 0),
+		metas:                    make(map[string]MetaCheck),
+		pods:                     make(map[string]PodCheck),
+		services:                 make(map[string]ServiceCheck),
+		statefulsets:             make(map[string]StatefulSetCheck),
+		deployments:              make(map[string]DeploymentCheck),
+		networkpolicies:          make(map[string]NetworkPolicyCheck),
+		ingresses:                make(map[string]IngressCheck),
+		cronjobs:                 make(map[string]CronJobCheck),
+		horizontalPodAutoscalers: make(map[string]HorizontalPodAutoscalerCheck),
 	}
 }
 
@@ -95,16 +97,23 @@ type CronJobCheck struct {
 	Fn CronJobCheckFn
 }
 
+type HorizontalPodAutoscalerCheckFn = func(autoscalingv1.HorizontalPodAutoscaler) scorecard.TestScore
+type HorizontalPodAutoscalerCheck struct {
+	ks.Check
+	Fn HorizontalPodAutoscalerCheckFn
+}
+
 type Checks struct {
-	all             []ks.Check
-	metas           map[string]MetaCheck
-	pods            map[string]PodCheck
-	services        map[string]ServiceCheck
-	statefulsets    map[string]StatefulSetCheck
-	deployments     map[string]DeploymentCheck
-	networkpolicies map[string]NetworkPolicyCheck
-	ingresses       map[string]IngressCheck
-	cronjobs        map[string]CronJobCheck
+	all                      []ks.Check
+	metas                    map[string]MetaCheck
+	pods                     map[string]PodCheck
+	services                 map[string]ServiceCheck
+	statefulsets             map[string]StatefulSetCheck
+	deployments              map[string]DeploymentCheck
+	networkpolicies          map[string]NetworkPolicyCheck
+	ingresses                map[string]IngressCheck
+	cronjobs                 map[string]CronJobCheck
+	horizontalPodAutoscalers map[string]HorizontalPodAutoscalerCheck
 
 	cnf config.Configuration
 }
@@ -171,6 +180,29 @@ func (c *Checks) registerPodCheck(ch PodCheck) {
 
 func (c *Checks) Pods() map[string]PodCheck {
 	return c.pods
+}
+
+func (c *Checks) RegisterHorizontalPodAutoscalerCheck(name, comment string, fn HorizontalPodAutoscalerCheckFn) {
+	ch := NewCheck(name, "HorizontalPodAutoscaler", comment, false)
+	c.registerHorizontalPodAutoscalerCheck(HorizontalPodAutoscalerCheck{ch, fn})
+}
+
+func (c *Checks) RegisterOptionalHorizontalPodAutoscalerCheck(name, comment string, fn HorizontalPodAutoscalerCheckFn) {
+	ch := NewCheck(name, "HorizontalPodAutoscaler", comment, true)
+	c.registerHorizontalPodAutoscalerCheck(HorizontalPodAutoscalerCheck{ch, fn})
+}
+
+func (c *Checks) registerHorizontalPodAutoscalerCheck(ch HorizontalPodAutoscalerCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
+		return
+	}
+	c.horizontalPodAutoscalers[machineFriendlyName(ch.Name)] = ch
+}
+
+func (c *Checks) HorizontalPodAutoscalers() map[string]HorizontalPodAutoscalerCheck {
+	return c.horizontalPodAutoscalers
 }
 
 func (c *Checks) RegisterCronJobCheck(name, comment string, fn CronJobCheckFn) {

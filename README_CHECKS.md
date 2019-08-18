@@ -19,3 +19,4 @@
 | deployment-has-host-podantiaffinity | Deployment | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | default |
 | statefulset-has-host-podantiaffinity | StatefulSet | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | default |
 | label-values | all | Validates label values | default |
+| horizontalpodautoscaler-has-target | HorizontalPodAutoscaler | Makes sure that the HPA targets a valid object | default |
