@@ -2,14 +2,12 @@ package parser
 
 import (
 	"bytes"
-	"github.com/zegl/kube-score/config"
-	ks "github.com/zegl/kube-score/domain"
-	"github.com/zegl/kube-score/parser/internal"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -20,6 +18,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"log"
+
+	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
+	"github.com/zegl/kube-score/parser/internal"
 )
 
 var scheme = runtime.NewScheme()
@@ -47,16 +49,17 @@ type detectKind struct {
 }
 
 type parsedObjects struct {
-	bothMetas            []ks.BothMeta
-	pods                 []corev1.Pod
-	podspecers           []ks.PodSpecer
-	networkPolicies      []networkingv1.NetworkPolicy
-	services             []corev1.Service
-	podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
-	deployments          []appsv1.Deployment
-	statefulsets         []appsv1.StatefulSet
-	ingresses            []extensionsv1beta1.Ingress
-	cronjobs             []batchv1beta1.CronJob
+	bothMetas                []ks.BothMeta
+	pods                     []corev1.Pod
+	podspecers               []ks.PodSpecer
+	networkPolicies          []networkingv1.NetworkPolicy
+	services                 []corev1.Service
+	podDisruptionBudgets     []policyv1beta1.PodDisruptionBudget
+	deployments              []appsv1.Deployment
+	statefulsets             []appsv1.StatefulSet
+	ingresses                []extensionsv1beta1.Ingress
+	cronjobs                 []batchv1beta1.CronJob
+	horizontalPodAutoscalers []autoscalingv1.HorizontalPodAutoscaler
 }
 
 func (p *parsedObjects) Services() []corev1.Service {
@@ -97,6 +100,10 @@ func (p *parsedObjects) Metas() []ks.BothMeta {
 
 func (p *parsedObjects) NetworkPolicies() []networkingv1.NetworkPolicy {
 	return p.networkPolicies
+}
+
+func (p *parsedObjects) HorizontalPodAutoscalers() []autoscalingv1.HorizontalPodAutoscaler {
+	return p.horizontalPodAutoscalers
 }
 
 func Empty() ks.AllTypes {
@@ -257,6 +264,12 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 		s.ingresses = append(s.ingresses, ingress)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta})
 
+	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
+		var hpa autoscalingv1.HorizontalPodAutoscaler
+		decode(fileContents, &hpa)
+		s.horizontalPodAutoscalers = append(s.horizontalPodAutoscalers, hpa)
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta})
+		
 	default:
 		if cnf.VerboseOutput > 1 {
 			log.Printf("Unknown datatype: %s", detectedVersion.String())
