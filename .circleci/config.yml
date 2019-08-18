@@ -6,8 +6,15 @@ jobs:
     working_directory: /go/app
     steps:
     - checkout
-    - run: go test -race -coverprofile=coverage.txt -covermode=atomic -coverpkg github.com/zegl/kube-score/... -v github.com/zegl/kube-score/...
-    - run: bash <(curl -s https://codecov.io/bash)
+    - run:
+        name: "Run go test"
+        command: go test -race -coverprofile=coverage.txt -covermode=atomic -coverpkg github.com/zegl/kube-score/... -v github.com/zegl/kube-score/...
+    - run:
+        name: "Enforce Go Formatted Code"
+        command: "! go fmt github.com/zegl/kube-score/... 2>&1 | read"
+    - run:
+        name: "Upload test coverage results"
+        command: bash <(curl -s https://codecov.io/bash)
 
 workflows:
   version: 2
