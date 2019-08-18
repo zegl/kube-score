@@ -3,6 +3,7 @@ module github.com/zegl/kube-score
 require (
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
+	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
 	github.com/elazarl/goproxy v0.0.0-20190711103511-473e67f1d7d2 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
@@ -22,7 +23,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20190414153302-2ae31c8b6b30 // indirect
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
 	golang.org/x/sys v0.0.0-20190726091711-fc99dfbffb4e // indirect
 	golang.org/x/tools v0.0.0-20190728063539-fc6e2057e7f6 // indirect
