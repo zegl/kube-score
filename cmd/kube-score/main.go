@@ -277,7 +277,7 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int) io.Reader {
 	}
 
 	for _, comment := range card.Comments {
-		fmt.Fprintf(w, "        * ")
+		fmt.Fprintf(w, "        · ")
 
 		if len(comment.Path) > 0 {
 			fmt.Fprintf(w, "%s -> ", comment.Path)
