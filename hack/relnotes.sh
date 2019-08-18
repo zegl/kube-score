@@ -35,7 +35,7 @@ done <<< "$RELNOTE_MERGES"
 #
 echo
 echo -n "This release contains contributions from: "
-git log ${PREV_RELEASE}...HEAD | rg -o "Co-authored-by: (.*?) <" --replace "\$1" | sort |  uniq | awk 'ORS=", "' | sed 's/, $//'
+git log ${PREV_RELEASE}...HEAD | rg -o "Co-authored-by: (.*?) <" --replace "\$1" | sort |  uniq | grep -v "[bot]" | awk 'ORS=", "' | sed 's/, $//'
 
 #
 # Download instructions
