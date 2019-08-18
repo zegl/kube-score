@@ -1,12 +1,13 @@
 package apps
 
 import (
-	"github.com/zegl/kube-score/score/checks"
-	"github.com/zegl/kube-score/score/internal"
-	"github.com/zegl/kube-score/scorecard"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/zegl/kube-score/score/checks"
+	"github.com/zegl/kube-score/score/internal"
+	"github.com/zegl/kube-score/scorecard"
 )
 
 func Register(allChecks *checks.Checks) {
@@ -19,8 +20,8 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 	// If replicas is not explicitly set, we'll still warn if the anti affinity is missing
 	// as that might indicate use of a Horizontal Pod Autoscaler
 	if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas < 2 {
-		score.Grade = scorecard.GradeAllOK
-		score.AddComment("", "Skipped", "Skipped because the deployment has less than 2 replicas")
+		score.Skipped = true
+		score.AddComment("", "Skipped because the deployment has less than 2 replicas", "")
 		return
 	}
 
@@ -51,8 +52,8 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 	// If replicas is not explicitly set, we'll still warn if the anti affinity is missing
 	// as that might indicate use of a Horizontal Pod Autoscaler
 	if statefulset.Spec.Replicas != nil && *statefulset.Spec.Replicas < 2 {
-		score.Grade = scorecard.GradeAllOK
-		score.AddComment("", "Skipped", "Skipped because the statefulset has less than 2 replicas")
+		score.Skipped = true
+		score.AddComment("", "Skipped because the statefulset has less than 2 replicas", "")
 		return
 	}
 

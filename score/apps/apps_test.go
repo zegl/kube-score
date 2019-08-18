@@ -11,9 +11,10 @@ import (
 )
 
 type testcase struct {
-	replicas      *int32
-	affinity      *corev1.Affinity
-	expectedGrade scorecard.Grade
+	replicas        *int32
+	affinity        *corev1.Affinity
+	expectedGrade   scorecard.Grade
+	expectedSkipped bool
 }
 
 func antiAffinityTestCases() []testcase {
@@ -24,8 +25,9 @@ func antiAffinityTestCases() []testcase {
 	return []testcase{
 		{
 			// No affinity configured
-			expectedGrade: scorecard.GradeWarning,
-			replicas:      i(5),
+			expectedGrade:   scorecard.GradeWarning,
+			replicas:        i(5),
+			expectedSkipped: false,
 		},
 		{
 			// OK! (required)
@@ -45,6 +47,7 @@ func antiAffinityTestCases() []testcase {
 					},
 				},
 			},
+			expectedSkipped: false,
 		},
 		{
 			// OK (preferred)
@@ -67,6 +70,7 @@ func antiAffinityTestCases() []testcase {
 					},
 				},
 			},
+			expectedSkipped: false,
 		},
 		{
 			// Not matching app label
@@ -86,11 +90,13 @@ func antiAffinityTestCases() []testcase {
 					},
 				},
 			},
+			expectedSkipped: false,
 		},
 		{
 			// Less than two replicas
-			expectedGrade: scorecard.GradeAllOK,
-			replicas:      i(1),
+			expectedGrade:   0,
+			replicas:        i(1),
+			expectedSkipped: true,
 		},
 	}
 }
@@ -139,6 +145,7 @@ func TestDeploymentHasAntiAffinity(t *testing.T) {
 
 		score, err := deploymentHasAntiAffinity(s)
 		assert.Nil(t, err)
-		assert.Equal(t, tc.expectedGrade, score.Grade, "caseID=%d", caseID)
+		assert.Equal(t, tc.expectedGrade, score.Grade, "unexpected grade caseID=%d", caseID)
+		assert.Equal(t, tc.expectedSkipped, score.Skipped, "unexpected skipped, caseID=%d", caseID)
 	}
 }

@@ -25,7 +25,8 @@ func TestDeploymentHasPodAntiAffinityNotSet(t *testing.T) {
 }
 
 func TestDeploymentHasPodAntiAffinityOneReplica(t *testing.T) {
-	testExpectedScore(t, "deployment-host-antiaffinity-1-replica.yaml", "Deployment has host PodAntiAffinity", 10)
+	// skipped
+	testExpectedScore(t, "deployment-host-antiaffinity-1-replica.yaml", "Deployment has host PodAntiAffinity", 0)
 }
 
 func TestStatefulSetHasPodAntiAffinityPreffered(t *testing.T) {
@@ -41,7 +42,8 @@ func TestStatefulSetHasPodAntiAffinityNotSet(t *testing.T) {
 }
 
 func TestStatefulSetHasPodAntiAffinityOneReplica(t *testing.T) {
-	testExpectedScore(t, "statefulset-host-antiaffinity-1-replica.yaml", "StatefulSet has host PodAntiAffinity", 10)
+	// skipped
+	testExpectedScore(t, "statefulset-host-antiaffinity-1-replica.yaml", "StatefulSet has host PodAntiAffinity", 0)
 }
 
 func TestStatefulSetHasPodAntiAffinityUndefinedReplicas(t *testing.T) {

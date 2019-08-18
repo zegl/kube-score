@@ -1,6 +1,7 @@
 package scorecard
 
 import (
+	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 
@@ -79,18 +80,21 @@ func (so ScoredObject) HumanFriendlyRef() string {
 }
 
 func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
-	// This test is ignored, don't save it
+	ts.Check = check
+
+	// This test is ignored (via annotations), don't save the score
 	if _, ok := so.ignoredChecks[check.ID]; ok {
-		return
+		ts.Skipped = true
+		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because %s is ignored", check.ID)}}
 	}
 
-	ts.Check = check
 	so.Checks = append(so.Checks, ts)
 }
 
 type TestScore struct {
 	Check    ks.Check
 	Grade    Grade
+	Skipped  bool
 	Comments []TestScoreComment
 }
 

@@ -11,8 +11,61 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func TestCiOutput(t *testing.T) {
-	card := &scorecard.Scorecard{
+func getTestCard() *scorecard.Scorecard {
+	checks := []scorecard.TestScore{
+		{
+			Check: domain.Check{
+				Name: "test-warning-two-comments",
+			},
+			Grade: scorecard.GradeWarning,
+			Comments: []scorecard.TestScoreComment{
+				{
+					Path:        "a",
+					Summary:     "summary",
+					Description: "description",
+				},
+				{
+					// No path
+					Summary:     "summary",
+					Description: "description",
+				},
+			},
+		},
+		{
+			Check: domain.Check{
+				Name: "test-ok-comment",
+			},
+			Grade: scorecard.GradeAllOK,
+			Comments: []scorecard.TestScoreComment{
+				{
+					Path:        "a",
+					Summary:     "summary",
+					Description: "description",
+				},
+			},
+		},
+		{
+			Check: domain.Check{
+				Name: "test-skipped-comment",
+			},
+			Skipped: true,
+			Comments: []scorecard.TestScoreComment{
+				{
+					Path:        "a",
+					Summary:     "skipped sum",
+					Description: "skipped description",
+				},
+			},
+		},
+		{
+			Check: domain.Check{
+				Name: "test-skipped-no-comment",
+			},
+			Skipped: true,
+		},
+	}
+
+	return &scorecard.Scorecard{
 		"a": &scorecard.ScoredObject{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Testing",
@@ -22,26 +75,7 @@ func TestCiOutput(t *testing.T) {
 				Name:      "foo",
 				Namespace: "foofoo",
 			},
-			Checks: []scorecard.TestScore{
-				{
-					Check: domain.Check{
-						Name: "TestingA",
-					},
-					Grade: scorecard.GradeWarning,
-					Comments: []scorecard.TestScoreComment{
-						{
-							Path:        "a",
-							Summary:     "summary",
-							Description: "description",
-						},
-						{
-							// No path
-							Summary:     "summary",
-							Description: "description",
-						},
-					},
-				},
-			},
+			Checks: checks,
 		},
 
 		// No namespace
@@ -53,92 +87,102 @@ func TestCiOutput(t *testing.T) {
 			ObjectMeta: v1.ObjectMeta{
 				Name: "bar-no-namespace",
 			},
-			Checks: []scorecard.TestScore{
-				{
-					Check: domain.Check{
-						Name: "TestingA",
-					},
-					Grade: scorecard.GradeAllOK,
-				},
-			},
+			Checks: checks,
 		},
 	}
+}
 
+func TestCiOutput(t *testing.T) {
 	// Defaults
-	r := outputCi(card)
+	r := outputCi(getTestCard())
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `[WARNING] foo/foofoo v1/Testing: (a) summary
 [WARNING] foo/foofoo v1/Testing: summary
-[OK] bar-no-namespace v1/Testing
+[OK] foo/foofoo v1/Testing: (a) summary
+[SKIPPED] foo/foofoo v1/Testing: (a) skipped sum
+[SKIPPED] foo/foofoo v1/Testing
+[WARNING] bar-no-namespace v1/Testing: (a) summary
+[WARNING] bar-no-namespace v1/Testing: summary
+[OK] bar-no-namespace v1/Testing: (a) summary
+[SKIPPED] bar-no-namespace v1/Testing: (a) skipped sum
+[SKIPPED] bar-no-namespace v1/Testing
 `, string(all))
 }
 
-func TestHumanOutput(t *testing.T) {
-	card := &scorecard.Scorecard{
-		"a": &scorecard.ScoredObject{
-			TypeMeta: v1.TypeMeta{
-				Kind:       "Testing",
-				APIVersion: "v1",
-			},
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "foo",
-				Namespace: "foofoo",
-			},
-			Checks: []scorecard.TestScore{
-				{
-					Check: domain.Check{
-						Name: "TestingA",
-					},
-					Grade: scorecard.GradeWarning,
-					Comments: []scorecard.TestScoreComment{
-						{
-							Path:        "a",
-							Summary:     "summary",
-							Description: "description",
-						},
-						{
-							// No path
-							Summary:     "summary",
-							Description: "description",
-						},
-					},
-				},
-			},
-		},
-
-		// No namespace
-		"b": &scorecard.ScoredObject{
-			TypeMeta: v1.TypeMeta{
-				Kind:       "Testing",
-				APIVersion: "v1",
-			},
-			ObjectMeta: v1.ObjectMeta{
-				Name: "bar-no-namespace",
-			},
-			Checks: []scorecard.TestScore{
-				{
-					Check: domain.Check{
-						Name: "TestingA",
-					},
-					Grade: scorecard.GradeAllOK,
-				},
-			},
-		},
-	}
-
-	// Defaults
-	r := outputHuman(card)
+func TestHumanOutputDefault(t *testing.T) {
+	r := outputHuman(getTestCard(), 0)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo
-    [WARNING] TestingA
+    [WARNING] test-warning-two-comments
         * a -> summary
-             description
+            description
         * summary
-             description
+            description
 v1/Testing bar-no-namespace
-    [OK] TestingA
+    [WARNING] test-warning-two-comments
+        * a -> summary
+            description
+        * summary
+            description
 `, string(all))
+}
 
+func TestHumanOutputVerbose1(t *testing.T) {
+	r := outputHuman(getTestCard(), 1)
+	all, err := ioutil.ReadAll(r)
+	assert.Nil(t, err)
+	assert.Equal(t, `v1/Testing foo in foofoo
+    [WARNING] test-warning-two-comments
+        * a -> summary
+            description
+        * summary
+            description
+    [OK] test-ok-comment
+        * a -> summary
+            description
+v1/Testing bar-no-namespace
+    [WARNING] test-warning-two-comments
+        * a -> summary
+            description
+        * summary
+            description
+    [OK] test-ok-comment
+        * a -> summary
+            description
+`, string(all))
+}
+
+func TestHumanOutputVerbose2(t *testing.T) {
+	r := outputHuman(getTestCard(), 2)
+	all, err := ioutil.ReadAll(r)
+	assert.Nil(t, err)
+	assert.Equal(t, `v1/Testing foo in foofoo
+    [WARNING] test-warning-two-comments
+        * a -> summary
+            description
+        * summary
+            description
+    [OK] test-ok-comment
+        * a -> summary
+            description
+    [SKIPPED] test-skipped-comment
+        * a -> skipped sum
+            skipped description
+    [SKIPPED] test-skipped-no-comment
+v1/Testing bar-no-namespace
+    [WARNING] test-warning-two-comments
+        * a -> summary
+            description
+        * summary
+            description
+    [OK] test-ok-comment
+        * a -> summary
+            description
+    [SKIPPED] test-skipped-comment
+        * a -> skipped sum
+            skipped description
+    [SKIPPED] test-skipped-no-comment
+`, string(all))
 }

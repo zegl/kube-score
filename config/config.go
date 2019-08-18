@@ -4,7 +4,7 @@ import "io"
 
 type Configuration struct {
 	AllFiles                              []io.Reader
-	VerboseOutput                         bool
+	VerboseOutput                         int
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool
 	IgnoredTests                          map[string]struct{}
