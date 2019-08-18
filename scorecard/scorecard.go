@@ -103,6 +103,19 @@ const (
 	GradeAllOK    Grade = 10
 )
 
+func (g Grade) String() string {
+	switch g {
+	case GradeCritical:
+		return "CRITICAL"
+	case GradeWarning:
+		return "WARNING"
+	case GradeAlmostOK, GradeAllOK:
+		return "OK"
+	default:
+		panic("Unknown grade")
+	}
+}
+
 type TestScoreComment struct {
 	Path        string
 	Summary     string
