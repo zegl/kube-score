@@ -20,11 +20,11 @@ func TestOkAllTheSameContainerResourceRequestsEqualLimits(t *testing.T) {
 						Name: "foo",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 						},
@@ -47,11 +47,11 @@ func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) 
 						Name: "foo",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 						},
@@ -62,11 +62,11 @@ func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) 
 						Name: "foo",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 						},
@@ -75,11 +75,11 @@ func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) 
 						Name: "foo2",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 						},
@@ -102,11 +102,11 @@ func TestOkSameQuantityContainerResourceRequestsEqualLimits(t *testing.T) {
 						Name: "foo",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1000m"),
+								"cpu":    resource.MustParse("1000m"),
 								"memory": resource.MustParse("0.25Gi"),
 							},
 						},
@@ -129,11 +129,11 @@ func TestFailBothContainerResourceRequestsEqualLimits(t *testing.T) {
 						Name: "foo",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("2"),
+								"cpu":    resource.MustParse("2"),
 								"memory": resource.MustParse("512Mi"),
 							},
 						},
@@ -153,7 +153,6 @@ func TestFailBothContainerResourceRequestsEqualLimits(t *testing.T) {
 	assert.Equal(t, "Having equal requests and limits is recommended to avoid resource DDOS of the node during spikes. Set resources.requests.memory == resources.limits.memory", s.Comments[1].Description)
 }
 
-
 func TestFailCpuInitContainerResourceRequestsEqualLimits(t *testing.T) {
 	s := containerResourceRequestsEqualLimits(
 		corev1.PodTemplateSpec{
@@ -163,11 +162,11 @@ func TestFailCpuInitContainerResourceRequestsEqualLimits(t *testing.T) {
 						Name: "init",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("2"),
+								"cpu":    resource.MustParse("2"),
 								"memory": resource.MustParse("256Mi"),
 							},
 						},
@@ -178,11 +177,11 @@ func TestFailCpuInitContainerResourceRequestsEqualLimits(t *testing.T) {
 						Name: "foo",
 						Resources: corev1.ResourceRequirements{
 							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+								"cpu":    resource.MustParse("1"),
 								"memory": resource.MustParse("256Mi"),
 							},
 						},

@@ -14,7 +14,7 @@ func TestStatefulSetReplicas(t *testing.T) {
 		skipped bool
 	}{
 		nil:        {scorecard.GradeCritical, false}, // failed
-		intptr(1):  {0, true},     // skipped
+		intptr(1):  {0, true},                        // skipped
 		intptr(10): {scorecard.GradeCritical, false}, // failed
 	}
 
@@ -40,7 +40,7 @@ func TestDeploymentReplicas(t *testing.T) {
 		skipped bool
 	}{
 		nil:        {scorecard.GradeCritical, false}, // failed
-		intptr(1):  {0, true},     // skipped
+		intptr(1):  {0, true},                        // skipped
 		intptr(10): {scorecard.GradeCritical, false}, // failed
 	}
 

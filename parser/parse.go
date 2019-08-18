@@ -269,7 +269,7 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 		decode(fileContents, &hpa)
 		s.horizontalPodAutoscalers = append(s.horizontalPodAutoscalers, hpa)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta})
-		
+
 	default:
 		if cnf.VerboseOutput > 1 {
 			log.Printf("Unknown datatype: %s", detectedVersion.String())

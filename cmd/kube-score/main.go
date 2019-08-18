@@ -288,8 +288,6 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int)
 
 		fmt.Fprint(w, comment.Summary)
 
-
-
 		if len(comment.Description) > 0 {
 			wrapper := wordwrap.Wrapper(termWidth-12, false)
 			wrapped := wrapper(comment.Description)
