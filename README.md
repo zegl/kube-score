@@ -34,7 +34,7 @@ For a full list of checks, see [README_CHECKS.md](README_CHECKS.md).
 
 ## Example output
 
-![](https://i.imgur.com/zETNJNS.png)
+![](https://user-images.githubusercontent.com/47952/63225706-5b90fe80-c1d3-11e9-8b9d-fad7e723afad.png)
 
 ## Usage in CI
 
