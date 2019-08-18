@@ -353,5 +353,3 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
             nisl venenatis, elementum augue a, porttitor libero.
 `, string(all))
 }
-
-

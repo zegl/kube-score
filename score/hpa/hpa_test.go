@@ -43,7 +43,7 @@ func TestHpaHasTarget(t *testing.T) {
 			},
 			allTargets: []domain.BothMeta{
 				{
-					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1",},
+					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 					ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				},
 			},
@@ -64,13 +64,12 @@ func TestHpaHasTarget(t *testing.T) {
 			},
 			allTargets: []domain.BothMeta{
 				{
-					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1",},
+					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 					ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foospace"},
 				},
 			},
 			expectedGrade: scorecard.GradeAllOK,
 		},
-
 
 		// No match (namespace)
 		{
@@ -86,13 +85,12 @@ func TestHpaHasTarget(t *testing.T) {
 			},
 			allTargets: []domain.BothMeta{
 				{
-					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1",},
+					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 					ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foospace"},
 				},
 			},
 			expectedGrade: scorecard.GradeCritical,
 		},
-
 
 		// No match (name)
 		{
@@ -108,13 +106,12 @@ func TestHpaHasTarget(t *testing.T) {
 			},
 			allTargets: []domain.BothMeta{
 				{
-					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1",},
+					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 					ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foospace"},
 				},
 			},
 			expectedGrade: scorecard.GradeCritical,
 		},
-
 
 		// No match (kind)
 		{
@@ -130,13 +127,12 @@ func TestHpaHasTarget(t *testing.T) {
 			},
 			allTargets: []domain.BothMeta{
 				{
-					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1",},
+					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 					ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foospace"},
 				},
 			},
 			expectedGrade: scorecard.GradeCritical,
 		},
-
 
 		// No match (version)
 		{
@@ -152,7 +148,7 @@ func TestHpaHasTarget(t *testing.T) {
 			},
 			allTargets: []domain.BothMeta{
 				{
-					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1",},
+					TypeMeta:   metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"},
 					ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foospace"},
 				},
 			},
