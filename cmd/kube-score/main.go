@@ -216,11 +216,22 @@ func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int) io.Reader {
 		scoredObject := (*scoreCard)[key]
 
 		// Headers for each object
-		color.New(color.FgMagenta).Fprintf(w, "%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
+		var writtenHeaderChars int
+		writtenHeaderChars, _ = color.New(color.FgMagenta).Fprintf(w, "%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
 		if scoredObject.ObjectMeta.Namespace != "" {
-			color.New(color.FgMagenta).Fprintf(w, " in %s\n", scoredObject.ObjectMeta.Namespace)
+			written2, _ := color.New(color.FgMagenta).Fprintf(w, " in %s", scoredObject.ObjectMeta.Namespace)
+			writtenHeaderChars += written2
+		}
+
+		// Adjust to 80 columns wide
+		fmt.Fprintf(w, strings.Repeat(" ", 80-writtenHeaderChars-2))
+
+		if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
+			fmt.Fprintf(w, "💥\n")
+		} else if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeWarning) {
+			fmt.Fprintf(w, "🤔\n")
 		} else {
-			fmt.Fprintln(w)
+			fmt.Fprintf(w, "✅\n")
 		}
 
 		for _, card := range scoredObject.Checks {
