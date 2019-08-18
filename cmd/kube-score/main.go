@@ -5,8 +5,10 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/eidolon/wordwrap"
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
+	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"io/ioutil"
 	"os"
@@ -167,7 +169,8 @@ Use "-" as filename to read from STDIN.`)
 		w.WriteString(string(d))
 		r = w
 	} else if *outputFormat == "human" {
-		r = outputHuman(scoreCard, *verboseOutput)
+		termWidth, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
+		r = outputHuman(scoreCard, *verboseOutput, termWidth)
 	} else {
 		r = outputCi(scoreCard)
 	}
@@ -202,7 +205,7 @@ func listChecks() {
 	output.Flush()
 }
 
-func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int) io.Reader {
+func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.Reader {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
@@ -216,15 +219,26 @@ func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int) io.Reader {
 		scoredObject := (*scoreCard)[key]
 
 		// Headers for each object
-		color.New(color.FgMagenta).Fprintf(w, "%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
+		var writtenHeaderChars int
+		writtenHeaderChars, _ = color.New(color.FgMagenta).Fprintf(w, "%s/%s %s", scoredObject.TypeMeta.APIVersion, scoredObject.TypeMeta.Kind, scoredObject.ObjectMeta.Name)
 		if scoredObject.ObjectMeta.Namespace != "" {
-			color.New(color.FgMagenta).Fprintf(w, " in %s\n", scoredObject.ObjectMeta.Namespace)
+			written2, _ := color.New(color.FgMagenta).Fprintf(w, " in %s", scoredObject.ObjectMeta.Namespace)
+			writtenHeaderChars += written2
+		}
+
+		// Adjust to 80 columns wide
+		fmt.Fprintf(w, strings.Repeat(" ", 80-writtenHeaderChars-2))
+
+		if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
+			fmt.Fprintf(w, "💥\n")
+		} else if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeWarning) {
+			fmt.Fprintf(w, "🤔\n")
 		} else {
-			fmt.Fprintln(w)
+			fmt.Fprintf(w, "✅\n")
 		}
 
 		for _, card := range scoredObject.Checks {
-			r := outputHumanStep(card, verboseOutput)
+			r := outputHumanStep(card, verboseOutput, termWidth)
 			io.Copy(w, r)
 		}
 	}
@@ -232,7 +246,7 @@ func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int) io.Reader {
 	return w
 }
 
-func outputHumanStep(card scorecard.TestScore, verboseOutput int) io.Reader {
+func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int) io.Reader {
 	w := bytes.NewBufferString("")
 
 	// Only print skipped items if verbosity is at least 2
@@ -266,7 +280,7 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int) io.Reader {
 	}
 
 	for _, comment := range card.Comments {
-		fmt.Fprintf(w, "        * ")
+		fmt.Fprintf(w, "        · ")
 
 		if len(comment.Path) > 0 {
 			fmt.Fprintf(w, "%s -> ", comment.Path)
@@ -274,8 +288,13 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int) io.Reader {
 
 		fmt.Fprint(w, comment.Summary)
 
+
+
 		if len(comment.Description) > 0 {
-			fmt.Fprintf(w, "\n%s%s", strings.Repeat(" ", 12), comment.Description)
+			wrapper := wordwrap.Wrapper(termWidth-12, false)
+			wrapped := wrapper(comment.Description)
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, wordwrap.Indent(wrapped, strings.Repeat(" ", 12), false))
 		}
 
 		fmt.Fprintln(w)
