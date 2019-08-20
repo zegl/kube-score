@@ -353,3 +353,51 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
             nisl venenatis, elementum augue a, porttitor libero.
 `, string(all))
 }
+
+func getTestCardLongTitle() *scorecard.Scorecard {
+	checks := []scorecard.TestScore{
+		{
+			Check: domain.Check{
+				Name: "test-warning-two-comments",
+			},
+			Grade: scorecard.GradeWarning,
+			Comments: []scorecard.TestScoreComment{
+				{
+					Path:        "a",
+					Summary:     "summary",
+					Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras elementum sagittis lacus, a dictum tortor lobortis vel. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nulla eu neque erat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Maecenas et nisl venenatis, elementum augue a, porttitor libero.",
+				},
+			},
+		},
+	}
+
+	return &scorecard.Scorecard{
+		"a": &scorecard.ScoredObject{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "Testing",
+				APIVersion: "v1",
+			},
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title",
+				Namespace: "foofoo",
+			},
+			Checks: checks,
+		},
+	}
+}
+
+func TestHumanOutputWithLongObjectNames(t *testing.T) {
+	r := outputHuman(getTestCardLongTitle(), 0, 80)
+	all, err := ioutil.ReadAll(r)
+	assert.Nil(t, err)
+	assert.Equal(t, `v1/Testing this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title in foofoo🤔
+    [WARNING] test-warning-two-comments
+        · a -> summary
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras
+            elementum sagittis lacus, a dictum tortor lobortis vel. Pellentesque
+            habitant morbi tristique senectus et netus et malesuada fames ac
+            turpis egestas. Nulla eu neque erat. Vestibulum ante ipsum primis in
+            faucibus orci luctus et ultrices posuere cubilia Curae; Maecenas et
+            nisl venenatis, elementum augue a, porttitor libero.
+`, string(all))
+}
