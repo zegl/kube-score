@@ -169,7 +169,11 @@ Use "-" as filename to read from STDIN.`)
 		w.WriteString(string(d))
 		r = w
 	} else if *outputFormat == "human" {
-		termWidth, _, _ := terminal.GetSize(int(os.Stdin.Fd()))
+		termWidth, _, err := terminal.GetSize(int(os.Stdin.Fd()))
+		// Assume a width of 80 if it can't be detected
+		if err != nil {
+			termWidth = 80
+		}
 		r = outputHuman(scoreCard, *verboseOutput, termWidth)
 	} else {
 		r = outputCi(scoreCard)
@@ -205,6 +209,13 @@ func listChecks() {
 	output.Flush()
 }
 
+func safeRepeat(s string, count int) string {
+	if count < 0 {
+		return ""
+	}
+	return strings.Repeat(s, count)
+}
+
 func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.Reader {
 	// Print the items sorted by scorecard key
 	var keys []string
@@ -227,7 +238,7 @@ func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth in
 		}
 
 		// Adjust to 80 columns wide
-		fmt.Fprintf(w, strings.Repeat(" ", 80-writtenHeaderChars-2))
+		fmt.Fprintf(w, safeRepeat(" ", 80-writtenHeaderChars-2))
 
 		if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
 			fmt.Fprintf(w, "💥\n")
