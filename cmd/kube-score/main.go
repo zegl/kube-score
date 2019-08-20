@@ -216,6 +216,13 @@ func safeRepeat(s string, count int) string {
 	return strings.Repeat(s, count)
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.Reader {
 	// Print the items sorted by scorecard key
 	var keys []string
@@ -237,8 +244,8 @@ func outputHuman(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth in
 			writtenHeaderChars += written2
 		}
 
-		// Adjust to 80 columns wide
-		fmt.Fprintf(w, safeRepeat(" ", 80-writtenHeaderChars-2))
+		// Adjust to termsize
+		fmt.Fprintf(w, safeRepeat(" ", min(80, termWidth)-writtenHeaderChars-2))
 
 		if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
 			fmt.Fprintf(w, "💥\n")
@@ -300,7 +307,11 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int)
 		fmt.Fprint(w, comment.Summary)
 
 		if len(comment.Description) > 0 {
-			wrapper := wordwrap.Wrapper(termWidth-12, false)
+			wrapWidth := termWidth - 12
+			if wrapWidth < 40 {
+				wrapWidth = 40
+			}
+			wrapper := wordwrap.Wrapper(wrapWidth, false)
 			wrapped := wrapper(comment.Description)
 			fmt.Fprintln(w)
 			fmt.Fprintf(w, wordwrap.Indent(wrapped, strings.Repeat(" ", 12), false))

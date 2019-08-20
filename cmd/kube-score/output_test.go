@@ -354,6 +354,26 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
 `, string(all))
 }
 
+func TestHumanOutputLogDescription0Width(t *testing.T) {
+	r := outputHuman(getTestCardLongDescription(), 0, 0)
+	all, err := ioutil.ReadAll(r)
+	assert.Nil(t, err)
+	assert.Equal(t, `v1/Testing foo in foofoo🤔
+    [WARNING] test-warning-two-comments
+        · a -> summary
+            Lorem ipsum dolor sit amet, consectetur
+            adipiscing elit. Cras elementum sagittis
+            lacus, a dictum tortor lobortis vel.
+            Pellentesque habitant morbi tristique
+            senectus et netus et malesuada fames ac
+            turpis egestas. Nulla eu neque erat.
+            Vestibulum ante ipsum primis in faucibus
+            orci luctus et ultrices posuere cubilia
+            Curae; Maecenas et nisl venenatis,
+            elementum augue a, porttitor libero.
+`, string(all))
+}
+
 func getTestCardLongTitle() *scorecard.Scorecard {
 	checks := []scorecard.TestScore{
 		{
