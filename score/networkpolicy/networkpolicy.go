@@ -35,12 +35,31 @@ func podHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec core
 			for labelKey, labelVal := range matchLabels {
 				if podLabelVal, ok := podSpec.Labels[labelKey]; ok && podLabelVal == labelVal {
 
-					for _, policyType := range netPol.Spec.PolicyTypes {
-						if policyType == networkingv1.PolicyTypeIngress {
-							hasMatchingIngressNetpol = true
-						}
-						if policyType == networkingv1.PolicyTypeEgress {
+					// Documentation of PolicyTypes
+					//
+					// List of rule types that the NetworkPolicy relates to.
+					// Valid options are "Ingress", "Egress", or "Ingress,Egress".
+					// If this field is not specified, it will default based on the existence of Ingress or Egress rules;
+					// policies that contain an Egress section are assumed to affect Egress, and all policies
+					// (whether or not they contain an Ingress section) are assumed to affect Ingress.
+					// If you want to write an egress-only policy, you must explicitly specify policyTypes [ "Egress" ].
+					// Likewise, if you want to write a policy that specifies that no egress is allowed,
+					// you must specify a policyTypes value that include "Egress" (since such a policy would not include
+					// an Egress section and would otherwise default to just [ "Ingress" ]).
+
+					if netPol.Spec.PolicyTypes == nil || len(netPol.Spec.PolicyTypes) == 0 {
+						hasMatchingIngressNetpol = true
+						if len(netPol.Spec.Egress) > 0 {
 							hasMatchingEgressNetpol = true
+						}
+					} else {
+						for _, policyType := range netPol.Spec.PolicyTypes {
+							if policyType == networkingv1.PolicyTypeIngress {
+								hasMatchingIngressNetpol = true
+							}
+							if policyType == networkingv1.PolicyTypeEgress {
+								hasMatchingEgressNetpol = true
+							}
 						}
 					}
 				}
