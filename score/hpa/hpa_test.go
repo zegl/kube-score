@@ -11,6 +11,7 @@ import (
 )
 
 func TestHpaHasTarget(t *testing.T) {
+	t.Parallel()
 	testcases := []struct {
 		hpa           v1.HorizontalPodAutoscaler
 		allTargets    []domain.BothMeta

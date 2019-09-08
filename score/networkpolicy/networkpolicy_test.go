@@ -11,6 +11,7 @@ import (
 )
 
 func TestPodHasNetworkPolicy(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		polTypes    []v1.PolicyType
 		expected    scorecard.Grade
