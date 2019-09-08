@@ -13,6 +13,8 @@ import (
 )
 
 func TestPodSecurityContext(test *testing.T) {
+	test.Parallel()
+
 	b := func(b bool) *bool { return &b }
 	i := func(i int64) *int64 { return &i }
 
@@ -178,22 +180,27 @@ func TestPodSecurityContext(test *testing.T) {
 }
 
 func TestContainerSecurityContextPrivilegied(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 1)
 }
 
 func TestContainerSecurityContextLowUser(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 1)
 }
 
 func TestContainerSecurityContextLowGroup(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 1)
 }
 
 func TestPodSecurityContextInherited(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "security-inherit-pod-security-context.yaml", "Container Security Context", 10)
 }
 
 func TestContainerSecurityContextAllGood(t *testing.T) {
+	t.Parallel()
 	c := testExpectedScore(t, "pod-security-context-all-good.yaml", "Container Security Context", 10)
 	assert.Empty(t, c)
 }

@@ -12,6 +12,7 @@ import (
 )
 
 func TestOkAllTheSameContainerResourceRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
 	s := containerResourceRequestsEqualLimits(
 		corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
@@ -39,6 +40,7 @@ func TestOkAllTheSameContainerResourceRequestsEqualLimits(t *testing.T) {
 }
 
 func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
 	s := containerResourceRequestsEqualLimits(
 		corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
@@ -94,6 +96,7 @@ func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) 
 }
 
 func TestOkSameQuantityContainerResourceRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
 	s := containerResourceRequestsEqualLimits(
 		corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
@@ -121,6 +124,7 @@ func TestOkSameQuantityContainerResourceRequestsEqualLimits(t *testing.T) {
 }
 
 func TestFailBothContainerResourceRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
 	s := containerResourceRequestsEqualLimits(
 		corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
@@ -154,6 +158,7 @@ func TestFailBothContainerResourceRequestsEqualLimits(t *testing.T) {
 }
 
 func TestFailCpuInitContainerResourceRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
 	s := containerResourceRequestsEqualLimits(
 		corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{

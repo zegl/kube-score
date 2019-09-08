@@ -70,18 +70,22 @@ func testExpectedScoreReader(t *testing.T, content io.Reader, testcase string, e
 }
 
 func TestPodContainerNoResources(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-test-resources-none.yaml", "Container Resources", 1)
 }
 
 func TestPodContainerResourceLimits(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-test-resources-only-limits.yaml", "Container Resources", 5)
 }
 
 func TestPodContainerResourceLimitsAndRequests(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-test-resources-limits-and-requests.yaml", "Container Resources", 10)
 }
 
 func TestPodContainerResourceLimitCpuNotRequired(t *testing.T) {
+	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
 		IgnoreContainerCpuLimitRequirement: true,
 		AllFiles:                           []io.Reader{testFile("pod-test-resources-limits-and-requests-no-cpu-limit.yaml")},
@@ -89,6 +93,7 @@ func TestPodContainerResourceLimitCpuNotRequired(t *testing.T) {
 }
 
 func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
+	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
 		IgnoreContainerCpuLimitRequirement: false,
 		AllFiles:                           []io.Reader{testFile("pod-test-resources-limits-and-requests-no-cpu-limit.yaml")},
@@ -96,6 +101,7 @@ func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
 }
 
 func TestPodContainerResourceNoLimitRequired(t *testing.T) {
+	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
 		IgnoreContainerCpuLimitRequirement:    true,
 		IgnoreContainerMemoryLimitRequirement: true,
@@ -104,42 +110,52 @@ func TestPodContainerResourceNoLimitRequired(t *testing.T) {
 }
 
 func TestDeploymentResources(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "deployment-test-resources.yaml", "Container Resources", 5)
 }
 
 func TestStatefulSetResources(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "statefulset-test-resources.yaml", "Container Resources", 5)
 }
 
 func TestPodContainerTagLatest(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-tag-latest.yaml", "Container Image Tag", 1)
 }
 
 func TestPodContainerTagFixed(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-tag-fixed.yaml", "Container Image Tag", 10)
 }
 
 func TestPodContainerPullPolicyUndefined(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-pullpolicy-undefined.yaml", "Container Image Pull Policy", 1)
 }
 
 func TestPodContainerPullPolicyUndefinedLatestTag(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-pullpolicy-undefined-latest-tag.yaml", "Container Image Pull Policy", 10)
 }
 
 func TestPodContainerPullPolicyUndefinedNoTag(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-pullpolicy-undefined-no-tag.yaml", "Container Image Pull Policy", 10)
 }
 
 func TestPodContainerPullPolicyNever(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-pullpolicy-never.yaml", "Container Image Pull Policy", 1)
 }
 
 func TestPodContainerPullPolicyAlways(t *testing.T) {
+	t.Parallel()
 	testExpectedScore(t, "pod-image-pullpolicy-always.yaml", "Container Image Pull Policy", 10)
 }
 
 func TestConfigMapMultiDash(t *testing.T) {
+	t.Parallel()
 	_, err := testScore(config.Configuration{
 		AllFiles: []io.Reader{testFile("configmap-multi-dash.yaml")},
 	})
@@ -147,6 +163,7 @@ func TestConfigMapMultiDash(t *testing.T) {
 }
 
 func TestAnnotationIgnore(t *testing.T) {
+	t.Parallel()
 	s, err := testScore(config.Configuration{
 		VerboseOutput: 0,
 		AllFiles:      []io.Reader{testFile("ignore-annotation-service.yaml")},
@@ -169,6 +186,7 @@ func TestAnnotationIgnore(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
+	t.Parallel()
 	s, err := testScore(config.Configuration{
 		AllFiles: []io.Reader{testFile("list.yaml")},
 	})

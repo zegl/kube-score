@@ -9,6 +9,7 @@ import (
 )
 
 func TestStatefulSetReplicas(t *testing.T) {
+	t.Parallel()
 	cases := map[*int32]struct {
 		grade   scorecard.Grade
 		skipped bool
@@ -35,6 +36,7 @@ func TestStatefulSetReplicas(t *testing.T) {
 }
 
 func TestDeploymentReplicas(t *testing.T) {
+	t.Parallel()
 	cases := map[*int32]struct {
 		grade   scorecard.Grade
 		skipped bool

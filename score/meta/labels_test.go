@@ -11,6 +11,7 @@ import (
 )
 
 func TestInvalidLabel(t *testing.T) {
+	t.Parallel()
 	s := validateLabelValues(domain.BothMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
@@ -26,6 +27,7 @@ func TestInvalidLabel(t *testing.T) {
 	assert.Equal(t, "The label value is invalid, and will not be accepted by Kubernetes", s.Comments[0].Description)
 }
 func TestOKLabel(t *testing.T) {
+	t.Parallel()
 	s := validateLabelValues(domain.BothMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{

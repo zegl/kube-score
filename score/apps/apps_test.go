@@ -102,6 +102,7 @@ func antiAffinityTestCases() []testcase {
 }
 
 func TestStatefulsetHasAntiAffinity(t *testing.T) {
+	t.Parallel()
 	for caseID, tc := range antiAffinityTestCases() {
 		s := appsv1.StatefulSet{
 			Spec: appsv1.StatefulSetSpec{
@@ -126,6 +127,7 @@ func TestStatefulsetHasAntiAffinity(t *testing.T) {
 }
 
 func TestDeploymentHasAntiAffinity(t *testing.T) {
+	t.Parallel()
 	for caseID, tc := range antiAffinityTestCases() {
 		s := appsv1.Deployment{
 			Spec: appsv1.DeploymentSpec{
