@@ -12,16 +12,16 @@ import (
 )
 
 type Check struct {
-	Name       string
-	ID         string
-	TargetType string
-	Comment    string
-	Optional   bool
+	Name       string `json:"name"`
+	ID         string `json:"id"`
+	TargetType string `json:"target_type"`
+	Comment    string `json:"comment"`
+	Optional   bool   `json:"optional"`
 }
 
 type BothMeta struct {
-	TypeMeta   metav1.TypeMeta
-	ObjectMeta metav1.ObjectMeta
+	TypeMeta   metav1.TypeMeta   `json:"type_meta"`
+	ObjectMeta metav1.ObjectMeta `json:"object_meta"`
 }
 
 type PodSpecer interface {

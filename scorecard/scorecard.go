@@ -1,6 +1,7 @@
 package scorecard
 
 import (
+	"encoding/json"
 	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
@@ -46,10 +47,27 @@ func (s Scorecard) AnyBelowOrEqualToGrade(threshold Grade) bool {
 	return false
 }
 
+func (s Scorecard) MarshalJSON() ([]byte, error) {
+	type EncodedScorecard struct {
+		ObjectName string `json:"object_name"`
+		*ScoredObject
+	}
+
+	var result []EncodedScorecard
+	for k, v := range s {
+		result = append(result, EncodedScorecard{
+			ScoredObject: v,
+			ObjectName:   k,
+		})
+	}
+
+	return json.Marshal(result)
+}
+
 type ScoredObject struct {
-	TypeMeta   metav1.TypeMeta
-	ObjectMeta metav1.ObjectMeta
-	Checks     []TestScore
+	TypeMeta   metav1.TypeMeta   `json:"type_meta"`
+	ObjectMeta metav1.ObjectMeta `json:"object_meta"`
+	Checks     []TestScore       `json:"checks"`
 
 	ignoredChecks map[string]struct{}
 }
@@ -99,10 +117,10 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
 }
 
 type TestScore struct {
-	Check    ks.Check
-	Grade    Grade
-	Skipped  bool
-	Comments []TestScoreComment
+	Check    ks.Check           `json:"check"`
+	Grade    Grade              `json:"grade"`
+	Skipped  bool               `json:"skipped"`
+	Comments []TestScoreComment `json:"comments"`
 }
 
 type Grade int
@@ -128,9 +146,9 @@ func (g Grade) String() string {
 }
 
 type TestScoreComment struct {
-	Path        string
-	Summary     string
-	Description string
+	Path        string `json:"path"`
+	Summary     string `json:"summary"`
+	Description string `json:"description"`
 }
 
 func (ts *TestScore) AddComment(path, summary, description string) {
