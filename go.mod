@@ -27,9 +27,9 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 	gopkg.in/yaml.v3 v3.0.0-20190709130402-674ba3eaed22
-	k8s.io/api v0.0.0-20190831074750-7364b6bdad65
-	k8s.io/apimachinery v0.0.0-20190831074630-461753078381
-	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a // indirect
+	k8s.io/api v0.0.0-20191005115622-2e41325d9e4b
+	k8s.io/apimachinery v0.0.0-20191005115455-e71eb83a557c
+	k8s.io/gengo v0.0.0-20190907103519-ebc107f98eab // indirect
 	sigs.k8s.io/structured-merge-diff v0.0.0-20190724202554-0c1d754dd648 // indirect
 	sigs.k8s.io/yaml v1.1.0
 )
