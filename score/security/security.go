@@ -10,6 +10,7 @@ import (
 
 func Register(allChecks *checks.Checks) {
 	allChecks.RegisterPodCheck("Container Security Context", `Makes sure that all pods have good securityContexts configured`, containerSecurityContext)
+	allChecks.RegisterOptionalPodCheck("Container Seccomp Profile", `Makes sure that all pods have at a seccomp policy configured.`, podSeccompProfile)
 }
 
 // containerSecurityContext checks that the recommended securityPolicy options are set
@@ -72,6 +73,27 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec, typeMeta metav
 
 	if noContextSet || hasPrivileged || hasWritableRootFS || hasLowUserID || hasLowGroupID {
 		score.Grade = scorecard.GradeCritical
+	} else {
+		score.Grade = scorecard.GradeAllOK
+	}
+
+	return
+}
+
+// podSeccompProfile checks if the any Seccommp profile is configured for the pod
+func podSeccompProfile(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+	metadata := podTemplate.ObjectMeta
+
+	seccompAnnotated := false
+	if metadata.Annotations != nil {
+		if _, ok := metadata.Annotations["seccomp.security.alpha.kubernetes.io/defaultProfileName"]; ok {
+			seccompAnnotated = true
+		}
+	}
+
+	if !seccompAnnotated {
+		score.Grade = scorecard.GradeWarning
+		score.AddComment(metadata.Name, "The pod has not configured Seccomp for its containers", "Running containers with Seccomp is reccomended to reduce the kernel attack surface")
 	} else {
 		score.Grade = scorecard.GradeAllOK
 	}

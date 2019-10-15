@@ -3,12 +3,14 @@ package score
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"io"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 	"testing"
 
+	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -203,4 +205,28 @@ func TestContainerSecurityContextAllGood(t *testing.T) {
 	t.Parallel()
 	c := testExpectedScore(t, "pod-security-context-all-good.yaml", "Container Security Context", 10)
 	assert.Empty(t, c)
+}
+
+func TestContainerSeccompMissing(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-seccomp-profile"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-seccomp-no-annotation.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Seccomp Profile", 5)
+}
+
+func TestContainerSeccompAllGood(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-seccomp-profile"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-seccomp-annotated.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Seccomp Profile", 10)
 }
