@@ -1,4 +1,4 @@
-package main
+package human
 
 import (
 	"io/ioutil"
@@ -92,28 +92,9 @@ func getTestCard() *scorecard.Scorecard {
 	}
 }
 
-func TestCiOutput(t *testing.T) {
-	t.Parallel()
-	// Defaults
-	r := outputCi(getTestCard())
-	all, err := ioutil.ReadAll(r)
-	assert.Nil(t, err)
-	assert.Equal(t, `[WARNING] foo/foofoo v1/Testing: (a) summary
-[WARNING] foo/foofoo v1/Testing: summary
-[OK] foo/foofoo v1/Testing: (a) summary
-[SKIPPED] foo/foofoo v1/Testing: (a) skipped sum
-[SKIPPED] foo/foofoo v1/Testing
-[WARNING] bar-no-namespace v1/Testing: (a) summary
-[WARNING] bar-no-namespace v1/Testing: summary
-[OK] bar-no-namespace v1/Testing: (a) summary
-[SKIPPED] bar-no-namespace v1/Testing: (a) skipped sum
-[SKIPPED] bar-no-namespace v1/Testing
-`, string(all))
-}
-
 func TestHumanOutputDefault(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCard(), 0, 100)
+	r := Human(getTestCard(), 0, 100)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -133,7 +114,7 @@ v1/Testing bar-no-namespace                                                   �
 
 func TestHumanOutputVerbose1(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCard(), 1, 100)
+	r := Human(getTestCard(), 1, 100)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -159,7 +140,7 @@ v1/Testing bar-no-namespace                                                   �
 
 func TestHumanOutputVerbose2(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCard(), 2, 100)
+	r := Human(getTestCard(), 2, 100)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -274,7 +255,7 @@ func getTestCardAllOK() *scorecard.Scorecard {
 
 func TestHumanOutputAllOKDefault(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCardAllOK(), 0, 100)
+	r := Human(getTestCardAllOK(), 0, 100)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      ✅
@@ -316,7 +297,7 @@ func getTestCardLongDescription() *scorecard.Scorecard {
 
 func TestHumanOutputLogDescription120Width(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCardLongDescription(), 0, 120)
+	r := Human(getTestCardLongDescription(), 0, 120)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -331,7 +312,7 @@ func TestHumanOutputLogDescription120Width(t *testing.T) {
 
 func TestHumanOutputLogDescription100Width(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCardLongDescription(), 0, 100)
+	r := Human(getTestCardLongDescription(), 0, 100)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -347,7 +328,7 @@ func TestHumanOutputLogDescription100Width(t *testing.T) {
 
 func TestHumanOutputLogDescription80Width(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCardLongDescription(), 0, 80)
+	r := Human(getTestCardLongDescription(), 0, 80)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -364,7 +345,7 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
 
 func TestHumanOutputLogDescription0Width(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCardLongDescription(), 0, 0)
+	r := Human(getTestCardLongDescription(), 0, 0)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo🤔
@@ -417,7 +398,7 @@ func getTestCardLongTitle() *scorecard.Scorecard {
 
 func TestHumanOutputWithLongObjectNames(t *testing.T) {
 	t.Parallel()
-	r := outputHuman(getTestCardLongTitle(), 0, 80)
+	r := Human(getTestCardLongTitle(), 0, 80)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title in foofoo🤔
