@@ -12,7 +12,6 @@ require (
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
-	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/googleapis/gnostic v0.3.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/kr/pty v1.1.8 // indirect
@@ -22,13 +21,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
-	golang.org/x/sys v0.0.0-20190726091711-fc99dfbffb4e // indirect
 	golang.org/x/tools v0.0.0-20190728063539-fc6e2057e7f6 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.7
 	gopkg.in/yaml.v3 v3.0.0-20190709130402-674ba3eaed22
-	k8s.io/api v0.0.0-20191005115622-2e41325d9e4b
-	k8s.io/apimachinery v0.0.0-20191005115455-e71eb83a557c
+	k8s.io/api v0.0.0-20191114100352-16d7abae0d2a
+	k8s.io/apimachinery v0.0.0-20191121015412-41065c7a8c2a
 	k8s.io/gengo v0.0.0-20190907103519-ebc107f98eab // indirect
 	sigs.k8s.io/structured-merge-diff v0.0.0-20190724202554-0c1d754dd648 // indirect
 	sigs.k8s.io/yaml v1.1.0
