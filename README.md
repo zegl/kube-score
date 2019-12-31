@@ -72,14 +72,15 @@ Actions:
 	help	Print this message
 
 Flags for score:
-      --enable-optional-test strings    Enable an optional test, can be set multiple times
-      --exit-one-on-warning             Exit with code 1 in case of warnings
-      --help                            Print help
-      --ignore-container-cpu-limit      Disables the requirement of setting a container CPU limit
-      --ignore-container-memory-limit   Disables the requirement of setting a container memory limit
-      --ignore-test strings             Disable a test, can be set multiple times
-      --output-format string            Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
-  -v, --verbose count                   Enable verbose output, can be set multiple times for increased verbosity.
+      --disable-ignore-checks-annotations   Set to true to disable the effect of the 'kube-score/ignore' annotations
+      --enable-optional-test strings        Enable an optional test, can be set multiple times
+      --exit-one-on-warning                 Exit with code 1 in case of warnings
+      --help                                Print help
+      --ignore-container-cpu-limit          Disables the requirement of setting a container CPU limit
+      --ignore-container-memory-limit       Disables the requirement of setting a container memory limit
+      --ignore-test strings                 Disable a test, can be set multiple times
+  -o, --output-format string                Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
+  -v, --verbose count                       Enable verbose output, can be set multiple times for increased verbosity.
 ```
 
 ### Ignoring a test
