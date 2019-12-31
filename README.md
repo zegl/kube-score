@@ -80,7 +80,7 @@ Flags for score:
       --ignore-container-memory-limit       Disables the requirement of setting a container memory limit
       --ignore-test strings                 Disable a test, can be set multiple times
   -o, --output-format string                Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
-      --output-version string               Set to 'v2' or 'v1'. Affects the output of the 'json' output format. 'v2' will become the default in a future release. (default "v1")
+      --output-version string               Changes the version of the --output-format. The 'json' format has version 'v1' (default) and 'v2'. The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.
   -v, --verbose count                       Enable verbose output, can be set multiple times for increased verbosity.
 ```
 
