@@ -173,15 +173,17 @@ Use "-" as filename to read from STDIN.`)
 		r = w
 	} else if *outputFormat == "json" && *outputVersion == "v2" {
 		r = json_v2.Output(scoreCard)
-	} else if *outputFormat == "human" {
+	} else if *outputFormat == "human" && *outputVersion == "v1" {
 		termWidth, _, err := terminal.GetSize(int(os.Stdin.Fd()))
 		// Assume a width of 80 if it can't be detected
 		if err != nil {
 			termWidth = 80
 		}
 		r = human.Human(scoreCard, *verboseOutput, termWidth)
-	} else {
+	} else if *outputFormat == "ci" && *outputVersion == "v1" {
 		r = ci.CI(scoreCard)
+	} else {
+		return fmt.Errorf("error: Unknown --output-format or --output-version")
 	}
 
 	output, _ := ioutil.ReadAll(r)
