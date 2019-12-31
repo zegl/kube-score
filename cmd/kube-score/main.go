@@ -16,6 +16,7 @@ import (
 	"github.com/zegl/kube-score/parser"
 	"github.com/zegl/kube-score/renderer/ci"
 	"github.com/zegl/kube-score/renderer/human"
+	"github.com/zegl/kube-score/renderer/json_v2"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/scorecard"
 )
@@ -83,6 +84,7 @@ func scoreFiles() error {
 	verboseOutput := fs.CountP("verbose", "v", "Enable verbose output, can be set multiple times for increased verbosity.")
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.StringP("output-format", "o", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
+	outputVersion := fs.String("output-version", "v1", "Set to 'v2' or 'v1'. Affects the output of the 'json' output format. 'v2' will become the default in a future release.")
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
@@ -164,11 +166,13 @@ Use "-" as filename to read from STDIN.`)
 
 	var r io.Reader
 
-	if *outputFormat == "json" {
+	if *outputFormat == "json" && *outputVersion == "v1" {
 		d, _ := json.MarshalIndent(scoreCard, "", "    ")
 		w := bytes.NewBufferString("")
 		w.WriteString(string(d))
 		r = w
+	} else if *outputFormat == "json" && *outputVersion == "v2" {
+		r = json_v2.Output(scoreCard)
 	} else if *outputFormat == "human" {
 		termWidth, _, err := terminal.GetSize(int(os.Stdin.Fd()))
 		// Assume a width of 80 if it can't be detected
