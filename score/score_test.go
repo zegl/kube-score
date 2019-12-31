@@ -165,8 +165,9 @@ func TestConfigMapMultiDash(t *testing.T) {
 func TestAnnotationIgnore(t *testing.T) {
 	t.Parallel()
 	s, err := testScore(config.Configuration{
-		VerboseOutput: 0,
-		AllFiles:      []io.Reader{testFile("ignore-annotation-service.yaml")},
+		VerboseOutput:             0,
+		AllFiles:                  []io.Reader{testFile("ignore-annotation-service.yaml")},
+		UseIgnoreChecksAnnotation: true,
 	})
 	assert.Nil(t, err)
 	assert.Len(t, s, 1)
@@ -177,6 +178,31 @@ func TestAnnotationIgnore(t *testing.T) {
 		for _, c := range o.Checks {
 			if c.Check.ID == "service-type" {
 				assert.True(t, c.Skipped)
+				tested = true
+			}
+		}
+		assert.Equal(t, "node-port-service-with-ignore", o.ObjectMeta.Name)
+	}
+	assert.True(t, tested)
+}
+
+func TestAnnotationIgnoreDisabled(t *testing.T) {
+	t.Parallel()
+	s, err := testScore(config.Configuration{
+		VerboseOutput:             0,
+		AllFiles:                  []io.Reader{testFile("ignore-annotation-service.yaml")},
+		UseIgnoreChecksAnnotation: false,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			if c.Check.ID == "service-type" {
+				assert.False(t, c.Skipped)
+				assert.Equal(t, scorecard.GradeWarning, c.Grade)
 				tested = true
 			}
 		}

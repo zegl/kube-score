@@ -19,7 +19,7 @@ func New() Scorecard {
 	return make(Scorecard)
 }
 
-func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *ScoredObject {
+func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, useIgnoreChecksAnnotation bool) *ScoredObject {
 	o := &ScoredObject{
 		TypeMeta:   typeMeta,
 		ObjectMeta: objectMeta,
@@ -31,7 +31,9 @@ func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 		return object
 	}
 
-	o.setIgnoredTests()
+	if useIgnoreChecksAnnotation {
+		o.setIgnoredTests()
+	}
 
 	s[o.resourceRefKey()] = o
 	return o

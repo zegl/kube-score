@@ -9,4 +9,5 @@ type Configuration struct {
 	IgnoreContainerMemoryLimitRequirement bool
 	IgnoredTests                          map[string]struct{}
 	EnabledOptionalTests                  map[string]struct{}
+	UseIgnoreChecksAnnotation             bool
 }
