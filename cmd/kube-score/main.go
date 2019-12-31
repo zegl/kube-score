@@ -85,6 +85,7 @@ func scoreFiles() error {
 	outputFormat := fs.StringP("output-format", "o", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
+	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
 	setDefault(fs, "score", false)
 
 	err := fs.Parse(os.Args[2:])
@@ -139,6 +140,7 @@ Use "-" as filename to read from STDIN.`)
 		IgnoreContainerMemoryLimitRequirement: *ignoreContainerMemoryLimit,
 		IgnoredTests:                          ignoredTests,
 		EnabledOptionalTests:                  enabledOptionalTests,
+		UseIgnoreChecksAnnotation:             !*disableIgnoreChecksAnnotation,
 	}
 
 	parsedFiles, err := parser.ParseFiles(cnf)

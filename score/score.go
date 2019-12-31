@@ -19,6 +19,7 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks.Checks {
@@ -46,22 +47,26 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	allChecks := RegisterAllChecks(allObjects, cnf)
 	scoreCard := scorecard.New()
 
+	newObject := func(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *scorecard.ScoredObject {
+		return scoreCard.NewObject(typeMeta, objectMeta, cnf.UseIgnoreChecksAnnotation)
+	}
+
 	for _, ingress := range allObjects.Ingresses() {
-		o := scoreCard.NewObject(ingress.TypeMeta, ingress.ObjectMeta)
+		o := newObject(ingress.TypeMeta, ingress.ObjectMeta)
 		for _, test := range allChecks.Ingresses() {
 			o.Add(test.Fn(ingress), test.Check)
 		}
 	}
 
 	for _, meta := range allObjects.Metas() {
-		o := scoreCard.NewObject(meta.TypeMeta, meta.ObjectMeta)
+		o := newObject(meta.TypeMeta, meta.ObjectMeta)
 		for _, test := range allChecks.Metas() {
 			o.Add(test.Fn(meta), test.Check)
 		}
 	}
 
 	for _, pod := range allObjects.Pods() {
-		o := scoreCard.NewObject(pod.TypeMeta, pod.ObjectMeta)
+		o := newObject(pod.TypeMeta, pod.ObjectMeta)
 		for _, test := range allChecks.Pods() {
 			score := test.Fn(corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
@@ -72,7 +77,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, podspecer := range allObjects.PodSpeccers() {
-		o := scoreCard.NewObject(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
+		o := newObject(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
 		for _, test := range allChecks.Pods() {
 			score := test.Fn(podspecer.GetPodTemplateSpec(), podspecer.GetTypeMeta())
 			o.Add(score, test.Check)
@@ -80,14 +85,14 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, service := range allObjects.Services() {
-		o := scoreCard.NewObject(service.TypeMeta, service.ObjectMeta)
+		o := newObject(service.TypeMeta, service.ObjectMeta)
 		for _, test := range allChecks.Services() {
 			o.Add(test.Fn(service), test.Check)
 		}
 	}
 
 	for _, statefulset := range allObjects.StatefulSets() {
-		o := scoreCard.NewObject(statefulset.TypeMeta, statefulset.ObjectMeta)
+		o := newObject(statefulset.TypeMeta, statefulset.ObjectMeta)
 		for _, test := range allChecks.StatefulSets() {
 			res, err := test.Fn(statefulset)
 			if err != nil {
@@ -98,7 +103,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, deployment := range allObjects.Deployments() {
-		o := scoreCard.NewObject(deployment.TypeMeta, deployment.ObjectMeta)
+		o := newObject(deployment.TypeMeta, deployment.ObjectMeta)
 		for _, test := range allChecks.Deployments() {
 			res, err := test.Fn(deployment)
 			if err != nil {
@@ -109,21 +114,21 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, netpol := range allObjects.NetworkPolicies() {
-		o := scoreCard.NewObject(netpol.TypeMeta, netpol.ObjectMeta)
+		o := newObject(netpol.TypeMeta, netpol.ObjectMeta)
 		for _, test := range allChecks.NetworkPolicies() {
 			o.Add(test.Fn(netpol), test.Check)
 		}
 	}
 
 	for _, cjob := range allObjects.CronJobs() {
-		o := scoreCard.NewObject(cjob.TypeMeta, cjob.ObjectMeta)
+		o := newObject(cjob.TypeMeta, cjob.ObjectMeta)
 		for _, test := range allChecks.CronJobs() {
 			o.Add(test.Fn(cjob), test.Check)
 		}
 	}
 
 	for _, hpa := range allObjects.HorizontalPodAutoscalers() {
-		o := scoreCard.NewObject(hpa.TypeMeta, hpa.ObjectMeta)
+		o := newObject(hpa.TypeMeta, hpa.ObjectMeta)
 		for _, test := range allChecks.HorizontalPodAutoscalers() {
 			o.Add(test.Fn(hpa), test.Check)
 		}
