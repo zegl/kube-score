@@ -16,7 +16,7 @@ You can test kube-score out in the browser with the [online demo](https://kube-s
 
 Pre-built releases can be downloaded from the [GitHub releases](https://github.com/zegl/kube-score/releases), from [Docker Hub](https://hub.docker.com/r/zegl/kube-score/), or with homebrew:
 
-```bash 
+```bash
 brew install kube-score/tap/kube-score
 ```
 
@@ -57,6 +57,14 @@ kube-score score my-app/*.yaml
 
 ```bash
 kube-score score my-app/deployment.yaml my-app/service.yaml
+```
+
+### Example with an existing cluster
+
+```bash
+kubectl api-resources --verbs=list --namespaced -o name \
+  | xargs -n1 -I{} bash -c "kubectl get {} --all-namespaces -oyaml && echo ---" \
+  | kube-score score -
 ```
 
 ## Configuration
