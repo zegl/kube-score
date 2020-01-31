@@ -9,13 +9,18 @@ builds:
   - windows
   goarch:
   - amd64
+  dir: cmd/kube-score
 
 archives:
   - id: binary
     format: binary
+    files:
+      - LICENSE
 
   # A release in archive format is needed for the homebrew release
   - id: default
+    files:
+      - LICENSE
 
 dockers:
 - goos: linux
@@ -24,7 +29,7 @@ dockers:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}"
-  dockerfile: Dockerfile
+  dockerfile: cmd/kube-score/Dockerfile
 
 - goos: linux
   goarch: amd64
@@ -32,7 +37,7 @@ dockers:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-helm"
-  dockerfile: helm.Dockerfile
+  dockerfile: cmd/kube-score/helm.Dockerfile
 
 checksum:
   name_template: 'checksums.txt'
