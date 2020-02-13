@@ -9,7 +9,7 @@ require (
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20190709130402-674ba3eaed22
-	k8s.io/api v0.17.2
+	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.0
 	sigs.k8s.io/yaml v1.2.0
 )
