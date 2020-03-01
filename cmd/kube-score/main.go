@@ -24,30 +24,62 @@ import (
 )
 
 func main() {
-	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	setDefault(fs, execName(os.Args[0]), "", true)
+	helpName := execName(os.Args[0])
+
+	fs := flag.NewFlagSet(helpName, flag.ExitOnError)
+	setDefault(fs, helpName, "", true)
+
+	command := ""
+	cmdArgsOffset := 2
+
+	// When executing kube-score as a kubectl plugin, default to the "score" sub-command to avoid stuttering
+	// "kubectl score" is equivalent to "kubectl score score"
+	if isKubectlPlugin(helpName) {
+		command = "score"
+		cmdArgsOffset = 1
+	}
 
 	// No command, flag, or file has been specified
-	if len(os.Args) == 1 {
+	if len(os.Args) <= cmdArgsOffset {
 		fs.Usage()
 		return
 	}
 
-	switch os.Args[1] {
-	case "score":
-		if err := scoreFiles(); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Failed to score files: %v", err)
+	type cmdFunc func(string, []string)
+
+	cmds := map[string]cmdFunc{
+		"score": func(helpName string, args []string) {
+			if err := scoreFiles(helpName, args); err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Failed to score files: %v", err)
+				os.Exit(1)
+			}
+		},
+
+		"list": func(helpName string, args []string) {
+			listChecks(helpName, args)
+		},
+
+		"version": func(helpName string, args []string) {
+			cmdVersion()
+		},
+
+		"help": func(helpName string, args []string) {
+			fs.Usage()
 			os.Exit(1)
-		}
-	case "list":
-		listChecks()
-	case "version":
-		cmdVersion()
-	case "help":
-		fallthrough
-	default:
-		fs.Usage()
-		os.Exit(1)
+		},
+	}
+
+	// If arg 1 is set and is a valid command, always use it as the command to execute, instead of the default
+	if _, ok := cmds[os.Args[1]]; ok {
+		command = os.Args[1]
+		cmdArgsOffset = 2
+	}
+
+	// Execute the command, or the help command if no matching command is found
+	if ex, ok := cmds[command]; ok {
+		ex(helpName, os.Args[cmdArgsOffset:])
+	} else {
+		cmds["help"](helpName, os.Args[cmdArgsOffset:])
 	}
 }
 
@@ -62,6 +94,10 @@ func execName(args0 string) string {
 	}
 
 	return binName
+}
+
+func isKubectlPlugin(helpName string) bool {
+	return execName(helpName) == "kubectl score"
 }
 
 func setDefault(fs *flag.FlagSet, binName, actionName string, displayForMoreInfo bool) {
@@ -91,8 +127,8 @@ Actions:
 	}
 }
 
-func scoreFiles() error {
-	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+func scoreFiles(binName string, args []string) error {
+	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
 	ignoreContainerCpuLimit := fs.Bool("ignore-container-cpu-limit", false, "Disables the requirement of setting a container CPU limit")
 	ignoreContainerMemoryLimit := fs.Bool("ignore-container-memory-limit", false, "Disables the requirement of setting a container memory limit")
@@ -103,9 +139,9 @@ func scoreFiles() error {
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
-	setDefault(fs, os.Args[0], "score", false)
+	setDefault(fs, binName, "score", false)
 
-	err := fs.Parse(os.Args[2:])
+	err := fs.Parse(args)
 	if err != nil {
 		return fmt.Errorf("failed to parse files: %s", err)
 	}
@@ -126,7 +162,7 @@ func scoreFiles() error {
 
 Usage: %s score [--flag1 --flag2] file1 file2 ...
 
-Use "-" as filename to read from STDIN.`, execName(os.Args[0]))
+Use "-" as filename to read from STDIN.`, execName(binName))
 	}
 
 	var allFilePointers []io.Reader
@@ -222,11 +258,11 @@ func getOutputVersion(flagValue, format string) string {
 	}
 }
 
-func listChecks() {
-	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+func listChecks(binName string, args []string) {
+	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
-	setDefault(fs, os.Args[0], "list", false)
-	fs.Parse(os.Args[2:])
+	setDefault(fs, binName, "list", false)
+	fs.Parse(args)
 
 	if *printHelp {
 		fs.Usage()
