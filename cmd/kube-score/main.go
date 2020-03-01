@@ -8,6 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/ssh/terminal"
@@ -23,7 +25,7 @@ import (
 
 func main() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	setDefault(fs, "", true)
+	setDefault(fs, execName(os.Args[0]), "", true)
 
 	// No command, flag, or file has been specified
 	if len(os.Args) == 1 {
@@ -49,19 +51,32 @@ func main() {
 	}
 }
 
-func setDefault(fs *flag.FlagSet, actionName string, displayForMoreInfo bool) {
+func execName(args0 string) string {
+	// Detect name of the binary
+	binName := path.Base(args0)
+
+	// If executed as a kubectl plugin, replace dash with a space
+	// "kubectl-score" -> "kubectl score"
+	if strings.HasPrefix(binName, "kubectl-") {
+		binName = strings.Replace(binName, "kubectl-", "kubectl ", 1)
+	}
+
+	return binName
+}
+
+func setDefault(fs *flag.FlagSet, binName, actionName string, displayForMoreInfo bool) {
 	fs.Usage = func() {
-		usage := `Usage of kube-score:
-kube-score [action] --flags
+		usage := fmt.Sprintf(`Usage of %s:
+%s [action] --flags
 
 Actions:
 	score	Checks all files in the input, and gives them a score and recommendations
 	list	Prints a CSV list of all available score checks
 	version	Print the version of kube-score
-	help	Print this message` + "\n\n"
+	help	Print this message`+"\n\n", binName, binName)
 
 		if displayForMoreInfo {
-			usage += `Run "kube-score [action] --help" for more information about a particular command`
+			usage += fmt.Sprintf(`Run "%s [action] --help" for more information about a particular command`, binName)
 		}
 
 		if len(actionName) > 0 {
@@ -88,7 +103,7 @@ func scoreFiles() error {
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
-	setDefault(fs, "score", false)
+	setDefault(fs, os.Args[0], "score", false)
 
 	err := fs.Parse(os.Args[2:])
 	if err != nil {
@@ -109,9 +124,9 @@ func scoreFiles() error {
 	if len(filesToRead) == 0 {
 		return fmt.Errorf(`Error: No files given as arguments.
 
-Usage: kube-score check [--flag1 --flag2] file1 file2 ...
+Usage: %s score [--flag1 --flag2] file1 file2 ...
 
-Use "-" as filename to read from STDIN.`)
+Use "-" as filename to read from STDIN.`, execName(os.Args[0]))
 	}
 
 	var allFilePointers []io.Reader
@@ -210,7 +225,7 @@ func getOutputVersion(flagValue, format string) string {
 func listChecks() {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
-	setDefault(fs, "list", false)
+	setDefault(fs, os.Args[0], "list", false)
 	fs.Parse(os.Args[2:])
 
 	if *printHelp {
