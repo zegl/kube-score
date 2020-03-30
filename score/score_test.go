@@ -100,6 +100,19 @@ func TestPodContainerResourceLimitCpuRequired(t *testing.T) {
 	}, "Container Resources", 1)
 }
 
+func TestPodContainerResourceRequestsEqualLimitsCpuNotRequired(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-resource-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		IgnoreContainerCpuLimitRequirement: true,
+		AllFiles:                           []io.Reader{testFile("pod-test-resources-limits-and-requests-no-cpu-limit.yaml")},
+		EnabledOptionalTests:               structMap,
+	}, "Container Resource Requests Equal Limits", 10)
+}
+
 func TestPodContainerResourceNoLimitRequired(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
