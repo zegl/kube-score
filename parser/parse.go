@@ -2,8 +2,11 @@ package parser
 
 import (
 	"bytes"
-	"gopkg.in/yaml.v3"
+	"fmt"
 	"io/ioutil"
+	"log"
+
+	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
@@ -17,7 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"log"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -145,7 +147,10 @@ func detectAndDecode(cnf config.Configuration, s *parsedObjects, raw []byte) err
 	// Parse lists and their items recursively
 	if detectedVersion == corev1.SchemeGroupVersion.WithKind("List") {
 		var list corev1.List
-		decode(raw, &list)
+		err := decode(raw, &list)
+		if err != nil {
+			return err
+		}
 		for _, listItem := range list.Items {
 			err := detectAndDecode(cnf, s, listItem.Raw)
 			if err != nil {
@@ -155,118 +160,125 @@ func detectAndDecode(cnf config.Configuration, s *parsedObjects, raw []byte) err
 		return nil
 	}
 
-	decodeItem(cnf, s, detectedVersion, raw)
+	err = decodeItem(cnf, s, detectedVersion, raw)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func decode(data []byte, object runtime.Object) {
+func decode(data []byte, object runtime.Object) error {
 	deserializer := codecs.UniversalDeserializer()
 	if _, _, err := deserializer.Decode(data, nil, object); err != nil {
-		panic(err)
+		gvk := object.GetObjectKind().GroupVersionKind()
+		return fmt.Errorf("Failed to parse %s: err=%w", gvk, err)
 	}
+	return nil
 }
 
-func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileContents []byte) {
+func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileContents []byte) error {
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		s.podspecers = append(s.podspecers, ps)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ps.GetTypeMeta(), ps.GetObjectMeta()})
 	}
 
+	var errs parseError
+
 	switch detectedVersion {
 	case corev1.SchemeGroupVersion.WithKind("Pod"):
 		var pod corev1.Pod
-		decode(fileContents, &pod)
+		errs.AddIfErr(decode(fileContents, &pod))
 		s.pods = append(s.pods, pod)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{pod.TypeMeta, pod.ObjectMeta})
 
 	case batchv1.SchemeGroupVersion.WithKind("Job"):
 		var job batchv1.Job
-		decode(fileContents, &job)
+		errs.AddIfErr(decode(fileContents, &job))
 		addPodSpeccer(internal.Batchv1Job{job})
 
 	case batchv1beta1.SchemeGroupVersion.WithKind("CronJob"):
 		var cronjob batchv1beta1.CronJob
-		decode(fileContents, &cronjob)
+		errs.AddIfErr(decode(fileContents, &cronjob))
 		addPodSpeccer(internal.Batchv1beta1CronJob{cronjob})
 		s.cronjobs = append(s.cronjobs, cronjob)
 
 	case appsv1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1.Deployment
-		decode(fileContents, &deployment)
+		errs.AddIfErr(decode(fileContents, &deployment))
 		addPodSpeccer(internal.Appsv1Deployment{deployment})
 
 		// TODO: Support older versions of Deployment as well?
 		s.deployments = append(s.deployments, deployment)
 	case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1beta1.Deployment
-		decode(fileContents, &deployment)
+		errs.AddIfErr(decode(fileContents, &deployment))
 		addPodSpeccer(internal.Appsv1beta1Deployment{deployment})
 	case appsv1beta2.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1beta2.Deployment
-		decode(fileContents, &deployment)
+		errs.AddIfErr(decode(fileContents, &deployment))
 		addPodSpeccer(internal.Appsv1beta2Deployment{deployment})
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment extensionsv1beta1.Deployment
-		decode(fileContents, &deployment)
+		errs.AddIfErr(decode(fileContents, &deployment))
 		addPodSpeccer(internal.Extensionsv1beta1Deployment{deployment})
 
 	case appsv1.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1.StatefulSet
-		decode(fileContents, &statefulSet)
+		errs.AddIfErr(decode(fileContents, &statefulSet))
 		addPodSpeccer(internal.Appsv1StatefulSet{statefulSet})
 
 		// TODO: Support older versions of StatefulSet as well?
 		s.statefulsets = append(s.statefulsets, statefulSet)
 	case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta1.StatefulSet
-		decode(fileContents, &statefulSet)
+		errs.AddIfErr(decode(fileContents, &statefulSet))
 		addPodSpeccer(internal.Appsv1beta1StatefulSet{statefulSet})
 	case appsv1beta2.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta2.StatefulSet
-		decode(fileContents, &statefulSet)
+		errs.AddIfErr(decode(fileContents, &statefulSet))
 		addPodSpeccer(internal.Appsv1beta2StatefulSet{statefulSet})
 
 	case appsv1.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset appsv1.DaemonSet
-		decode(fileContents, &daemonset)
+		errs.AddIfErr(decode(fileContents, &daemonset))
 		addPodSpeccer(internal.Appsv1DaemonSet{daemonset})
 	case appsv1beta2.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset appsv1beta2.DaemonSet
-		decode(fileContents, &daemonset)
+		errs.AddIfErr(decode(fileContents, &daemonset))
 		addPodSpeccer(internal.Appsv1beta2DaemonSet{daemonset})
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset extensionsv1beta1.DaemonSet
-		decode(fileContents, &daemonset)
+		errs.AddIfErr(decode(fileContents, &daemonset))
 		addPodSpeccer(internal.Extensionsv1beta1DaemonSet{daemonset})
 
 	case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 		var netpol networkingv1.NetworkPolicy
-		decode(fileContents, &netpol)
+		errs.AddIfErr(decode(fileContents, &netpol))
 		s.networkPolicies = append(s.networkPolicies, netpol)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{netpol.TypeMeta, netpol.ObjectMeta})
 
 	case corev1.SchemeGroupVersion.WithKind("Service"):
 		var service corev1.Service
-		decode(fileContents, &service)
+		errs.AddIfErr(decode(fileContents, &service))
 		s.services = append(s.services, service)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{service.TypeMeta, service.ObjectMeta})
 
 	case policyv1beta1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 		var disruptBudget policyv1beta1.PodDisruptionBudget
-		decode(fileContents, &disruptBudget)
+		errs.AddIfErr(decode(fileContents, &disruptBudget))
 		s.podDisruptionBudgets = append(s.podDisruptionBudgets, disruptBudget)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta})
 
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress extensionsv1beta1.Ingress
-		decode(fileContents, &ingress)
+		errs.AddIfErr(decode(fileContents, &ingress))
 		s.ingresses = append(s.ingresses, ingress)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta})
 
 	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv1.HorizontalPodAutoscaler
-		decode(fileContents, &hpa)
+		errs.AddIfErr(decode(fileContents, &hpa))
 		s.horizontalPodAutoscalers = append(s.horizontalPodAutoscalers, hpa)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta})
 
@@ -275,4 +287,9 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 			log.Printf("Unknown datatype: %s", detectedVersion.String())
 		}
 	}
+
+	if errs.Any() {
+		return errs
+	}
+	return nil
 }

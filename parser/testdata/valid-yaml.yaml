@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: xyz-service
+  namespace: test
+spec:
+  type: NodePort
+  ports:
+  - port: 123
+    targetPort: 4444
+    nodePort: 32444
+  selector:
+    app: xyz

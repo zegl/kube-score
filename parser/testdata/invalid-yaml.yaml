@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${APP}-service
+  namespace: test
+spec:
+  type: NodePort
+  ports:
+  - port: ${PORT_EXPOSE}
+    targetPort: ${PORT_EXPOSE}
+    nodePort: ${PORT}
+  selector:
+    app: ${APP}
