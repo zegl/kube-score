@@ -8,8 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
-	"strings"
 
 	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/ssh/terminal"
@@ -28,24 +26,6 @@ func main() {
 
 	fs := flag.NewFlagSet(helpName, flag.ExitOnError)
 	setDefault(fs, helpName, "", true)
-
-	command := ""
-	cmdArgsOffset := 2
-
-	// When executing kube-score as a kubectl plugin, default to the "score" sub-command to avoid stuttering
-	// "kubectl score" is equivalent to "kubectl score score"
-	if isKubectlPlugin(helpName) {
-		command = "score"
-		cmdArgsOffset = 1
-	}
-
-	// No command, flag, or file has been specified
-	if len(os.Args) <= cmdArgsOffset {
-		fs.Usage()
-		return
-	}
-
-	type cmdFunc func(string, []string)
 
 	cmds := map[string]cmdFunc{
 		"score": func(helpName string, args []string) {
@@ -69,10 +49,10 @@ func main() {
 		},
 	}
 
-	// If arg 1 is set and is a valid command, always use it as the command to execute, instead of the default
-	if _, ok := cmds[os.Args[1]]; ok {
-		command = os.Args[1]
-		cmdArgsOffset = 2
+	command, cmdArgsOffset, err := parse(os.Args, cmds)
+	if err != nil {
+		fs.Usage()
+		os.Exit(1)
 	}
 
 	// Execute the command, or the help command if no matching command is found
@@ -81,23 +61,6 @@ func main() {
 	} else {
 		cmds["help"](helpName, os.Args[cmdArgsOffset:])
 	}
-}
-
-func execName(args0 string) string {
-	// Detect name of the binary
-	binName := path.Base(args0)
-
-	// If executed as a kubectl plugin, replace dash with a space
-	// "kubectl-score" -> "kubectl score"
-	if strings.HasPrefix(binName, "kubectl-") {
-		binName = strings.Replace(binName, "kubectl-", "kubectl ", 1)
-	}
-
-	return binName
-}
-
-func isKubectlPlugin(helpName string) bool {
-	return execName(helpName) == "kubectl score"
 }
 
 func setDefault(fs *flag.FlagSet, binName, actionName string, displayForMoreInfo bool) {
