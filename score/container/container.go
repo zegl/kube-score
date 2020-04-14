@@ -13,6 +13,8 @@ import (
 func Register(allChecks *checks.Checks, cnf config.Configuration) {
 	allChecks.RegisterPodCheck("Container Resources", `Makes sure that all pods have resource limits and requests set. The --ignore-container-cpu-limit flag can be used to disable the requirement of having a CPU limit`, containerResources(!cnf.IgnoreContainerCpuLimitRequirement, !cnf.IgnoreContainerMemoryLimitRequirement))
 	allChecks.RegisterOptionalPodCheck("Container Resource Requests Equal Limits", `Makes sure that all pods have the same requests as limits on resources set.`, containerResourceRequestsEqualLimits)
+	allChecks.RegisterOptionalPodCheck("Container CPU Requests Equal Limits", `Makes sure that all pods have the same CPU requests as limits set.`, containerCPURequestsEqualLimits)
+	allChecks.RegisterOptionalPodCheck("Container Memory Requests Equal Limits", `Makes sure that all pods have the same memory requests as limits set.`, containerMemoryRequestsEqualLimits)
 	allChecks.RegisterPodCheck("Container Image Tag", `Makes sure that a explicit non-latest tag is used`, containerImageTag)
 	allChecks.RegisterPodCheck("Container Image Pull Policy", `Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated.`, containerImagePullPolicy)
 }
@@ -65,6 +67,24 @@ func containerResources(requireCPULimit bool, requireMemoryLimit bool) func(core
 
 // containerResourceRequestsEqualLimits checks that all containers have equal requests and limits for CPU and memory resources
 func containerResourceRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+	cpuScore := containerCPURequestsEqualLimits(podTemplate, typeMeta)
+	memoryScore := containerMemoryRequestsEqualLimits(podTemplate, typeMeta)
+
+	score.Grade = scorecard.GradeAllOK
+	if cpuScore.Grade == scorecard.GradeCritical {
+		score.Grade = scorecard.GradeCritical
+		score.Comments = append(score.Comments, cpuScore.Comments...)
+	}
+	if memoryScore.Grade == scorecard.GradeCritical {
+		score.Grade = scorecard.GradeCritical
+		score.Comments = append(score.Comments, memoryScore.Comments...)
+	}
+
+	return score
+}
+
+// containerCPURequestsEqualLimits checks that all containers have equal requests and limits for CPU resources
+func containerCPURequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
 	pod := podTemplate.Spec
 
 	allContainers := pod.InitContainers
@@ -79,6 +99,29 @@ func containerResourceRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, ty
 			score.AddComment(container.Name, "CPU requests does not match limits", "Having equal requests and limits is recommended to avoid resource DDOS of the node during spikes. Set resources.requests.cpu == resources.limits.cpu")
 			resourcesDoNotMatch = true
 		}
+	}
+
+	if resourcesDoNotMatch {
+		score.Grade = scorecard.GradeCritical
+	} else {
+		score.Grade = scorecard.GradeAllOK
+	}
+
+	return
+}
+
+// containerMemoryRequestsEqualLimits checks that all containers have equal requests and limits for memory resources
+func containerMemoryRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+	pod := podTemplate.Spec
+
+	allContainers := pod.InitContainers
+	allContainers = append(allContainers, pod.Containers...)
+
+	resourcesDoNotMatch := false
+
+	for _, container := range allContainers {
+		requests := &container.Resources.Requests
+		limits := &container.Resources.Limits
 		if !requests.Memory().Equal(*limits.Memory()) {
 			score.AddComment(container.Name, "Memory requests does not match limits", "Having equal requests and limits is recommended to avoid resource DDOS of the node during spikes. Set resources.requests.memory == resources.limits.memory")
 			resourcesDoNotMatch = true

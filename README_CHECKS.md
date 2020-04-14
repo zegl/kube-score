@@ -5,6 +5,8 @@
 | cronjob-has-deadline | CronJob | Makes sure that all CronJobs has a configured deadline | default |
 | container-resources | Pod | Makes sure that all pods have resource limits and requests set. The --ignore-container-cpu-limit flag can be used to disable the requirement of having a CPU limit | default |
 | container-resource-requests-equal-limits | Pod | Makes sure that all pods have the same requests as limits on resources set. | optional |
+| container-cpu-requests-equal-limits | Pod | Makes sure that all pods have the same CPU requests as limits set. | optional |
+| container-memory-requests-equal-limits | Pod | Makes sure that all pods have the same memory requests as limits set. | optional |
 | container-image-tag | Pod | Makes sure that a explicit non-latest tag is used | default |
 | container-image-pull-policy | Pod | Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated. | default |
 | statefulset-has-poddisruptionbudget | StatefulSet | Makes sure that all StatefulSets are targeted by a PDB | default |

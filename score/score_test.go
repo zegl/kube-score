@@ -109,6 +109,78 @@ func TestPodContainerResourceNoLimitRequired(t *testing.T) {
 	}, "Container Resources", 10)
 }
 
+func TestPodContainerResourceRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-resource-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-test-resources-limits-and-requests.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Resource Requests Equal Limits", 10)
+}
+
+func TestPodContainerMemoryRequestsEqualLimits(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-memory-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-test-resources-limits-and-requests.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Memory Requests Equal Limits", 10)
+}
+
+func TestPodContainerCPURequestsEqualLimits(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-cpu-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-test-resources-limits-and-requests.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container CPU Requests Equal Limits", 10)
+}
+
+func TestPodContainerResourceRequestsEqualLimitsNoLimits(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-resource-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-test-resources-no-limits.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Resource Requests Equal Limits", 1)
+}
+
+func TestPodContainerMemoryRequestsEqualLimitsNoLimits(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-memory-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-test-resources-no-limits.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Memory Requests Equal Limits", 1)
+}
+
+func TestPodContainerCPURequestsEqualLimitsNoLimits(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-cpu-requests-equal-limits"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []io.Reader{testFile("pod-test-resources-no-limits.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container CPU Requests Equal Limits", 1)
+}
+
 func TestDeploymentResources(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "deployment-test-resources.yaml", "Container Resources", 5)
