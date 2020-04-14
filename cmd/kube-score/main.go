@@ -98,7 +98,7 @@ func scoreFiles(binName string, args []string) error {
 	verboseOutput := fs.CountP("verbose", "v", "Enable verbose output, can be set multiple times for increased verbosity.")
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.StringP("output-format", "o", "human", "Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs.")
-	outputVersion := fs.String("output-version", "", "Changes the version of the --output-format. The 'json' format has version 'v1' (default) and 'v2'. The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.")
+	outputVersion := fs.String("output-version", "", "Changes the version of the --output-format. The 'json' format has version 'v2' (default) and 'v1' (deprecated, will be removed in v1.7.0). The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.")
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
@@ -215,7 +215,7 @@ func getOutputVersion(flagValue, format string) string {
 
 	switch format {
 	case "json":
-		return "v1" // TODO: Switch this to v2 in v1.6.0
+		return "v2"
 	default:
 		return "v1"
 	}
