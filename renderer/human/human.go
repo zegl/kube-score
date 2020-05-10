@@ -108,6 +108,11 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int)
 			fmt.Fprintf(w, wordwrap.Indent(wrapped, strings.Repeat(" ", 12), false))
 		}
 
+		if len(comment.DocumentationURL) > 0 {
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, "%sMore information: %s", strings.Repeat(" ", 12), comment.DocumentationURL)
+		}
+
 		fmt.Fprintln(w)
 	}
 

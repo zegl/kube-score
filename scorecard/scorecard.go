@@ -130,9 +130,10 @@ func (g Grade) String() string {
 }
 
 type TestScoreComment struct {
-	Path        string
-	Summary     string
-	Description string
+	Path             string
+	Summary          string
+	Description      string
+	DocumentationURL string
 }
 
 func (ts *TestScore) AddComment(path, summary, description string) {
@@ -140,5 +141,14 @@ func (ts *TestScore) AddComment(path, summary, description string) {
 		Path:        path,
 		Summary:     summary,
 		Description: description,
+	})
+}
+
+func (ts *TestScore) AddCommentWithURL(path, summary, description, documentationURL string) {
+	ts.Comments = append(ts.Comments, TestScoreComment{
+		Path:             path,
+		Summary:          summary,
+		Description:      description,
+		DocumentationURL: documentationURL,
 	})
 }
