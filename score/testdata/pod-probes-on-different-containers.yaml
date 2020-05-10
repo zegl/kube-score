@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: pod-test-1
+  labels:
+    app: test
 spec:
   containers:
   - name: foobar
@@ -16,3 +18,16 @@ spec:
         port: 8080
   - name: foobar2
     image: foo/bar:latest
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: test
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
