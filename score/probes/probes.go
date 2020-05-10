@@ -1,15 +1,16 @@
 package probes
 
 import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
-	allChecks.RegisterPodCheck("Pod Probes", `Makes sure that all Pods have bot a readinessProbe and a libenessProbe configured`, containerProbes(services.Services()))
+	allChecks.RegisterPodCheck("Pod Probes", `Makes sure that all Pods have safe probe configurations`, containerProbes(services.Services()))
 }
 
 // containerProbes returns a function that checks if all probes are defined correctly in the Pod.
@@ -88,24 +89,44 @@ func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, 
 			}
 		}
 
-		if hasLivenessProbe && (hasReadinessProbe || !isTargetedByService) {
-			if !probesAreIdentical {
-				score.Grade = scorecard.GradeAllOK
-			} else {
-				score.Grade = scorecard.GradeAlmostOK
-				score.AddComment("", "Pod has the same readiness and liveness probe", "It's recommended to have different probes for the two different purposes.")
-			}
-		} else if !hasReadinessProbe && !hasLivenessProbe {
+		if hasLivenessProbe && hasReadinessProbe && probesAreIdentical {
 			score.Grade = scorecard.GradeCritical
-			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
-			score.AddComment("", "Container is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
-		} else if isTargetedByService && !hasReadinessProbe {
-			score.Grade = scorecard.GradeCritical
-			score.AddComment("", "Container is missing a readinessProbe", "Without a readinessProbe Services will start sending traffic to this pod before it's ready")
-		} else if !hasLivenessProbe {
-			score.Grade = scorecard.GradeWarning
-			score.AddComment("", "Pod is missing a livenessProbe", "Without a livenessProbe kubelet can not restart the Pod if it has crashed")
+			score.AddCommentWithURL(
+				"", "Container has the same readiness and liveness probe",
+				"Using the same probe for liveness and readiness is very likely dangerous. Generally it's better to avoid the livenessProbe than re-using the readinessProbe.",
+				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
+			)
+			return score
 		}
+
+		if !isTargetedByService {
+			score.Grade = scorecard.GradeAllOK
+			score.AddComment("", "The pod is not targeted by a service, skipping probe checks.", "")
+			return score
+		}
+
+		if !hasReadinessProbe {
+			score.Grade = scorecard.GradeCritical
+			score.AddCommentWithURL("", "Container is missing a readinessProbe",
+				"A readinessProbe should be used to indicate when the service is ready to receive traffic. "+
+					"Without it, the Pod is risking to receive traffic before it has booted. "+
+					"It's also used during rollouts, and can prevent downtime if a new version of the application is failing.",
+				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
+			)
+			return score
+		}
+
+		if !hasLivenessProbe {
+			score.Grade = scorecard.GradeAlmostOK
+			score.AddCommentWithURL("", "Container is missing a livenessProbe",
+				"A livenssProbe can be used to restart the container if it's deadlocked or has crashed without exiting. "+
+					"It's only recommended to setup a livenessProbe if you really need one.",
+				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
+			)
+			return score
+		}
+
+		score.Grade = scorecard.GradeAllOK
 
 		return score
 	}

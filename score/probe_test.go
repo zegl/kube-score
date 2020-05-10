@@ -3,68 +3,71 @@ package score
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/zegl/kube-score/scorecard"
 )
 
 func TestProbesPodAllMissing(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-all-missing.yaml", "Pod Probes", 1)
-	assert.Len(t, comments, 2)
+	comments := testExpectedScore(t, "pod-probes-all-missing.yaml", "Pod Probes", scorecard.GradeCritical)
+	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
-	assert.Equal(t, "Container is missing a livenessProbe", comments[1].Summary)
 }
 
 func TestProbesPodMissingReady(t *testing.T) {
 	t.Parallel()
-	// not targeted by service, expected full score
-	comments := testExpectedScore(t, "pod-probes-missing-ready.yaml", "Pod Probes", 10)
-	assert.Len(t, comments, 0)
+	comments := testExpectedScore(t, "pod-probes-missing-ready.yaml", "Pod Probes", scorecard.GradeCritical)
+	assert.Len(t, comments, 1)
+	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 }
 
 func TestProbesPodIdenticalHTTP(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-identical-http.yaml", "Pod Probes", 7)
+	comments := testExpectedScore(t, "pod-probes-identical-http.yaml", "Pod Probes", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
-	assert.Equal(t, "Pod has the same readiness and liveness probe", comments[0].Summary)
+	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }
 
 func TestProbesPodIdenticalTCP(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-identical-tcp.yaml", "Pod Probes", 7)
+	comments := testExpectedScore(t, "pod-probes-identical-tcp.yaml", "Pod Probes", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
-	assert.Equal(t, "Pod has the same readiness and liveness probe", comments[0].Summary)
+	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }
 
 func TestProbesPodIdenticalExec(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", 7)
+	comments := testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
-	assert.Equal(t, "Pod has the same readiness and liveness probe", comments[0].Summary)
+	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }
 
 func TestProbesTargetedByService(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-targeted-by-service.yaml", "Pod Probes", 1)
+	comments := testExpectedScore(t, "pod-probes-targeted-by-service.yaml", "Pod Probes", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 }
 
 func TestProbesTargetedByServiceSameNamespace(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-targeted-by-service-same-namespace.yaml", "Pod Probes", 1)
+	comments := testExpectedScore(t, "pod-probes-targeted-by-service-same-namespace.yaml", "Pod Probes", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 }
 
 func TestProbesTargetedByServiceDifferentNamespace(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-targeted-by-service-different-namespace.yaml", "Pod Probes", 10)
-	assert.Len(t, comments, 0)
+	comments := testExpectedScore(t, "pod-probes-targeted-by-service-different-namespace.yaml", "Pod Probes", scorecard.GradeAllOK)
+	assert.Len(t, comments, 1)
+	assert.Equal(t, "The pod is not targeted by a service, skipping probe checks.", comments[0].Summary)
 }
 
 func TestProbesTargetedByServiceNotTargeted(t *testing.T) {
 	t.Parallel()
 	comments := testExpectedScore(t, "pod-probes-not-targeted-by-service.yaml", "Pod Probes", 10)
-	assert.Len(t, comments, 0)
+	assert.Len(t, comments, 1)
+	assert.Equal(t, "The pod is not targeted by a service, skipping probe checks.", comments[0].Summary)
 }
 
 func TestProbesMultipleContainers(t *testing.T) {

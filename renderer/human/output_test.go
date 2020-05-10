@@ -26,8 +26,9 @@ func getTestCard() *scorecard.Scorecard {
 				},
 				{
 					// No path
-					Summary:     "summary",
-					Description: "description",
+					Summary:          "summary",
+					Description:      "description",
+					DocumentationURL: "https://kube-score.com/whatever",
 				},
 			},
 		},
@@ -103,12 +104,14 @@ func TestHumanOutputDefault(t *testing.T) {
             description
         路 summary
             description
+            More information: https://kube-score.com/whatever
 v1/Testing bar-no-namespace                                                   馃
     [WARNING] test-warning-two-comments
         路 a -> summary
             description
         路 summary
             description
+            More information: https://kube-score.com/whatever
 `, string(all))
 }
 
@@ -123,6 +126,7 @@ func TestHumanOutputVerbose1(t *testing.T) {
             description
         路 summary
             description
+            More information: https://kube-score.com/whatever
     [OK] test-ok-comment
         路 a -> summary
             description
@@ -132,6 +136,7 @@ v1/Testing bar-no-namespace                                                   馃
             description
         路 summary
             description
+            More information: https://kube-score.com/whatever
     [OK] test-ok-comment
         路 a -> summary
             description
@@ -149,6 +154,7 @@ func TestHumanOutputVerbose2(t *testing.T) {
             description
         路 summary
             description
+            More information: https://kube-score.com/whatever
     [OK] test-ok-comment
         路 a -> summary
             description
@@ -162,6 +168,7 @@ v1/Testing bar-no-namespace                                                   馃
             description
         路 summary
             description
+            More information: https://kube-score.com/whatever
     [OK] test-ok-comment
         路 a -> summary
             description
