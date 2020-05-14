@@ -119,7 +119,7 @@ func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, 
 		if !hasLivenessProbe {
 			score.Grade = scorecard.GradeAlmostOK
 			score.AddCommentWithURL("", "Container is missing a livenessProbe",
-				"A livenssProbe can be used to restart the container if it's deadlocked or has crashed without exiting. "+
+				"A livenessProbe can be used to restart the container if it's deadlocked or has crashed without exiting. "+
 					"It's only recommended to setup a livenessProbe if you really need one.",
 				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
 			)
