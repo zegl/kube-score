@@ -93,7 +93,7 @@ func podSeccompProfile(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeM
 
 	if !seccompAnnotated {
 		score.Grade = scorecard.GradeWarning
-		score.AddComment(metadata.Name, "The pod has not configured Seccomp for its containers", "Running containers with Seccomp is reccomended to reduce the kernel attack surface")
+		score.AddComment(metadata.Name, "The pod has not configured Seccomp for its containers", "Running containers with Seccomp is recommended to reduce the kernel attack surface")
 	} else {
 		score.Grade = scorecard.GradeAllOK
 	}
