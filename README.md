@@ -32,7 +32,7 @@ For a full list of checks, see [README_CHECKS.md](README_CHECKS.md).
 * Pod is targeted by a `NetworkPolicy`, both egress and ingress rules are recommended
 * Deployments and StatefulSets should have a `PodDisruptionPolicy`
 * Deployments and StatefulSets should have host PodAntiAffinity configured
-* Container probes, both readiness and liveness checks should be configured, and should not be identical
+* Container probes, a readiness should be configured, and should not be identical to the liveness probe. Read more in  [README_PROBES.md](README_PROBES.md).
 * Container securityContext, run as high number user/group, do not run as root or with privileged root fs
 * Stable APIs, use a stable API if available (supported: Deployments, StatefulSets, DaemonSet)
 
