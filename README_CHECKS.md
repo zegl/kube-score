@@ -13,9 +13,9 @@
 | deployment-has-poddisruptionbudget | Deployment | Makes sure that all Deployments are targeted by a PDB | default |
 | pod-networkpolicy | Pod | Makes sure that all Pods are targeted by a NetworkPolicy | default |
 | networkpolicy-targets-pod | NetworkPolicy | Makes sure that all NetworkPolicies targets at least one Pod | default |
-| pod-probes | Pod | Makes sure that all Pods have bot a readinessProbe and a libenessProbe configured | default |
+| pod-probes | Pod | Makes sure that all Pods have safe probe configurations | default |
 | container-security-context | Pod | Makes sure that all pods have good securityContexts configured | default |
-| container-seccomp-profile | Pod | Makes sure that all pods have a Seccomp profile configured | optional |
+| container-seccomp-profile | Pod | Makes sure that all pods have at a seccomp policy configured. | optional |
 | service-targets-pod | Service | Makes sure that all Services targets a Pod | default |
 | service-type | Service | Makes sure that the Service type is not NodePort | default |
 | stable-version | all | Checks if the object is using a deprecated apiVersion | default |
