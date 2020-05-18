@@ -25,9 +25,11 @@ func parse(args []string, cmds map[string]cmdFunc) (command string, cmdArgsOffse
 	}
 
 	// If arg 1 is set and is a valid command, always use it as the command to execute, instead of the default
-	if _, ok := cmds[args[1]]; ok {
-		command = args[1]
-		cmdArgsOffset = 2
+	if len(args) > 1 {
+		if _, ok := cmds[args[1]]; ok {
+			command = args[1]
+			cmdArgsOffset = 2
+		}
 	}
 	return
 }
