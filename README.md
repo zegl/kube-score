@@ -71,6 +71,12 @@ kubectl api-resources --verbs=list --namespaced -o name \
   | kube-score score -
 ```
 
+### Example with Docker
+
+```bash
+docker run -v $(pwd):/project zegl/kube-score:v1.7.0 score my-app/*.yaml
+```
+
 ## Configuration
 
 ```
