@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       labels:
-        app: foo
+        app: not-foo
     spec:
       containers:
         - name: foobar

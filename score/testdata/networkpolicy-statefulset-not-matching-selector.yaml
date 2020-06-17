@@ -12,15 +12,15 @@ spec:
     - Ingress
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: deployment-test-1
+  name: statefulset-test-1
   namespace: testspace
 spec:
   template:
     metadata:
       labels:
-        app: foo
+        app: not-foo
     spec:
       containers:
         - name: foobar
