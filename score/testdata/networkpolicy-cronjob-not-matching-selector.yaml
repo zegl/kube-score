@@ -11,17 +11,19 @@ spec:
     - Egress
     - Ingress
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1beta1
+kind: CronJob
 metadata:
-  name: deployment-test-1
+  name: cronjob-test-1
   namespace: testspace
 spec:
-  template:
-    metadata:
-      labels:
-        app: foo
+  jobTemplate:
     spec:
-      containers:
-        - name: foobar
-          image: foo:bar
+      template:
+        metadata:
+          labels:
+            app: not-foo
+        spec:
+          containers:
+          - name: foobar
+            image: foo:bar

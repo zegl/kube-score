@@ -2,6 +2,8 @@ package score
 
 import (
 	"testing"
+
+	"github.com/zegl/kube-score/scorecard"
 )
 
 func TestPodHasNoMatchingNetworkPolicy(t *testing.T) {
@@ -39,8 +41,38 @@ func TestNetworkPolicyTargetsPodNotMatching(t *testing.T) {
 	testExpectedScore(t, "networkpolicy-targets-pod-not-matching.yaml", "NetworkPolicy targets Pod", 1)
 }
 
-func TestNetworkPolicyNamespaceMatching(t *testing.T) {
+func TestNetworkPolicyDeploymentNamespaceMatching(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "networkpolicy-deployment-matching.yaml", "NetworkPolicy targets Pod", 10)
-	testExpectedScore(t, "networkpolicy-deployment-matching.yaml", "Pod NetworkPolicy", 10)
+	testExpectedScore(t, "networkpolicy-deployment-matching.yaml", "NetworkPolicy targets Pod", scorecard.GradeAllOK)
+	testExpectedScore(t, "networkpolicy-deployment-matching.yaml", "Pod NetworkPolicy", scorecard.GradeAllOK)
+}
+
+func TestNetworkPolicyStatefulSetNamespaceMatching(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "networkpolicy-statefulset-matching.yaml", "NetworkPolicy targets Pod", scorecard.GradeAllOK)
+	testExpectedScore(t, "networkpolicy-statefulset-matching.yaml", "Pod NetworkPolicy", scorecard.GradeAllOK)
+}
+
+func TestNetworkPolicyCronJobNamespaceMatching(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "networkpolicy-cronjob-matching.yaml", "NetworkPolicy targets Pod", scorecard.GradeAllOK)
+	testExpectedScore(t, "networkpolicy-cronjob-matching.yaml", "Pod NetworkPolicy", scorecard.GradeAllOK)
+}
+
+func TestNetworkPolicyDeploymentNamespaceNotMatchingSelector(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "networkpolicy-deployment-not-matching-selector.yaml", "NetworkPolicy targets Pod", scorecard.GradeCritical)
+	testExpectedScore(t, "networkpolicy-deployment-not-matching-selector.yaml", "Pod NetworkPolicy", scorecard.GradeCritical)
+}
+
+func TestNetworkPolicyStatefulSetNamespaceNotMatchingSelector(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "networkpolicy-statefulset-not-matching-selector.yaml", "NetworkPolicy targets Pod", scorecard.GradeCritical)
+	testExpectedScore(t, "networkpolicy-statefulset-not-matching-selector.yaml", "Pod NetworkPolicy", scorecard.GradeCritical)
+}
+
+func TestNetworkPolicyCronJobNamespaceNotMatchingSelector(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "networkpolicy-cronjob-not-matching-selector.yaml", "NetworkPolicy targets Pod", scorecard.GradeCritical)
+	testExpectedScore(t, "networkpolicy-cronjob-not-matching-selector.yaml", "Pod NetworkPolicy", scorecard.GradeCritical)
 }
