@@ -29,6 +29,7 @@ dockers:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}"
+  - "zegl/kube-score:latest"
   dockerfile: cmd/kube-score/Dockerfile
 
 - goos: linux
@@ -37,6 +38,7 @@ dockers:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-helm"
+  - "zegl/kube-score:latest-helm"
   dockerfile: cmd/kube-score/helm.Dockerfile
 
 checksum:
