@@ -71,17 +71,7 @@ func TestPodSecurityContext(test *testing.T) {
 			},
 		},
 
-		// Context is non nul, but has all null values
-		{
-			ctx:           &corev1.SecurityContext{},
-			expectedGrade: 1,
-			expectedComment: &scorecard.TestScoreComment{
-				Path:        "foobar",
-				Summary:     "The container is privileged",
-				Description: "Set securityContext.privileged to false",
-			},
-		},
-		// Context is non nul, but has all null values
+		// Context is non-null, but has all null values
 		{
 			ctx:           &corev1.SecurityContext{},
 			expectedGrade: 1,
@@ -143,6 +133,52 @@ func TestPodSecurityContext(test *testing.T) {
 				Path:        "foobar",
 				Summary:     "The container running with a low group ID",
 				Description: "A groupid above 10 000 is recommended to avoid conflicts with the host. Set securityContext.runAsGroup to a value > 10000",
+			},
+		},
+
+		// Privileged defaults to "false"
+		{
+			ctx: &corev1.SecurityContext{
+				ReadOnlyRootFilesystem: b(true),
+				RunAsNonRoot:           b(true),
+			},
+			podCtx: &corev1.PodSecurityContext{
+				RunAsUser:  i(20000),
+				RunAsGroup: i(20000),
+			},
+			expectedGrade: scorecard.GradeAllOK,
+		},
+
+		// Privileged explicitly set to "false"
+		{
+			ctx: &corev1.SecurityContext{
+				ReadOnlyRootFilesystem: b(true),
+				RunAsNonRoot:           b(true),
+				Privileged:             b(false),
+			},
+			podCtx: &corev1.PodSecurityContext{
+				RunAsUser:  i(20000),
+				RunAsGroup: i(20000),
+			},
+			expectedGrade: scorecard.GradeAllOK,
+		},
+
+		// Privileged explicitly set to "true"
+		{
+			ctx: &corev1.SecurityContext{
+				ReadOnlyRootFilesystem: b(true),
+				RunAsNonRoot:           b(true),
+				Privileged:             b(true),
+			},
+			podCtx: &corev1.PodSecurityContext{
+				RunAsUser:  i(20000),
+				RunAsGroup: i(20000),
+			},
+			expectedGrade: scorecard.GradeCritical,
+			expectedComment: &scorecard.TestScoreComment{
+				Path:        "foobar",
+				Summary:     "The container is privileged",
+				Description: "Set securityContext.privileged to false. Privileged containers can access all devices on the host, and grants almost the same access as non-containerized processes on the host.",
 			},
 		},
 	}
