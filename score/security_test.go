@@ -29,7 +29,7 @@ func TestPodSecurityContext(test *testing.T) {
 		// No security context set
 		{
 			ctx:           nil,
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "Container has no configured security context",
@@ -45,14 +45,14 @@ func TestPodSecurityContext(test *testing.T) {
 				RunAsNonRoot:           b(true),
 				Privileged:             b(false),
 			},
-			expectedGrade: 10,
+			expectedGrade: scorecard.GradeAllOK,
 		},
 		// Read only file system is explicitly false
 		{
 			ctx: &corev1.SecurityContext{
 				ReadOnlyRootFilesystem: b(false),
 			},
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The pod has a container with a writable root filesystem",
@@ -63,7 +63,7 @@ func TestPodSecurityContext(test *testing.T) {
 			ctx: &corev1.SecurityContext{
 				ReadOnlyRootFilesystem: b(false),
 			},
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The pod has a container with a writable root filesystem",
@@ -74,7 +74,7 @@ func TestPodSecurityContext(test *testing.T) {
 		// Context is non-null, but has all null values
 		{
 			ctx:           &corev1.SecurityContext{},
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The pod has a container with a writable root filesystem",
@@ -84,7 +84,7 @@ func TestPodSecurityContext(test *testing.T) {
 		// Context is non nul, but has all null values
 		{
 			ctx:           &corev1.SecurityContext{},
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container is running with a low user ID",
@@ -94,7 +94,7 @@ func TestPodSecurityContext(test *testing.T) {
 		// Context is non nul, but has all null values
 		{
 			ctx:           &corev1.SecurityContext{},
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container running with a low group ID",
@@ -112,7 +112,7 @@ func TestPodSecurityContext(test *testing.T) {
 				RunAsUser:  i(20000),
 				RunAsGroup: i(20000),
 			},
-			expectedGrade: 10,
+			expectedGrade: scorecard.GradeAllOK,
 		},
 		// PodSecurityContext is set, assert that the values are inherited
 		// The container ctx has invalid values
@@ -128,7 +128,7 @@ func TestPodSecurityContext(test *testing.T) {
 				RunAsUser:  i(20000),
 				RunAsGroup: i(20000),
 			},
-			expectedGrade: 1,
+			expectedGrade: scorecard.GradeCritical,
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container running with a low group ID",
@@ -219,27 +219,27 @@ func TestPodSecurityContext(test *testing.T) {
 
 func TestContainerSecurityContextPrivilegied(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", 1)
+	testExpectedScore(t, "pod-security-context-privilegied.yaml", "Container Security Context", scorecard.GradeCritical)
 }
 
 func TestContainerSecurityContextLowUser(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", 1)
+	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", scorecard.GradeCritical)
 }
 
 func TestContainerSecurityContextLowGroup(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", 1)
+	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", scorecard.GradeCritical)
 }
 
 func TestPodSecurityContextInherited(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "security-inherit-pod-security-context.yaml", "Container Security Context", 10)
+	testExpectedScore(t, "security-inherit-pod-security-context.yaml", "Container Security Context", scorecard.GradeAllOK)
 }
 
 func TestContainerSecurityContextAllGood(t *testing.T) {
 	t.Parallel()
-	c := testExpectedScore(t, "pod-security-context-all-good.yaml", "Container Security Context", 10)
+	c := testExpectedScore(t, "pod-security-context-all-good.yaml", "Container Security Context", scorecard.GradeAllOK)
 	assert.Empty(t, c)
 }
 
@@ -252,7 +252,7 @@ func TestContainerSeccompMissing(t *testing.T) {
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:             []io.Reader{testFile("pod-seccomp-no-annotation.yaml")},
 		EnabledOptionalTests: structMap,
-	}, "Container Seccomp Profile", 5)
+	}, "Container Seccomp Profile", scorecard.GradeWarning)
 }
 
 func TestContainerSeccompAllGood(t *testing.T) {
@@ -264,5 +264,5 @@ func TestContainerSeccompAllGood(t *testing.T) {
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:             []io.Reader{testFile("pod-seccomp-annotated.yaml")},
 		EnabledOptionalTests: structMap,
-	}, "Container Seccomp Profile", 10)
+	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }
