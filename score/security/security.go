@@ -52,7 +52,7 @@ func containerSecurityContext(podTemplate corev1.PodTemplateSpec, typeMeta metav
 
 		if sec.Privileged != nil && *sec.Privileged {
 			hasPrivileged = true
-			score.AddComment(container.Name, "The container is privileged", "Set securityContext.privileged to false")
+			score.AddComment(container.Name, "The container is privileged", "Set securityContext.privileged to false. Privileged containers can access all devices on the host, and grants almost the same access as non-containerized processes on the host.")
 		}
 
 		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false {

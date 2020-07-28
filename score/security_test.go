@@ -178,7 +178,7 @@ func TestPodSecurityContext(test *testing.T) {
 			expectedComment: &scorecard.TestScoreComment{
 				Path:        "foobar",
 				Summary:     "The container is privileged",
-				Description: "Set securityContext.privileged to false",
+				Description: "Set securityContext.privileged to false. Privileged containers can access all devices on the host, and grants almost the same access as non-containerized processes on the host.",
 			},
 		},
 	}
