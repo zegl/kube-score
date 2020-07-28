@@ -41,6 +41,15 @@ dockers:
   - "zegl/kube-score:latest-helm"
   dockerfile: cmd/kube-score/helm.Dockerfile
 
+- goos: linux
+  goarch: amd64
+  binaries:
+  - kube-score
+  image_templates:
+  - "zegl/kube-score:{{ .Tag }}-kustomize"
+  - "zegl/kube-score:latest-kustomize"
+  dockerfile: cmd/kube-score/kustomize.Dockerfile
+
 checksum:
   name_template: 'checksums.txt'
 
