@@ -53,6 +53,12 @@ The input to `kube-score` should be all applications that you deploy to the same
 helm template my-app | kube-score score -
 ```
 
+### Example with Kustomize
+
+```bash
+kustomize build . | kube-score score -
+```
+
 ### Example with static YAMLs
 
 ```bash
