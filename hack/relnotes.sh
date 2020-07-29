@@ -44,6 +44,6 @@ echo
 echo "# Download"
 echo "* Download the binaries from the GitHub release page"
 echo "* Download the image from Docker Hub: \`zegl/kube-score:${CURRENT_TAG}\`"
-echo "* Download the image from Docker Hub with Helm pre-installed: \`zegl/kube-score:${CURRENT_TAG}-helm\`"
+echo "* Download the image from Docker Hub with Helm or Kustomize pre-installed: \`zegl/kube-score:${CURRENT_TAG}-helm\`, \`zegl/kube-score:${CURRENT_TAG}-kustomize\` "
 echo "* Download from homebrew: \`brew install kube-score/tap/kube-score\`"
 echo "* Download with krew: \`kubectl krew install score\`"
