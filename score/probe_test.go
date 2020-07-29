@@ -65,19 +65,19 @@ func TestProbesTargetedByServiceDifferentNamespace(t *testing.T) {
 
 func TestProbesTargetedByServiceNotTargeted(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-not-targeted-by-service.yaml", "Pod Probes", 10)
+	comments := testExpectedScore(t, "pod-probes-not-targeted-by-service.yaml", "Pod Probes", scorecard.GradeAllOK)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "The pod is not targeted by a service, skipping probe checks.", comments[0].Summary)
 }
 
 func TestProbesMultipleContainers(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-on-different-containers.yaml", "Pod Probes", 10)
+	comments := testExpectedScore(t, "pod-probes-on-different-containers.yaml", "Pod Probes", scorecard.GradeAllOK)
 	assert.Len(t, comments, 0)
 }
 
 func TestProbesMultipleContainersInit(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-on-different-containers-init.yaml", "Pod Probes", 10)
+	comments := testExpectedScore(t, "pod-probes-on-different-containers-init.yaml", "Pod Probes", scorecard.GradeAllOK)
 	assert.Len(t, comments, 0)
 }
