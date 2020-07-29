@@ -9,7 +9,7 @@ FILE="${KREW_INDEX_PATH}/plugins/score.yaml"
 KUBE_SCORE_REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
 checksum() {
-    grep -E "kube-score_${VERSION}_${1}_amd64.tar.gz" ${KUBE_SCORE_REPO_ROOT}/cmd/kube-score/dist/kube-score_${VERSION}_checksums.txt | awk '{print $1}'
+    grep -E "kube-score_${VERSION}_${1}_amd64.tar.gz" ${KUBE_SCORE_REPO_ROOT}/dist/checksums.txt | awk '{print $1}'
 }
 
 gg() {
