@@ -9,6 +9,8 @@ builds:
   - windows
   goarch:
   - amd64
+  - arm
+  - arm64
   dir: cmd/kube-score
 
 archives:
