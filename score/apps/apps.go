@@ -2,6 +2,7 @@ package apps
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -10,9 +11,36 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func Register(allChecks *checks.Checks) {
+func Register(allChecks *checks.Checks, allHPAs []autoscalingv1.HorizontalPodAutoscaler) {
 	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
 	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
+	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Hakes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
+}
+
+func hpaDeploymentNoReplicas(allHPAs []autoscalingv1.HorizontalPodAutoscaler) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
+	return func(deployment appsv1.Deployment) (score scorecard.TestScore, err error) {
+		// If is targeted by a HPA
+		for _, hpa := range allHPAs {
+			if hpa.Namespace == deployment.Namespace &&
+				hpa.Spec.ScaleTargetRef.Kind == deployment.Kind &&
+				hpa.Spec.ScaleTargetRef.Name == deployment.Name {
+
+				if deployment.Spec.Replicas == nil {
+					score.Grade = scorecard.GradeAllOK
+					return
+				}
+
+				score.Grade = scorecard.GradeCritical
+				score.AddComment("", "The deployment is targeted by a HPA, but a static replica count is configured in the DeploymentSpec", "When replicas is both statically set and managed by the HPA, the replicas will be changed to the statically configured count when the spec is applied, even if the HPA wants the replica count to be higher.")
+				return
+			}
+		}
+
+		score.Grade = scorecard.GradeAllOK
+		score.Skipped = true
+		score.AddComment("", "Skipped because the deployment is not targeted by a HorizontalPodAutoscaler", "")
+		return
+	}
 }
 
 func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.TestScore, err error) {

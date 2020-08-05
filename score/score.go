@@ -34,7 +34,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	security.Register(allChecks)
 	service.Register(allChecks, allObjects, allObjects)
 	stable.Register(allChecks)
-	apps.Register(allChecks)
+	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers())
 	meta.Register(allChecks)
 	hpa.Register(allChecks, allObjects.Metas())
 
