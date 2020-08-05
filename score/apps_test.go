@@ -62,3 +62,13 @@ func TestStatefulSetHasPodAntiAffinityUndefinedReplicas(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "statefulset-host-antiaffinity-undefined-replicas.yaml", "StatefulSet has host PodAntiAffinity", scorecard.GradeWarning)
 }
+
+func TestDeploymentWithHPAHasReplicas(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "deployment-with-hpa-has-replicas.yaml", "Deployment targeted by HPA does not have replicas configured", scorecard.GradeCritical)
+}
+
+func TestDeploymentWithHPANotHasReplicas(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "deployment-with-hpa-not-has-replicas.yaml", "Deployment targeted by HPA does not have replicas configured", scorecard.GradeAllOK)
+}
