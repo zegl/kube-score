@@ -11,6 +11,8 @@ import (
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
+	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -51,17 +53,18 @@ type detectKind struct {
 }
 
 type parsedObjects struct {
-	bothMetas                []ks.BothMeta
-	pods                     []corev1.Pod
-	podspecers               []ks.PodSpecer
-	networkPolicies          []networkingv1.NetworkPolicy
-	services                 []corev1.Service
-	podDisruptionBudgets     []policyv1beta1.PodDisruptionBudget
-	deployments              []appsv1.Deployment
-	statefulsets             []appsv1.StatefulSet
-	ingresses                []extensionsv1beta1.Ingress
-	cronjobs                 []batchv1beta1.CronJob
-	horizontalPodAutoscalers []autoscalingv1.HorizontalPodAutoscaler
+	bothMetas            []ks.BothMeta
+	pods                 []corev1.Pod
+	podspecers           []ks.PodSpecer
+	networkPolicies      []networkingv1.NetworkPolicy
+	services             []corev1.Service
+	podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
+	deployments          []appsv1.Deployment
+	statefulsets         []appsv1.StatefulSet
+	ingresses            []extensionsv1beta1.Ingress
+	cronjobs             []batchv1beta1.CronJob
+	// horizontalPodAutoscalers []autoscalingv1.HorizontalPodAutoscaler
+	hpaTargeters []ks.HpaTargeter // all versions of HPAs
 }
 
 func (p *parsedObjects) Services() []corev1.Service {
@@ -104,8 +107,8 @@ func (p *parsedObjects) NetworkPolicies() []networkingv1.NetworkPolicy {
 	return p.networkPolicies
 }
 
-func (p *parsedObjects) HorizontalPodAutoscalers() []autoscalingv1.HorizontalPodAutoscaler {
-	return p.horizontalPodAutoscalers
+func (p *parsedObjects) HorizontalPodAutoscalers() []ks.HpaTargeter {
+	return p.hpaTargeters
 }
 
 func Empty() ks.AllTypes {
@@ -279,7 +282,19 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv1.HorizontalPodAutoscaler
 		errs.AddIfErr(decode(fileContents, &hpa))
-		s.horizontalPodAutoscalers = append(s.horizontalPodAutoscalers, hpa)
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta})
+		s.hpaTargeters = append(s.hpaTargeters, internal.HPAv1{hpa})
+
+	case autoscalingv2beta1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
+		var hpa autoscalingv2beta1.HorizontalPodAutoscaler
+		errs.AddIfErr(decode(fileContents, &hpa))
+		s.hpaTargeters = append(s.hpaTargeters, internal.HPAv2beta1{hpa})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta})
+
+	case autoscalingv2beta2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
+		var hpa autoscalingv2beta2.HorizontalPodAutoscaler
+		errs.AddIfErr(decode(fileContents, &hpa))
+		s.hpaTargeters = append(s.hpaTargeters, internal.HPAv2beta2{hpa})
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta})
 
 	default:

@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -164,13 +165,15 @@ func TestDeploymentTargetedByHpaHasNoReplicasAllOK(t *testing.T) {
 		},
 	}
 
-	hpas := []autoscalingv1.HorizontalPodAutoscaler{
-		{
-			Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
-				ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
-					Kind:       "Deployment",
-					Name:       "foo",
-					APIVersion: "apps/v1",
+	hpas := []ks.HpaTargeter{
+		hpav1{
+			autoscalingv1.HorizontalPodAutoscaler{
+				Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
+					ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
+						Kind:       "Deployment",
+						Name:       "foo",
+						APIVersion: "apps/v1",
+					},
 				},
 			},
 		},
@@ -183,7 +186,7 @@ func TestDeploymentTargetedByHpaHasNoReplicasAllOK(t *testing.T) {
 	assert.False(t, score.Skipped)
 }
 
-func TestDeploymentTargetedByHpaHasSetReplicasAllOK(t *testing.T) {
+func TestDeploymentTargetedByHpaHasSetReplicasCritical(t *testing.T) {
 	t.Parallel()
 
 	deployment := appsv1.Deployment{
@@ -194,13 +197,15 @@ func TestDeploymentTargetedByHpaHasSetReplicasAllOK(t *testing.T) {
 		},
 	}
 
-	hpas := []autoscalingv1.HorizontalPodAutoscaler{
-		{
-			Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
-				ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
-					Kind:       "Deployment",
-					Name:       "foo",
-					APIVersion: "apps/v1",
+	hpas := []ks.HpaTargeter{
+		hpav1{
+			autoscalingv1.HorizontalPodAutoscaler{
+				Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
+					ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
+						Kind:       "Deployment",
+						Name:       "foo",
+						APIVersion: "apps/v1",
+					},
 				},
 			},
 		},
@@ -224,13 +229,15 @@ func TestDeploymentNotTargetedByHpaIsSkippedAllOKK(t *testing.T) {
 		},
 	}
 
-	hpas := []autoscalingv1.HorizontalPodAutoscaler{
-		{
-			Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
-				ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
-					Kind:       "Deployment",
-					Name:       "some-other-obj",
-					APIVersion: "apps/v1",
+	hpas := []ks.HpaTargeter{
+		hpav1{
+			autoscalingv1.HorizontalPodAutoscaler{
+				Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
+					ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
+						Kind:       "Deployment",
+						Name:       "some-other-foo",
+						APIVersion: "apps/v1",
+					},
 				},
 			},
 		},
@@ -241,4 +248,52 @@ func TestDeploymentNotTargetedByHpaIsSkippedAllOKK(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, scorecard.GradeAllOK, score.Grade)
 	assert.True(t, score.Skipped)
+}
+
+func TestDeploymentTargetedByHpaHasNoReplicasAllOKCaseInsensitiveKind(t *testing.T) {
+	t.Parallel()
+
+	deployment := appsv1.Deployment{
+		TypeMeta:   metav1.TypeMeta{Kind: "Deployment"},
+		ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: nil,
+		},
+	}
+
+	hpas := []ks.HpaTargeter{
+		hpav1{
+			autoscalingv1.HorizontalPodAutoscaler{
+				Spec: autoscalingv1.HorizontalPodAutoscalerSpec{
+					ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
+						Kind:       "deployment",
+						Name:       "foo",
+						APIVersion: "apps/v1",
+					},
+				},
+			},
+		},
+	}
+
+	f := hpaDeploymentNoReplicas(hpas)
+	score, err := f(deployment)
+	assert.Nil(t, err)
+	assert.Equal(t, scorecard.GradeAllOK, score.Grade)
+	assert.False(t, score.Skipped)
+}
+
+type hpav1 struct {
+	autoscalingv1.HorizontalPodAutoscaler
+}
+
+func (d hpav1) GetTypeMeta() metav1.TypeMeta {
+	return d.TypeMeta
+}
+
+func (d hpav1) GetObjectMeta() metav1.ObjectMeta {
+	return d.ObjectMeta
+}
+
+func (d hpav1) HpaTarget() autoscalingv1.CrossVersionObjectReference {
+	return d.Spec.ScaleTargetRef
 }

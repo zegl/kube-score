@@ -30,6 +30,12 @@ type PodSpecer interface {
 	GetPodTemplateSpec() corev1.PodTemplateSpec
 }
 
+type HpaTargeter interface {
+	GetTypeMeta() metav1.TypeMeta
+	GetObjectMeta() metav1.ObjectMeta
+	HpaTarget() autoscalingv1.CrossVersionObjectReference
+}
+
 type Metas interface {
 	Metas() []BothMeta
 }
@@ -71,7 +77,7 @@ type PodDisruptionBudgets interface {
 }
 
 type HorizontalPodAutoscalers interface {
-	HorizontalPodAutoscalers() []autoscalingv1.HorizontalPodAutoscaler
+	HorizontalPodAutoscalers() []HpaTargeter
 }
 
 type AllTypes interface {

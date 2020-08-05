@@ -159,7 +159,23 @@ func TestHpaHasTarget(t *testing.T) {
 
 	for _, tc := range testcases {
 		fn := hpaHasTarget(tc.allTargets)
-		score := fn(tc.hpa)
+		score := fn(hpav1{tc.hpa})
 		assert.Equal(t, tc.expectedGrade, score.Grade)
 	}
+}
+
+type hpav1 struct {
+	v1.HorizontalPodAutoscaler
+}
+
+func (d hpav1) GetTypeMeta() metav1.TypeMeta {
+	return d.TypeMeta
+}
+
+func (d hpav1) GetObjectMeta() metav1.ObjectMeta {
+	return d.ObjectMeta
+}
+
+func (d hpav1) HpaTarget() v1.CrossVersionObjectReference {
+	return d.Spec.ScaleTargetRef
 }
