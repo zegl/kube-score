@@ -1,7 +1,6 @@
 package checks
 
 import (
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -97,7 +96,7 @@ type CronJobCheck struct {
 	Fn CronJobCheckFn
 }
 
-type HorizontalPodAutoscalerCheckFn = func(autoscalingv1.HorizontalPodAutoscaler) scorecard.TestScore
+type HorizontalPodAutoscalerCheckFn = func(ks.HpaTargeter) scorecard.TestScore
 type HorizontalPodAutoscalerCheck struct {
 	ks.Check
 	Fn HorizontalPodAutoscalerCheckFn

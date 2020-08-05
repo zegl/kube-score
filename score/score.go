@@ -128,7 +128,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, hpa := range allObjects.HorizontalPodAutoscalers() {
-		o := newObject(hpa.TypeMeta, hpa.ObjectMeta)
+		o := newObject(hpa.GetTypeMeta(), hpa.GetObjectMeta())
 		for _, test := range allChecks.HorizontalPodAutoscalers() {
 			o.Add(test.Fn(hpa), test.Check)
 		}

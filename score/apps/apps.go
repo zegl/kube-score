@@ -2,28 +2,31 @@ package apps
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func Register(allChecks *checks.Checks, allHPAs []autoscalingv1.HorizontalPodAutoscaler) {
+func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter) {
 	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
 	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
 	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Hakes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
 }
 
-func hpaDeploymentNoReplicas(allHPAs []autoscalingv1.HorizontalPodAutoscaler) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
+func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
 	return func(deployment appsv1.Deployment) (score scorecard.TestScore, err error) {
 		// If is targeted by a HPA
 		for _, hpa := range allHPAs {
-			if hpa.Namespace == deployment.Namespace &&
-				hpa.Spec.ScaleTargetRef.Kind == deployment.Kind &&
-				hpa.Spec.ScaleTargetRef.Name == deployment.Name {
+			target := hpa.HpaTarget()
+
+			if hpa.GetObjectMeta().Namespace == deployment.Namespace &&
+				strings.ToLower(target.Kind) == strings.ToLower(deployment.Kind) &&
+				target.Name == deployment.Name {
 
 				if deployment.Spec.Replicas == nil {
 					score.Grade = scorecard.GradeAllOK
