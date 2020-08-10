@@ -1,6 +1,11 @@
 package config
 
-import "io"
+import (
+	"errors"
+	"io"
+	"strconv"
+	"strings"
+)
 
 type Configuration struct {
 	AllFiles                              []io.Reader
@@ -10,4 +15,43 @@ type Configuration struct {
 	IgnoredTests                          map[string]struct{}
 	EnabledOptionalTests                  map[string]struct{}
 	UseIgnoreChecksAnnotation             bool
+	KubernetesVersion                     Semver
+}
+
+type Semver struct {
+	Major int
+	Minor int
+}
+
+var errInvalidSemver = errors.New("invalid semver")
+
+func ParseSemver(s string) (Semver, error) {
+	if len(s) == 0 {
+		return Semver{}, errInvalidSemver
+	}
+	start := 0
+	if s[0] == 'v' {
+		start = 1
+	}
+
+	// Separate by .
+	parts := strings.Split(s[start:], ".")
+	if len(parts) != 2 {
+		return Semver{}, errInvalidSemver
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return Semver{}, errInvalidSemver
+	}
+
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return Semver{}, errInvalidSemver
+	}
+
+	return Semver{
+		Major: major,
+		Minor: minor,
+	}, nil
 }
