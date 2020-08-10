@@ -55,14 +55,16 @@ func testScore(config config.Configuration) (scorecard.Scorecard, error) {
 
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
 	return testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles: []io.Reader{testFile(filename)},
+		AllFiles:          []io.Reader{testFile(filename)},
+		KubernetesVersion: config.Semver{1, 18},
 	}, testcase, expectedScore)
 }
 
 func testExpectedScoreReader(t *testing.T, content io.Reader, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
 	return testExpectedScoreWithConfig(
 		t, config.Configuration{
-			AllFiles: []io.Reader{content},
+			AllFiles:          []io.Reader{content},
+			KubernetesVersion: config.Semver{1, 18},
 		},
 		testcase,
 		expectedScore,
