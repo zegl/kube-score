@@ -108,8 +108,9 @@ Flags for score:
       --ignore-container-cpu-limit          Disables the requirement of setting a container CPU limit
       --ignore-container-memory-limit       Disables the requirement of setting a container memory limit
       --ignore-test strings                 Disable a test, can be set multiple times
+      --kubernetes-version string           Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results. (default "v1.18")
   -o, --output-format string                Set to 'human', 'json' or 'ci'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. (default "human")
-      --output-version string               Changes the version of the --output-format. The 'json' format has version 'v1' (default) and 'v2'. The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.
+      --output-version string               Changes the version of the --output-format. The 'json' format has version 'v2' (default) and 'v1' (deprecated, will be removed in v1.7.0). The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.
   -v, --verbose count                       Enable verbose output, can be set multiple times for increased verbosity.
 ```
 
