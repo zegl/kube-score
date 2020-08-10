@@ -25,6 +25,7 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 			"extensions/v1beta1": {
 				"Deployment": recommendedApi{"apps/v1", config.Semver{1, 9}},
 				"DaemonSet":  recommendedApi{"apps/v1", config.Semver{1, 9}},
+				"Ingress":    recommendedApi{"networking.k8s.io/v1beta1", config.Semver{1, 14}},
 			},
 			"apps/v1beta1": {
 				"Deployment":  recommendedApi{"apps/v1", config.Semver{1, 9}},
@@ -51,7 +52,7 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 				score.Grade = scorecard.GradeWarning
 				score.AddComment("",
 					fmt.Sprintf("The apiVersion and kind %s/%s is deprecated", meta.TypeMeta.APIVersion, meta.TypeMeta.Kind),
-					fmt.Sprintf("It's recommended to use %s instead", recAPI.newAPI),
+					fmt.Sprintf("It's recommended to use %s instead which has been available since Kubernetes %s", recAPI.newAPI, recAPI.availableSince.String()),
 				)
 				return
 			}
