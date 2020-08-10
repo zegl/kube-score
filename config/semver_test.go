@@ -30,3 +30,19 @@ func TestSemver(t *testing.T) {
 		assert.Equal(t, tc.expectedErr, e, "Case: %d", d)
 	}
 }
+
+func TestSemverLessThan(t *testing.T) {
+	tc := []struct {
+		a        Semver
+		b        Semver
+		expected bool
+	}{
+		{Semver{1, 0}, Semver{1, 0}, false},
+		{Semver{1, 0}, Semver{1, 2}, true},
+		{Semver{1, 6}, Semver{2, 0}, true},
+		{Semver{2, 6}, Semver{1, 18}, false},
+	}
+	for d, tc := range tc {
+		assert.Equal(t, tc.expected, tc.a.LessThan(tc.b), "Case: %d", d)
+	}
+}

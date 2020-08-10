@@ -55,3 +55,13 @@ func ParseSemver(s string) (Semver, error) {
 		Minor: minor,
 	}, nil
 }
+
+func (s Semver) LessThan(other Semver) bool {
+	if s.Major < other.Major {
+		return true
+	}
+	if s.Major == other.Major && s.Minor < other.Minor {
+		return true
+	}
+	return false
+}
