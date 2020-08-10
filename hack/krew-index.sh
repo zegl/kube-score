@@ -19,7 +19,7 @@ gg() {
 gg checkout master
 gg fetch origin
 gg reset --hard origin/master
-gg branch -D "kube-score-${VERSION}"
+gg branch -D "kube-score-${VERSION}" || true
 gg checkout -b "kube-score-${VERSION}"
 
 yq write --inplace "$FILE" "spec.version" "v${VERSION}"
