@@ -7,6 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -68,6 +69,10 @@ type Ingresses interface {
 	Ingresses() []extensionsv1beta1.Ingress
 }
 
+type Networkingv1beta1Ingresses interface {
+	Networkingv1beta1Ingresses() []networkingv1beta1.Ingress
+}
+
 type CronJobs interface {
 	CronJobs() []batchv1beta1.CronJob
 }
@@ -89,6 +94,7 @@ type AllTypes interface {
 	Deployments
 	NetworkPolicies
 	Ingresses
+	Networkingv1beta1Ingresses
 	CronJobs
 	PodDisruptionBudgets
 	HorizontalPodAutoscalers
