@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -64,4 +65,8 @@ func (s Semver) LessThan(other Semver) bool {
 		return true
 	}
 	return false
+}
+
+func (s Semver) String() string {
+	return fmt.Sprintf("v%d.%d", s.Major, s.Minor)
 }
