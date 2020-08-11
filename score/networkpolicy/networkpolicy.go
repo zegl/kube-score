@@ -30,10 +30,8 @@ func podHasNetworkPolicy(allNetpols []networkingv1.NetworkPolicy) func(spec core
 				continue
 			}
 
-			matchLabels := netPol.Spec.PodSelector.MatchLabels
-
-			for labelKey, labelVal := range matchLabels {
-				if podLabelVal, ok := podSpec.Labels[labelKey]; ok && podLabelVal == labelVal {
+			if selector, err := metav1.LabelSelectorAsSelector(&netPol.Spec.PodSelector); err == nil {
+				if selector.Matches(internal.MapLables(podSpec.Labels)) {
 
 					// Documentation of PolicyTypes
 					//
