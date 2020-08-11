@@ -76,3 +76,9 @@ func TestNetworkPolicyCronJobNamespaceNotMatchingSelector(t *testing.T) {
 	testExpectedScore(t, "networkpolicy-cronjob-not-matching-selector.yaml", "NetworkPolicy targets Pod", scorecard.GradeCritical)
 	testExpectedScore(t, "networkpolicy-cronjob-not-matching-selector.yaml", "Pod NetworkPolicy", scorecard.GradeCritical)
 }
+
+func TestNetworkPolicyEmptyPodSelector(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "networkpolicy-targets-all-pods.yaml", "NetworkPolicy targets Pod", scorecard.GradeAllOK)
+	testExpectedScore(t, "networkpolicy-targets-all-pods.yaml", "Pod NetworkPolicy", scorecard.GradeAllOK)
+}
