@@ -52,15 +52,9 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, ingress := range allObjects.Ingresses() {
-		o := newObject(ingress.TypeMeta, ingress.ObjectMeta)
+		o := newObject(ingress.GetTypeMeta(), ingress.GetObjectMeta())
 		for _, test := range allChecks.Ingresses() {
-			o.Add(test.Fn(&ingress, nil), test.Check)
-		}
-	}
-	for _, ingress := range allObjects.Networkingv1beta1Ingresses() {
-		o := newObject(ingress.TypeMeta, ingress.ObjectMeta)
-		for _, test := range allChecks.Ingresses() {
-			o.Add(test.Fn(nil, &ingress), test.Check)
+			o.Add(test.Fn(ingress), test.Check)
 		}
 	}
 

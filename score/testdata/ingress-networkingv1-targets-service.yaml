@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: testspace
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /app
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 5601
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-service
+  namespace: testspace
+spec:
+  selector:
+    app: kibana
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5601

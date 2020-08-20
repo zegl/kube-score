@@ -1,13 +1,11 @@
 package checks
 
 import (
-	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -85,8 +83,7 @@ type NetworkPolicyCheck struct {
 	Fn NetworkPolicyCheckFn
 }
 
-// Calls to IngressCheckFn should set either parameter 1 or 2, but not both.
-type IngressCheckFn = func(*extensionsv1beta1.Ingress, *networkingv1beta1.Ingress) scorecard.TestScore
+type IngressCheckFn = func(ks.Ingress) scorecard.TestScore
 type IngressCheck struct {
 	ks.Check
 	Fn IngressCheckFn
