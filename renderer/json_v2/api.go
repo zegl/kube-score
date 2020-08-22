@@ -23,6 +23,8 @@ type ScoredObject struct {
 	TypeMeta   metav1.TypeMeta   `json:"type_meta"`
 	ObjectMeta metav1.ObjectMeta `json:"object_meta"`
 	Checks     []TestScore       `json:"checks"`
+	FileName   string            `json:"file_name"`
+	FileRow    int               `json:"file_row"`
 }
 
 type TestScore struct {
@@ -47,6 +49,8 @@ func Output(input *scorecard.Scorecard) io.Reader {
 			TypeMeta:   v.TypeMeta,
 			ObjectMeta: v.ObjectMeta,
 			Checks:     convertTestScore(v.Checks),
+			FileName:   v.FileLocation.Name,
+			FileRow:    v.FileLocation.Line,
 		})
 	}
 
