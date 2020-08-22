@@ -179,3 +179,7 @@ func (d hpav1) GetObjectMeta() metav1.ObjectMeta {
 func (d hpav1) HpaTarget() v1.CrossVersionObjectReference {
 	return d.Spec.ScaleTargetRef
 }
+
+func (d hpav1) FileLocation() domain.FileLocation {
+	return domain.FileLocation{}
+}

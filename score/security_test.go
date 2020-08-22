@@ -3,7 +3,6 @@ package score
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"io"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -250,7 +250,7 @@ func TestContainerSeccompMissing(t *testing.T) {
 	structMap["container-seccomp-profile"] = struct{}{}
 
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []io.Reader{testFile("pod-seccomp-no-annotation.yaml")},
+		AllFiles:             []ks.NamedReader{testFile("pod-seccomp-no-annotation.yaml")},
 		EnabledOptionalTests: structMap,
 	}, "Container Seccomp Profile", scorecard.GradeWarning)
 }
@@ -262,7 +262,7 @@ func TestContainerSeccompAllGood(t *testing.T) {
 	structMap["container-seccomp-profile"] = struct{}{}
 
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []io.Reader{testFile("pod-seccomp-annotated.yaml")},
+		AllFiles:             []ks.NamedReader{testFile("pod-seccomp-annotated.yaml")},
 		EnabledOptionalTests: structMap,
 	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }

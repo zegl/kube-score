@@ -5,10 +5,17 @@ import (
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	ks "github.com/zegl/kube-score/domain"
 )
 
 type Batchv1Job struct {
 	batchv1.Job
+	Location ks.FileLocation
+}
+
+func (d Batchv1Job) FileLocation() ks.FileLocation {
+	return d.Location
 }
 
 func (d Batchv1Job) GetTypeMeta() metav1.TypeMeta {
@@ -25,19 +32,28 @@ func (d Batchv1Job) GetPodTemplateSpec() corev1.PodTemplateSpec {
 }
 
 type Batchv1beta1CronJob struct {
-	batchv1beta1.CronJob
+	Obj      batchv1beta1.CronJob
+	Location ks.FileLocation
+}
+
+func (d Batchv1beta1CronJob) FileLocation() ks.FileLocation {
+	return d.Location
 }
 
 func (d Batchv1beta1CronJob) GetTypeMeta() metav1.TypeMeta {
-	return d.TypeMeta
+	return d.Obj.TypeMeta
 }
 
 func (d Batchv1beta1CronJob) GetObjectMeta() metav1.ObjectMeta {
-	return d.ObjectMeta
+	return d.Obj.ObjectMeta
 }
 
 func (d Batchv1beta1CronJob) GetPodTemplateSpec() corev1.PodTemplateSpec {
-	t := d.Spec.JobTemplate.Spec.Template
-	t.ObjectMeta.Namespace = d.ObjectMeta.Namespace
+	t := d.Obj.Spec.JobTemplate.Spec.Template
+	t.ObjectMeta.Namespace = d.Obj.ObjectMeta.Namespace
 	return t
+}
+
+func (d Batchv1beta1CronJob) CronJob() batchv1beta1.CronJob {
+	return d.Obj
 }

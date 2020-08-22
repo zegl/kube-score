@@ -11,6 +11,7 @@ import (
 
 	"github.com/eidolon/wordwrap"
 	"github.com/fatih/color"
+
 	"github.com/zegl/kube-score/scorecard"
 )
 

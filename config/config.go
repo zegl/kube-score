@@ -3,13 +3,14 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
+
+	ks "github.com/zegl/kube-score/domain"
 )
 
 type Configuration struct {
-	AllFiles                              []io.Reader
+	AllFiles                              []ks.NamedReader
 	VerboseOutput                         int
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool

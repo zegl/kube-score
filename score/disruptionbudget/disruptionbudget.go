@@ -9,7 +9,6 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 
 	appsv1 "k8s.io/api/apps/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,8 +17,9 @@ func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
 	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", `Makes sure that all Deployments are targeted by a PDB`, deploymentHas(budgets.PodDisruptionBudgets()))
 }
 
-func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, lables map[string]string) (bool, error) {
-	for _, budget := range budgets {
+func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, lables map[string]string) (bool, error) {
+	for _, b := range budgets {
+		budget := b.PodDisruptionBudget()
 		if budget.Namespace != namespace {
 			continue
 		}
@@ -37,7 +37,7 @@ func hasMatching(budgets []policyv1beta1.PodDisruptionBudget, namespace string, 
 	return false, nil
 }
 
-func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.StatefulSet) (scorecard.TestScore, error) {
+func statefulSetHas(budgets []ks.PodDisruptionBudget) func(appsv1.StatefulSet) (scorecard.TestScore, error) {
 	return func(statefulset appsv1.StatefulSet) (score scorecard.TestScore, err error) {
 		if statefulset.Spec.Replicas != nil && *statefulset.Spec.Replicas < 2 {
 			score.Skipped = true
@@ -62,7 +62,7 @@ func statefulSetHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Sta
 	}
 }
 
-func deploymentHas(budgets []policyv1beta1.PodDisruptionBudget) func(appsv1.Deployment) (scorecard.TestScore, error) {
+func deploymentHas(budgets []ks.PodDisruptionBudget) func(appsv1.Deployment) (scorecard.TestScore, error) {
 	return func(deployment appsv1.Deployment) (score scorecard.TestScore, err error) {
 		if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas < 2 {
 			score.Skipped = true

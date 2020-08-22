@@ -7,6 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
+	"github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -99,8 +100,20 @@ func TestPodHasNetworkPolicy(t *testing.T) {
 			Spec: corev1.PodSpec{},
 		}
 
-		fn := podHasNetworkPolicy([]v1.NetworkPolicy{pol})
+		fn := podHasNetworkPolicy([]domain.NetworkPolicy{np{Obj: pol}})
 		score := fn(corev1.PodTemplateSpec{ObjectMeta: pod.ObjectMeta, Spec: pod.Spec}, pod.TypeMeta)
 		assert.Equal(t, tc.expected, score.Grade, "caseID = %d", caseID)
 	}
+}
+
+type np struct {
+	Obj v1.NetworkPolicy
+}
+
+func (n np) NetworkPolicy() v1.NetworkPolicy {
+	return n.Obj
+}
+
+func (np) FileLocation() domain.FileLocation {
+	return domain.FileLocation{}
 }
