@@ -62,12 +62,9 @@ type parsedObjects struct {
 	podDisruptionBudgets []policyv1beta1.PodDisruptionBudget
 	deployments          []appsv1.Deployment
 	statefulsets         []appsv1.StatefulSet
-
-	ingresses                  []extensionsv1beta1.Ingress
-	networkingv1beta1ingresses []networkingv1beta1.Ingress
-
-	cronjobs     []batchv1beta1.CronJob
-	hpaTargeters []ks.HpaTargeter // all versions of HPAs
+	ingresses            []ks.Ingress // supports multiple versions of ingress
+	cronjobs             []batchv1beta1.CronJob
+	hpaTargeters         []ks.HpaTargeter // all versions of HPAs
 }
 
 func (p *parsedObjects) Services() []corev1.Service {
@@ -82,12 +79,8 @@ func (p *parsedObjects) PodSpeccers() []ks.PodSpecer {
 	return p.podspecers
 }
 
-func (p *parsedObjects) Ingresses() []extensionsv1beta1.Ingress {
+func (p *parsedObjects) Ingresses() []ks.Ingress {
 	return p.ingresses
-}
-
-func (p *parsedObjects) Networkingv1beta1Ingresses() []networkingv1beta1.Ingress {
-	return p.networkingv1beta1ingresses
 }
 
 func (p *parsedObjects) PodDisruptionBudgets() []policyv1beta1.PodDisruptionBudget {
@@ -283,12 +276,19 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress extensionsv1beta1.Ingress
 		errs.AddIfErr(decode(fileContents, &ingress))
-		s.ingresses = append(s.ingresses, ingress)
+		s.ingresses = append(s.ingresses, internal.ExtensionsIngressV1beta1{ingress})
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta})
+
 	case networkingv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress networkingv1beta1.Ingress
 		errs.AddIfErr(decode(fileContents, &ingress))
-		s.networkingv1beta1ingresses = append(s.networkingv1beta1ingresses, ingress)
+		s.ingresses = append(s.ingresses, internal.IngressV1beta1{ingress})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta})
+
+	case networkingv1.SchemeGroupVersion.WithKind("Ingress"):
+		var ingress networkingv1.Ingress
+		errs.AddIfErr(decode(fileContents, &ingress))
+		s.ingresses = append(s.ingresses, internal.IngressV1{ingress})
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta})
 
 	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):

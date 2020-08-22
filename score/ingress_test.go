@@ -16,12 +16,22 @@ func TestIngressTargetsServiceNoMatch(t *testing.T) {
 	testExpectedScore(t, "ingress-targets-service-no-match.yaml", "Ingress targets Service", scorecard.GradeCritical)
 }
 
-func TestNetworkingIngressTargetsService(t *testing.T) {
+func TestNetworkingIngressV1beta1TargetsService(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "ingress-networkingv1beta1-targets-service.yaml", "Ingress targets Service", scorecard.GradeAllOK)
 }
 
-func TestNetworkingIngressTargetsServiceNoMatch(t *testing.T) {
+func TestNetworkingIngressV1beta1TargetsServiceNoMatch(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "ingress-networkingv1beta1-targets-service-no-match.yaml", "Ingress targets Service", scorecard.GradeCritical)
+}
+
+func TestNetworkingIngressV1TargetsService(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "ingress-networkingv1-targets-service.yaml", "Ingress targets Service", scorecard.GradeAllOK)
+}
+
+func TestNetworkingIngressV1TargetsServiceNoMatch(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "ingress-networkingv1-targets-service-no-match.yaml", "Ingress targets Service", scorecard.GradeCritical)
 }
