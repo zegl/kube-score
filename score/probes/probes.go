@@ -18,7 +18,7 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 // ReadinessProbes are not required if the pod is not targeted by a Service.
 //
 // containerProbes takes a slice of all defined Services as input.
-func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore {
+func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore {
 	return func(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
 		if typeMeta.Kind == "CronJob" && typeMeta.GroupVersionKind().Group == "batch" || typeMeta.Kind == "Job" && typeMeta.GroupVersionKind().Group == "batch" {
 			score.Grade = scorecard.GradeAllOK
@@ -33,7 +33,8 @@ func containerProbes(allServices []corev1.Service) func(corev1.PodTemplateSpec, 
 		probesAreIdentical := false
 		isTargetedByService := false
 
-		for _, service := range allServices {
+		for _, s := range allServices {
+			service := s.Service()
 			if podTemplate.Namespace == service.Namespace {
 				for selectorKey, selectorVal := range service.Spec.Selector {
 					if podLabelVal, ok := podTemplate.Labels[selectorKey]; ok && podLabelVal == selectorVal {

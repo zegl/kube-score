@@ -1,10 +1,10 @@
 package score
 
 import (
-	"io"
 	"testing"
 
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -16,7 +16,7 @@ func TestStatefulSetAppsv1beta1(t *testing.T) {
 func TestStatefulSetAppsv1beta1Kubernetes1dot4(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:          []io.Reader{testFile("statefulset-appsv1beta1.yaml")},
+		AllFiles:          []ks.NamedReader{testFile("statefulset-appsv1beta1.yaml")},
 		KubernetesVersion: config.Semver{1, 4},
 	}, "Stable version", scorecard.GradeAllOK)
 }
@@ -24,7 +24,7 @@ func TestStatefulSetAppsv1beta1Kubernetes1dot4(t *testing.T) {
 func TestStatefulSetAppsv1beta1Kubernetes1dot18(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:          []io.Reader{testFile("statefulset-appsv1beta1.yaml")},
+		AllFiles:          []ks.NamedReader{testFile("statefulset-appsv1beta1.yaml")},
 		KubernetesVersion: config.Semver{1, 18},
 	}, "Stable version", scorecard.GradeWarning)
 }

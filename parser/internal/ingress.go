@@ -15,6 +15,11 @@ var _ ks.Ingress = (*ExtensionsIngressV1beta1)(nil)
 
 type IngressV1 struct {
 	networkingv1.Ingress
+	Location ks.FileLocation
+}
+
+func (i IngressV1) FileLocation() ks.FileLocation {
+	return i.Location
 }
 
 func (i IngressV1) GetObjectMeta() v1.ObjectMeta {
@@ -31,6 +36,11 @@ func (i IngressV1) Rules() []networkingv1.IngressRule {
 
 type IngressV1beta1 struct {
 	networkingv1beta1.Ingress
+	Location ks.FileLocation
+}
+
+func (i IngressV1beta1) FileLocation() ks.FileLocation {
+	return i.Location
 }
 
 func (i IngressV1beta1) GetObjectMeta() v1.ObjectMeta {
@@ -78,6 +88,7 @@ func (i IngressV1beta1) Rules() []networkingv1.IngressRule {
 
 type ExtensionsIngressV1beta1 struct {
 	extensionsv1beta1.Ingress
+	Location ks.FileLocation
 }
 
 func (i ExtensionsIngressV1beta1) GetObjectMeta() v1.ObjectMeta {
@@ -121,4 +132,8 @@ func (i ExtensionsIngressV1beta1) Rules() []networkingv1.IngressRule {
 	}
 
 	return res
+}
+
+func (i ExtensionsIngressV1beta1) FileLocation() ks.FileLocation {
+	return i.Location
 }

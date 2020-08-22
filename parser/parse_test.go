@@ -2,11 +2,11 @@ package parser
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"testing"
 
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -30,7 +30,7 @@ func TestParse(t *testing.T) {
 		fp, err := os.Open(tc.fname)
 		assert.Nil(t, err)
 		_, err = ParseFiles(config.Configuration{
-			AllFiles: []io.Reader{fp},
+			AllFiles: []ks.NamedReader{fp},
 		})
 		if tc.expected == nil {
 			assert.Nil(t, err)

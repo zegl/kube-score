@@ -1,10 +1,11 @@
 package service
 
 import (
+	corev1 "k8s.io/api/core/v1"
+
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
-	corev1 "k8s.io/api/core/v1"
 )
 
 func Register(allChecks *checks.Checks, pods ks.Pods, podspeccers ks.PodSpeccers) {
@@ -14,9 +15,10 @@ func Register(allChecks *checks.Checks, pods ks.Pods, podspeccers ks.PodSpeccers
 
 // serviceTargetsPod checks if a Service targets a pod and issues a critical warning if no matching pod
 // could be found
-func serviceTargetsPod(pods []corev1.Pod, podspecers []ks.PodSpecer) func(corev1.Service) scorecard.TestScore {
+func serviceTargetsPod(pods []ks.Pod, podspecers []ks.PodSpecer) func(corev1.Service) scorecard.TestScore {
 	podsInNamespace := make(map[string][]map[string]string)
-	for _, pod := range pods {
+	for _, p := range pods {
+		pod := p.Pod()
 		if _, ok := podsInNamespace[pod.Namespace]; !ok {
 			podsInNamespace[pod.Namespace] = []map[string]string{}
 		}

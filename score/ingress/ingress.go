@@ -2,7 +2,6 @@ package ingress
 
 import (
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
 
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
@@ -13,13 +12,13 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 	allChecks.RegisterIngressCheck("Ingress targets Service", `Makes sure that the Ingress targets a Service`, ingressTargetsService(services.Services()))
 }
 
-func ingressTargetsService(allServices []corev1.Service) func(ks.Ingress) scorecard.TestScore {
+func ingressTargetsService(allServices []ks.Service) func(ks.Ingress) scorecard.TestScore {
 	return func(ingress ks.Ingress) (score scorecard.TestScore) {
 		return ingressTargetsServiceCommon(ingress, allServices)
 	}
 }
 
-func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []corev1.Service) (score scorecard.TestScore) {
+func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []ks.Service) (score scorecard.TestScore) {
 	allRulesHaveMatches := true
 
 	for _, rule := range ingress.Rules() {
@@ -27,7 +26,9 @@ func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []corev1.Servic
 
 			pathHasMatch := false
 
-			for _, service := range allServices {
+			for _, srv := range allServices {
+				service := srv.Service()
+
 				if service.Namespace != ingress.GetObjectMeta().Namespace {
 					continue
 				}

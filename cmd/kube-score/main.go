@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser"
 	"github.com/zegl/kube-score/renderer/ci"
 	"github.com/zegl/kube-score/renderer/human"
@@ -130,7 +131,7 @@ Usage: %s score [--flag1 --flag2] file1 file2 ...
 Use "-" as filename to read from STDIN.`, execName(binName))
 	}
 
-	var allFilePointers []io.Reader
+	var allFilePointers []ks.NamedReader
 
 	for _, file := range filesToRead {
 		var fp io.Reader
@@ -145,7 +146,7 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 			}
 		}
 
-		allFilePointers = append(allFilePointers, fp)
+		allFilePointers = append(allFilePointers, namedReader{Reader: fp, name: file})
 	}
 
 	ignoredTests := listToStructMap(ignoreTests)
@@ -259,4 +260,13 @@ func listToStructMap(items *[]string) map[string]struct{} {
 		structMap[testID] = struct{}{}
 	}
 	return structMap
+}
+
+type namedReader struct {
+	io.Reader
+	name string
+}
+
+func (n namedReader) Name() string {
+	return n.name
 }

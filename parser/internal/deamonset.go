@@ -6,10 +6,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	ks "github.com/zegl/kube-score/domain"
 )
 
 type Appsv1DaemonSet struct {
 	appsv1.DaemonSet
+	Location ks.FileLocation
+}
+
+func (d Appsv1DaemonSet) FileLocation() ks.FileLocation {
+	return d.Location
 }
 
 func (d Appsv1DaemonSet) GetTypeMeta() metav1.TypeMeta {
@@ -27,6 +34,11 @@ func (d Appsv1DaemonSet) GetPodTemplateSpec() corev1.PodTemplateSpec {
 
 type Appsv1beta2DaemonSet struct {
 	appsv1beta2.DaemonSet
+	Location ks.FileLocation
+}
+
+func (d Appsv1beta2DaemonSet) FileLocation() ks.FileLocation {
+	return d.Location
 }
 
 func (d Appsv1beta2DaemonSet) GetTypeMeta() metav1.TypeMeta {
@@ -44,6 +56,11 @@ func (d Appsv1beta2DaemonSet) GetPodTemplateSpec() corev1.PodTemplateSpec {
 
 type Extensionsv1beta1DaemonSet struct {
 	extensionsv1beta1.DaemonSet
+	Location ks.FileLocation
+}
+
+func (d Extensionsv1beta1DaemonSet) FileLocation() ks.FileLocation {
+	return d.Location
 }
 
 func (d Extensionsv1beta1DaemonSet) GetTypeMeta() metav1.TypeMeta {

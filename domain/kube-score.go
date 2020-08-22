@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"io"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
@@ -18,67 +19,120 @@ type Check struct {
 	Optional   bool
 }
 
+type NamedReader interface {
+	io.Reader
+	Name() string
+}
+
+type FileLocation struct {
+	Name string
+	Line int
+}
+
 type BothMeta struct {
 	TypeMeta   metav1.TypeMeta
 	ObjectMeta metav1.ObjectMeta
+	FileLocationer
 }
 
 type PodSpecer interface {
+	FileLocationer
 	GetTypeMeta() metav1.TypeMeta
 	GetObjectMeta() metav1.ObjectMeta
 	GetPodTemplateSpec() corev1.PodTemplateSpec
+}
+
+type FileLocationer interface {
+	FileLocation() FileLocation
 }
 
 type HpaTargeter interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetObjectMeta() metav1.ObjectMeta
 	HpaTarget() autoscalingv1.CrossVersionObjectReference
+	FileLocationer
 }
 
 type Ingress interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetObjectMeta() metav1.ObjectMeta
 	Rules() []networkingv1.IngressRule
+	FileLocationer
 }
 
 type Metas interface {
 	Metas() []BothMeta
 }
 
+type Pod interface {
+	Pod() corev1.Pod
+	FileLocationer
+}
+
 type Pods interface {
-	Pods() []corev1.Pod
+	Pods() []Pod
 }
 
 type PodSpeccers interface {
 	PodSpeccers() []PodSpecer
 }
 
+type Service interface {
+	Service() corev1.Service
+	FileLocationer
+}
+
 type Services interface {
-	Services() []corev1.Service
+	Services() []Service
+}
+
+type StatefulSet interface {
+	StatefulSet() appsv1.StatefulSet
+	FileLocationer
 }
 
 type StatefulSets interface {
-	StatefulSets() []appsv1.StatefulSet
+	StatefulSets() []StatefulSet
+}
+
+type Deployment interface {
+	Deployment() appsv1.Deployment
+	FileLocationer
 }
 
 type Deployments interface {
-	Deployments() []appsv1.Deployment
+	Deployments() []Deployment
+}
+
+type NetworkPolicy interface {
+	NetworkPolicy() networkingv1.NetworkPolicy
+	FileLocationer
 }
 
 type NetworkPolicies interface {
-	NetworkPolicies() []networkingv1.NetworkPolicy
+	NetworkPolicies() []NetworkPolicy
 }
 
 type Ingresses interface {
 	Ingresses() []Ingress
 }
 
+type CronJob interface {
+	CronJob() batchv1beta1.CronJob
+	FileLocationer
+}
+
 type CronJobs interface {
-	CronJobs() []batchv1beta1.CronJob
+	CronJobs() []CronJob
+}
+
+type PodDisruptionBudget interface {
+	PodDisruptionBudget() policyv1beta1.PodDisruptionBudget
+	FileLocationer
 }
 
 type PodDisruptionBudgets interface {
-	PodDisruptionBudgets() []policyv1beta1.PodDisruptionBudget
+	PodDisruptionBudgets() []PodDisruptionBudget
 }
 
 type HorizontalPodAutoscalers interface {

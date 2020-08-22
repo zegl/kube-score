@@ -49,9 +49,10 @@ func (s Scorecard) AnyBelowOrEqualToGrade(threshold Grade) bool {
 }
 
 type ScoredObject struct {
-	TypeMeta   metav1.TypeMeta
-	ObjectMeta metav1.ObjectMeta
-	Checks     []TestScore
+	TypeMeta     metav1.TypeMeta
+	ObjectMeta   metav1.ObjectMeta
+	FileLocation ks.FileLocation
+	Checks       []TestScore
 
 	ignoredChecks map[string]struct{}
 }
@@ -88,8 +89,9 @@ func (so ScoredObject) HumanFriendlyRef() string {
 	return s
 }
 
-func (so *ScoredObject) Add(ts TestScore, check ks.Check) {
+func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLocationer) {
 	ts.Check = check
+	so.FileLocation = locationer.FileLocation()
 
 	// This test is ignored (via annotations), don't save the score
 	if _, ok := so.ignoredChecks[check.ID]; ok {
