@@ -39,3 +39,37 @@ func TestParse(t *testing.T) {
 		}
 	}
 }
+
+func TestFileLocationHelm(t *testing.T) {
+	doc := `# Source: app1/templates/deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	fl := detectFileLocation("someName", 1, []byte(doc))
+	assert.Equal(t, "app1/templates/deployment.yaml", fl.Name)
+	assert.Equal(t, 1, fl.Line)
+}
+
+
+func TestFileLocation(t *testing.T) {
+	doc := `kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	fl := detectFileLocation("someName", 123, []byte(doc))
+	assert.Equal(t, "someName", fl.Name)
+	assert.Equal(t, 123, fl.Line)
+}

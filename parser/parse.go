@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
@@ -133,10 +134,19 @@ func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 
 		offset := 1 // Line numbers are 1 indexed
 
+		// Remove initial "---\n" if present
+		if bytes.HasPrefix(fullFile, []byte("---\n")) {
+			fullFile = fullFile[4:]
+			offset = 2
+		}
+
 		for _, fileContents := range bytes.Split(fullFile, []byte("\n---\n")) {
-			err := detectAndDecode(cnf, s, namedReader.Name(), offset, fileContents)
-			if err != nil {
-				return nil, err
+
+			if len(bytes.TrimSpace(fileContents)) > 0 {
+				err := detectAndDecode(cnf, s, namedReader.Name(), offset, fileContents)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			offset += 2 + bytes.Count(fileContents, []byte("\n"))
@@ -188,16 +198,31 @@ func decode(data []byte, object runtime.Object) error {
 	return nil
 }
 
+func detectFileLocation(fileName string, fileOffset int, fileContents []byte) ks.FileLocation {
+	// If the object YAML begins with a Helm style "# Source: " comment
+	// Use the information in there as the file name
+	firstRow := string(bytes.Split(fileContents, []byte("\n"))[0])
+	helmTemplatePrefix := "# Source: "
+	if strings.HasPrefix(firstRow, helmTemplatePrefix) {
+		return ks.FileLocation{
+			Name: firstRow[len(helmTemplatePrefix):],
+			Line: 1, // Set line to 1 as the line definition gets lost in Helm
+		}
+	}
+
+	return ks.FileLocation{
+		Name: fileName,
+		Line: fileOffset,
+	}
+}
+
 func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileName string, fileOffset int, fileContents []byte) error {
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		s.podspecers = append(s.podspecers, ps)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{ps.GetTypeMeta(), ps.GetObjectMeta(), ps})
 	}
 
-	fileLocation := ks.FileLocation{
-		Name: fileName,
-		Line: fileOffset,
-	}
+	fileLocation := detectFileLocation(fileName, fileOffset, fileContents)
 
 	var errs parseError
 
