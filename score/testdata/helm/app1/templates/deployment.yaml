@@ -1,0 +1,19 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo2
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar2

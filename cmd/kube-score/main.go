@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/ssh/terminal"
@@ -19,6 +20,7 @@ import (
 	"github.com/zegl/kube-score/renderer/ci"
 	"github.com/zegl/kube-score/renderer/human"
 	"github.com/zegl/kube-score/renderer/json_v2"
+	"github.com/zegl/kube-score/renderer/sarif"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/scorecard"
 )
@@ -117,9 +119,9 @@ func scoreFiles(binName string, args []string) error {
 		return nil
 	}
 
-	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" {
+	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" && *outputFormat != "sarif" {
 		fs.Usage()
-		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json' or 'ci'")
+		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json', 'sarif' or 'ci'")
 	}
 
 	filesToRead := fs.Args()
@@ -135,18 +137,20 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 
 	for _, file := range filesToRead {
 		var fp io.Reader
+		var filename string
 
 		if file == "-" {
 			fp = os.Stdin
+			filename = "STDIN"
 		} else {
 			var err error
 			fp, err = os.Open(file)
 			if err != nil {
 				return err
 			}
+			filename, _ = filepath.Abs(file)
 		}
-
-		allFilePointers = append(allFilePointers, namedReader{Reader: fp, name: file})
+		allFilePointers = append(allFilePointers, namedReader{Reader: fp, name: filename})
 	}
 
 	ignoredTests := listToStructMap(ignoreTests)
@@ -207,6 +211,8 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		r = human.Human(scoreCard, *verboseOutput, termWidth)
 	} else if *outputFormat == "ci" && version == "v1" {
 		r = ci.CI(scoreCard)
+	} else if *outputFormat == "sarif" {
+		r = sarif.Output(scoreCard)
 	} else {
 		return fmt.Errorf("error: Unknown --output-format or --output-version")
 	}
