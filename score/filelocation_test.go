@@ -21,7 +21,6 @@ func TestFileLocationHelm(t *testing.T) {
 	assert.Equal(t, 1, sc["Deployment/apps/v1//foo2"].FileLocation.Line)
 }
 
-
 func TestFileLocation(t *testing.T) {
 	sc, err := testScore(config.Configuration{
 		AllFiles:          []ks.NamedReader{testFile("linenumbers.yaml")},
