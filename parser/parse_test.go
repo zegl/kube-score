@@ -57,7 +57,6 @@ spec:
 	assert.Equal(t, 1, fl.Line)
 }
 
-
 func TestFileLocation(t *testing.T) {
 	doc := `kind: Deployment
 apiVersion: apps/v1
