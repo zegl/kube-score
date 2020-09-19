@@ -14,7 +14,7 @@ func cronJobHasDeadline(job v1beta1.CronJob) (score scorecard.TestScore) {
 	if job.Spec.StartingDeadlineSeconds == nil {
 		score.Grade = scorecard.GradeCritical
 		score.AddComment("", "The CronJob should have startingDeadlineSeconds configured",
-			"This makes sure that jobs are automatically cancelled if they can not be scheduler")
+			"This makes sure that jobs are automatically cancelled if they can not be scheduled")
 		return
 	}
 
