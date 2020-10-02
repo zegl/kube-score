@@ -5,6 +5,7 @@ import (
 
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
+	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -41,14 +42,9 @@ func serviceTargetsPod(pods []ks.Pod, podspecers []ks.PodSpecer) func(corev1.Ser
 		hasMatch := false
 
 		for _, podLables := range podsInNamespace[service.Namespace] {
-			matchCount := 0
-			for selectorKey, selectorVal := range service.Spec.Selector {
-				if labelVal, ok := podLables[selectorKey]; ok && labelVal == selectorVal {
-					matchCount++
-				}
-			}
-			if matchCount == len(service.Spec.Selector) {
+			if internal.LabelSelectorMatchesLabels(service.Spec.Selector, podLables) {
 				hasMatch = true
+				break
 			}
 		}
 

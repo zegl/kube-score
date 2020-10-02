@@ -135,15 +135,8 @@ func podIsTargetedByService(pod corev1.PodTemplateSpec, service corev1.Service) 
 		return false
 	}
 
-	labelSelector := &metav1.LabelSelector{
-		MatchLabels: service.Spec.Selector,
-	}
-
-	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
-	if err != nil {
-		return false
-	}
-
-	lables := internal.MapLables(pod.GetObjectMeta().GetLabels())
-	return selector.Matches(internal.MapLables(lables))
+	return internal.LabelSelectorMatchesLabels(
+		service.Spec.Selector,
+		pod.GetObjectMeta().GetLabels(),
+	)
 }
