@@ -6,6 +6,7 @@ import (
 
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
+	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -34,13 +35,9 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 		isTargetedByService := false
 
 		for _, s := range allServices {
-			service := s.Service()
-			if podTemplate.Namespace == service.Namespace {
-				for selectorKey, selectorVal := range service.Spec.Selector {
-					if podLabelVal, ok := podTemplate.Labels[selectorKey]; ok && podLabelVal == selectorVal {
-						isTargetedByService = true
-					}
-				}
+			if podIsTargetedByService(podTemplate, s.Service()) {
+				isTargetedByService = true
+				break
 			}
 		}
 
@@ -131,4 +128,22 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 
 		return score
 	}
+}
+
+func podIsTargetedByService(pod corev1.PodTemplateSpec, service corev1.Service) bool {
+	if pod.Namespace != service.Namespace {
+		return false
+	}
+
+	labelSelector := &metav1.LabelSelector{
+		MatchLabels: service.Spec.Selector,
+	}
+
+	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+	if err != nil {
+		return false
+	}
+
+	lables := internal.MapLables(pod.GetObjectMeta().GetLabels())
+	return selector.Matches(internal.MapLables(lables))
 }
