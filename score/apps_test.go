@@ -72,3 +72,28 @@ func TestDeploymentWithHPANotHasReplicas(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "deployment-with-hpa-not-has-replicas.yaml", "Deployment targeted by HPA does not have replicas configured", scorecard.GradeAllOK)
 }
+
+func TestStatefulsetHasServiceName(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "statefulset-service-name.yaml", "StatefulSet has ServiceName", scorecard.GradeAllOK)
+}
+
+func TestStatefulsetHasServiceNameDifferentName(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "statefulset-service-name-different-name.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
+}
+
+func TestStatefulsetHasServiceNameDifferentNamespace(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "statefulset-service-name-not-headless.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
+}
+
+func TestStatefulsetHasServiceNameDifferentLabel(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "statefulset-service-name-different-label.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
+}
+
+func TestStatefulsetHasServiceNameNotHeadless(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "statefulset-service-name-not-headless.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
+}
