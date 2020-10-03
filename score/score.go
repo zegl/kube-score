@@ -34,7 +34,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	security.Register(allChecks)
 	service.Register(allChecks, allObjects, allObjects)
 	stable.Register(cnf.KubernetesVersion, allChecks)
-	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers())
+	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers(), allObjects.Services())
 	meta.Register(allChecks)
 	hpa.Register(allChecks, allObjects.Metas())
 

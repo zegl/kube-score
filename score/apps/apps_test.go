@@ -301,3 +301,362 @@ func (d hpav1) HpaTarget() autoscalingv1.CrossVersionObjectReference {
 func (hpav1) FileLocation() ks.FileLocation {
 	return ks.FileLocation{}
 }
+
+func TestStatefulSetHasServiceName(t *testing.T) {
+	t.Parallel()
+
+	testcases := []struct {
+		statefulset     appsv1.StatefulSet
+		services        []ks.Service
+		expectedErr     error
+		expectedGrade   scorecard.Grade
+		expectedSkipped bool
+	}{
+		// Match (no namespace)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeAllOK,
+			expectedSkipped: false,
+		},
+
+		// No match (different service name)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "bar-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeCritical,
+			expectedSkipped: false,
+		},
+
+		// No match (missing service name)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeCritical,
+			expectedSkipped: false,
+		},
+
+		// Match (same namespace)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foo-ns"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc", Namespace: "foo-ns"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeAllOK,
+			expectedSkipped: false,
+		},
+
+		// No match (different namespace)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foo-ns"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc", Namespace: "bar-ns"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeCritical,
+			expectedSkipped: false,
+		},
+
+		// Match (multiple namespaces)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foo-ns"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc", Namespace: "bar-ns"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc", Namespace: "foo-ns"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeAllOK,
+			expectedSkipped: false,
+		},
+
+		// Match (multiple namespaces, revesed)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "foo-ns"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc", Namespace: "foo-ns"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc", Namespace: "bar-ns"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeAllOK,
+			expectedSkipped: false,
+		},
+
+		// No match (not headless service)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "",
+							Selector: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeCritical,
+			expectedSkipped: false,
+		},
+
+		// No match (selector)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					ServiceName: "foo-svc",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			services: []ks.Service{
+				service{
+					corev1.Service{
+						ObjectMeta: metav1.ObjectMeta{Name: "foo-svc"},
+						Spec: corev1.ServiceSpec{
+							ClusterIP: "None",
+							Selector: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:     nil,
+			expectedGrade:   scorecard.GradeCritical,
+			expectedSkipped: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		fn := statefulsetHasServiceName(tc.services)
+		score, err := fn(tc.statefulset)
+		assert.Equal(t, tc.expectedErr, err)
+		assert.Equal(t, tc.expectedGrade, score.Grade)
+		assert.Equal(t, tc.expectedSkipped, score.Skipped)
+	}
+}
+
+type service struct {
+	svc corev1.Service
+}
+
+func (d service) Service() corev1.Service {
+	return d.svc
+}
+
+func (d service) FileLocation() ks.FileLocation {
+	return ks.FileLocation{}
+}

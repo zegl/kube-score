@@ -12,10 +12,11 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter) {
+func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter, allServices []ks.Service) {
 	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
 	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
 	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
+	allChecks.RegisterStatefulSetCheck("StatefulSet has ServiceName", "Makes sure that StatefulSets have a existing headless serviceName.", statefulsetHasServiceName(allServices))
 }
 
 func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
@@ -132,4 +133,28 @@ func hasPodAntiAffinity(selfLables internal.MapLables, affinity *corev1.Affinity
 	}
 
 	return false
+}
+
+func statefulsetHasServiceName(allServices []ks.Service) func(statefulset appsv1.StatefulSet) (scorecard.TestScore, error) {
+	return func(statefulset appsv1.StatefulSet) (score scorecard.TestScore, err error) {
+		for _, service := range allServices {
+			if service.Service().Namespace != statefulset.Namespace ||
+				service.Service().Name != statefulset.Spec.ServiceName ||
+				service.Service().Spec.ClusterIP != "None" {
+				continue
+			}
+
+			if internal.LabelSelectorMatchesLabels(
+				service.Service().Spec.Selector,
+				statefulset.Spec.Template.GetObjectMeta().GetLabels(),
+			) {
+				score.Grade = scorecard.GradeAllOK
+				return
+			}
+		}
+
+		score.Grade = scorecard.GradeCritical
+		score.AddComment("", "StatefulSet does not have a valid serviceName", "StatefulSets currently require a Headless Service to be responsible for the network identity of the Pods. You are responsible for creating this Service. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations")
+		return
+	}
 }

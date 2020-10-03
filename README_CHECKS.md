@@ -22,5 +22,6 @@
 | deployment-has-host-podantiaffinity | Deployment | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | default |
 | statefulset-has-host-podantiaffinity | StatefulSet | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | default |
 | deployment-targeted-by-hpa-does-not-have-replicas-configured | Deployment | Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set | default |
+| statefulset-has-servicename | StatefulSet | Makes sure that StatefulSets have a existing serviceName that is headless. | default |
 | label-values | all | Validates label values | default |
 | horizontalpodautoscaler-has-target | HorizontalPodAutoscaler | Makes sure that the HPA targets a valid object | default |

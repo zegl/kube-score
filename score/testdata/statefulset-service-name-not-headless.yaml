@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-test-1
+spec:
+  selector:
+    app: foo
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset-test-1
+spec:
+  serviceName: svc-test-1
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foobar
+        image: foo/bar:123
