@@ -122,6 +122,7 @@ func Empty() ks.AllTypes {
 
 func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 	s := &parsedObjects{}
+	s2 := &parsedObjects{}
 
 	for _, namedReader := range cnf.AllFiles {
 		fullFile, err := ioutil.ReadAll(namedReader)
@@ -153,7 +154,77 @@ func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 		}
 	}
 
-	return s, nil
+	for _,pod := range s.pods {
+		ns := pod.Pod().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.pods = append(s2.pods, pod)
+		}
+	}
+
+	for _,podspecer := range s.podspecers {
+		ns := podspecer.GetObjectMeta().Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.podspecers = append(s2.podspecers, podspecer)
+		}
+	}
+
+	for _,netpool := range s.networkPolicies {
+		ns := netpool.NetworkPolicy().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.networkPolicies = append(s2.networkPolicies, netpool)
+		}
+	}
+
+	for _,service := range s.services {
+		ns := service.Service().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.services = append(s2.services, service)
+		}
+	}
+
+	for _,deployment := range s.deployments {
+		ns := deployment.Deployment().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.deployments = append(s2.deployments, deployment)
+		}
+	}
+
+	for _,statefulset := range s.statefulsets {
+		ns := statefulset.StatefulSet().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.statefulsets = append(s2.statefulsets, statefulset)
+		}
+	}
+
+	for _,ingress := range s.ingresses {
+		ns := ingress.GetObjectMeta().Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.ingresses = append(s2.ingresses, ingress)
+		}
+	}
+
+	for _,cjob := range s.cronjobs {
+		ns := cjob.CronJob().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.cronjobs = append(s2.cronjobs, cjob)
+		}
+	}
+
+	for _,hpa := range s.hpaTargeters {
+		ns := hpa.GetObjectMeta().Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.hpaTargeters = append(s2.hpaTargeters, hpa)
+		}
+	}
+
+	for _,pdb := range s.podDisruptionBudgets {
+		ns := pdb.PodDisruptionBudget().ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.podDisruptionBudgets = append(s2.podDisruptionBudgets, pdb)
+		}
+	}
+
+	return s2, nil
 }
 
 func detectAndDecode(cnf config.Configuration, s *parsedObjects, fileName string, fileOffset int, raw []byte) error {
