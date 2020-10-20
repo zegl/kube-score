@@ -223,7 +223,13 @@ func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 			s2.podDisruptionBudgets = append(s2.podDisruptionBudgets, pdb)
 		}
 	}
-	s2.bothMetas = s.bothMetas
+
+	for _,bothMeta := range s.bothMetas {
+		ns := bothMeta.ObjectMeta.Namespace
+		if _, ok := cnf.IgnoredNamespaces[ns]; !ok {
+			s2.bothMetas = append(s2.bothMetas, bothMeta)
+		}
+	}
 
 	return s2, nil
 }
