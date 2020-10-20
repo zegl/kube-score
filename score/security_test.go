@@ -266,3 +266,27 @@ func TestContainerSeccompAllGood(t *testing.T) {
 		EnabledOptionalTests: structMap,
 	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }
+
+func TestNetworkPolicyIgnoreNamespace(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["testspacedd"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("networkpolicy-cronjob-not-matching-selector.yaml")},
+		KubernetesVersion: config.Semver{1, 18},
+		IgnoredNamespaces: structMap,
+	}, "NetworkPolicy targets Pod", scorecard.GradeCritical)
+
+	structMapCorrect := make(map[string]struct{})
+	structMapCorrect["testspace"] = struct{}{}
+
+	sc, _ := testScore(config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("networkpolicy-cronjob-not-matching-selector.yaml")},
+		KubernetesVersion: config.Semver{1, 18},
+		IgnoredNamespaces: structMapCorrect,
+	});
+
+	assert.Equal(t, sc, scorecard.Scorecard{})
+}
