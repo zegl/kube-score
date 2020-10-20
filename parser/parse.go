@@ -223,6 +223,7 @@ func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 			s2.podDisruptionBudgets = append(s2.podDisruptionBudgets, pdb)
 		}
 	}
+	s2.bothMetas = s.bothMetas
 
 	return s2, nil
 }
