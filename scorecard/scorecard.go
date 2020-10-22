@@ -2,6 +2,7 @@ package scorecard
 
 import (
 	"fmt"
+	"github.com/zegl/kube-score/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 
@@ -89,7 +90,7 @@ func (so ScoredObject) HumanFriendlyRef() string {
 	return s
 }
 
-func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLocationer) {
+func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLocationer, cnf config.Configuration) {
 	ts.Check = check
 	so.FileLocation = locationer.FileLocation()
 
@@ -97,6 +98,11 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	if _, ok := so.ignoredChecks[check.ID]; ok {
 		ts.Skipped = true
 		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because %s is ignored", check.ID)}}
+	}
+
+	if _, ok := cnf.IgnoredNamespaces[so.ObjectMeta.Namespace]; ok {
+		ts.Skipped = true
+		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because %s namespace is ignored", so.ObjectMeta.Namespace)}}
 	}
 
 	so.Checks = append(so.Checks, ts)

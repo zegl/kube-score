@@ -54,14 +54,14 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, ingress := range allObjects.Ingresses() {
 		o := newObject(ingress.GetTypeMeta(), ingress.GetObjectMeta())
 		for _, test := range allChecks.Ingresses() {
-			o.Add(test.Fn(ingress), test.Check, ingress)
+			o.Add(test.Fn(ingress), test.Check, ingress, cnf)
 		}
 	}
 
 	for _, meta := range allObjects.Metas() {
 		o := newObject(meta.TypeMeta, meta.ObjectMeta)
 		for _, test := range allChecks.Metas() {
-			o.Add(test.Fn(meta), test.Check, meta)
+			o.Add(test.Fn(meta), test.Check, meta, cnf)
 		}
 	}
 
@@ -72,7 +72,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 				ObjectMeta: pod.Pod().ObjectMeta,
 				Spec:       pod.Pod().Spec,
 			}, pod.Pod().TypeMeta)
-			o.Add(score, test.Check, pod)
+			o.Add(score, test.Check, pod, cnf)
 		}
 	}
 
@@ -80,14 +80,14 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 		o := newObject(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
 		for _, test := range allChecks.Pods() {
 			score := test.Fn(podspecer.GetPodTemplateSpec(), podspecer.GetTypeMeta())
-			o.Add(score, test.Check, podspecer)
+			o.Add(score, test.Check, podspecer, cnf)
 		}
 	}
 
 	for _, service := range allObjects.Services() {
 		o := newObject(service.Service().TypeMeta, service.Service().ObjectMeta)
 		for _, test := range allChecks.Services() {
-			o.Add(test.Fn(service.Service()), test.Check, service)
+			o.Add(test.Fn(service.Service()), test.Check, service, cnf)
 		}
 	}
 
@@ -98,7 +98,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 			if err != nil {
 				return nil, err
 			}
-			o.Add(res, test.Check, statefulset)
+			o.Add(res, test.Check, statefulset, cnf)
 		}
 	}
 
@@ -109,28 +109,28 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 			if err != nil {
 				return nil, err
 			}
-			o.Add(res, test.Check, deployment)
+			o.Add(res, test.Check, deployment, cnf)
 		}
 	}
 
 	for _, netpol := range allObjects.NetworkPolicies() {
 		o := newObject(netpol.NetworkPolicy().TypeMeta, netpol.NetworkPolicy().ObjectMeta)
 		for _, test := range allChecks.NetworkPolicies() {
-			o.Add(test.Fn(netpol.NetworkPolicy()), test.Check, netpol)
+			o.Add(test.Fn(netpol.NetworkPolicy()), test.Check, netpol, cnf)
 		}
 	}
 
 	for _, cjob := range allObjects.CronJobs() {
 		o := newObject(cjob.CronJob().TypeMeta, cjob.CronJob().ObjectMeta)
 		for _, test := range allChecks.CronJobs() {
-			o.Add(test.Fn(cjob.CronJob()), test.Check, cjob)
+			o.Add(test.Fn(cjob.CronJob()), test.Check, cjob, cnf)
 		}
 	}
 
 	for _, hpa := range allObjects.HorizontalPodAutoscalers() {
 		o := newObject(hpa.GetTypeMeta(), hpa.GetObjectMeta())
 		for _, test := range allChecks.HorizontalPodAutoscalers() {
-			o.Add(test.Fn(hpa), test.Check, hpa)
+			o.Add(test.Fn(hpa), test.Check, hpa, cnf)
 		}
 	}
 

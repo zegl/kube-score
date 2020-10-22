@@ -267,26 +267,30 @@ func TestContainerSeccompAllGood(t *testing.T) {
 	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }
 
-func TestNetworkPolicyIgnoreNamespace(t *testing.T) {
+func TestServiceIgnoreNamespace(t *testing.T) {
 	t.Parallel()
 
 	structMap := make(map[string]struct{})
-	structMap["testspacedd"] = struct{}{}
+	structMap["site"] = struct{}{}
 
-	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("networkpolicy-cronjob-not-matching-selector.yaml")},
-		KubernetesVersion: config.Semver{1, 18},
+	s, err := testScore(config.Configuration{
+		VerboseOutput:     0,
+		AllFiles:          []ks.NamedReader{testFile("service-externalname.yaml")},
 		IgnoredNamespaces: structMap,
-	}, "NetworkPolicy targets Pod", scorecard.GradeCritical)
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
 
-	structMapCorrect := make(map[string]struct{})
-	structMapCorrect["testspace"] = struct{}{}
+	tested := false
 
-	sc, _ := testScore(config.Configuration{
-		AllFiles: []ks.NamedReader{testFile("networkpolicy-cronjob-not-matching-selector.yaml")},
-		KubernetesVersion: config.Semver{1, 18},
-		IgnoredNamespaces: structMapCorrect,
-	});
-
-	assert.Equal(t, sc, scorecard.Scorecard{})
+	for _, o := range s {
+		for _, c := range o.Checks {
+			if c.Check.ID == "service-targets-pod" {
+				assert.True(t, c.Skipped)
+				assert.Equal(t, scorecard.GradeAllOK, c.Grade)
+				tested = true
+			}
+		}
+	}
+	assert.True(t, tested)
 }
