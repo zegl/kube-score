@@ -14,7 +14,10 @@
 | pod-networkpolicy | Pod | Makes sure that all Pods are targeted by a NetworkPolicy | default |
 | networkpolicy-targets-pod | NetworkPolicy | Makes sure that all NetworkPolicies targets at least one Pod | default |
 | pod-probes | Pod | Makes sure that all Pods have safe probe configurations | default |
-| container-security-context | Pod | Makes sure that all pods have good securityContexts configured | default |
+| container-security-context | Pod | Makes sure that all pods have good securityContexts configured (*deprecated*, see [README_SECURITYCONTEXT.md](README_SECURITYCONTEXT.md) | default |
+| container-security-context-user-group-id | Pod | Makes sure that user and group ID are set and > 10000 | optional |
+| container-security-context-privileged | Pod | Makes sure that no Containers run in privileged mode | optional |
+| container-security-context-readonlyrootfilesystem | Pod | Makes sure that all Containers have a read only root filesystem | optional |
 | container-seccomp-profile | Pod | Makes sure that all pods have at a seccomp policy configured. | optional |
 | service-targets-pod | Service | Makes sure that all Services targets a Pod | default |
 | service-type | Service | Makes sure that the Service type is not NodePort | default |
