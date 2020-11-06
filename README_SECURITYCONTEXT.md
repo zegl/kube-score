@@ -14,5 +14,8 @@ and enable one or more of the following optional checks:
 * `container-security-context-privileged`
 * `container-security-context-readonlyrootfilesystem`
 
-In future releases the `container-security-context` will become *optional*
-and replaced by the more detailed checks.
+## Release Timeline
+
+* v1.10: Introduce the three new checks.
+* v1.11: Make `container-security-context` optional, and make the three new checks run by default.
+* v1.12: Remove `container-security-context`.
