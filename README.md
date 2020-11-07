@@ -38,7 +38,7 @@ For a full list of checks, see [README_CHECKS.md](README_CHECKS.md).
 * Deployments and StatefulSets should have a `PodDisruptionPolicy`
 * Deployments and StatefulSets should have host PodAntiAffinity configured
 * Container probes, a readiness should be configured, and should not be identical to the liveness probe. Read more in  [README_PROBES.md](README_PROBES.md).
-* Container securityContext, run as high number user/group, do not run as root or with privileged root fs
+* Container securityContext, run as high number user/group, do not run as root or with privileged root fs. Read more in [README_SECURITYCONTEXT.md](README_SECURITYCONTEXT.md).
 * Stable APIs, use a stable API if available (supported: Deployments, StatefulSets, DaemonSet)
 
 ## Example output
