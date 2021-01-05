@@ -35,3 +35,8 @@ func TestNetworkingIngressV1TargetsServiceNoMatch(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "ingress-networkingv1-targets-service-no-match.yaml", "Ingress targets Service", scorecard.GradeCritical)
 }
+
+func TestNetworkPolicyV1InvalidBackend(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "ingress-v1-invalid-backend.yaml", "Ingress targets Service", scorecard.GradeCritical)
+}

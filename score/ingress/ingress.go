@@ -46,10 +46,14 @@ func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []ks.Service) (
 
 			if !pathHasMatch {
 				allRulesHaveMatches = false
-				if path.Backend.Service.Port.Number > 0 {
-					score.AddComment(path.Path, "No service match was found", fmt.Sprintf("No service with name %s and port number %d was found", path.Backend.Service.Name, path.Backend.Service.Port.Number))
+				if path.Backend.Service != nil {
+					if path.Backend.Service.Port.Number > 0 {
+						score.AddComment(path.Path, "No service match was found", fmt.Sprintf("No service with name %s and port number %d was found", path.Backend.Service.Name, path.Backend.Service.Port.Number))
+					} else {
+						score.AddComment(path.Path, "No service match was found", fmt.Sprintf("No service with name %s and port named %s was found", path.Backend.Service.Name, path.Backend.Service.Port.Name))
+					}
 				} else {
-					score.AddComment(path.Path, "No service match was found", fmt.Sprintf("No service with name %s and port named %s was found", path.Backend.Service.Name, path.Backend.Service.Port.Name))
+					score.AddComment(path.Path, "No service match was found", "")
 				}
 			}
 		}
