@@ -48,6 +48,15 @@ dockers:
   binaries:
   - kube-score
   image_templates:
+  - "zegl/kube-score:{{ .Tag }}-helm3"
+  - "zegl/kube-score:latest-helm3"
+  dockerfile: cmd/kube-score/helm3.Dockerfile
+
+- goos: linux
+  goarch: amd64
+  binaries:
+  - kube-score
+  image_templates:
   - "zegl/kube-score:{{ .Tag }}-kustomize"
   - "zegl/kube-score:latest-kustomize"
   dockerfile: cmd/kube-score/kustomize.Dockerfile
