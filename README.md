@@ -85,7 +85,7 @@ kubectl api-resources --verbs=list --namespaced -o name \
 ### Example with Docker
 
 ```bash
-docker run -v $(pwd):/project zegl/kube-score:v1.7.0 score my-app/*.yaml
+docker run -v $(pwd):/project zegl/kube-score:v1.10.0 score my-app/*.yaml
 ```
 
 ## Configuration
