@@ -155,6 +155,19 @@ go build github.com/zegl/kube-score/cmd/kube-score
 go test -v github.com/zegl/kube-score/...
 ```
 
+## CICD
+
+### Gitlab
+
+```bash
+image: zegl/kube-score:v1.10.0-cicd
+
+k8s:
+  stage: linter
+  script:
+    - /kube-score score kubernetes/deploy.yml
+```
+
 ## Contributing?
 
 Do you want to help out? Take a look at the [Contributing Guidelines](./.github/CONTRIBUTING.md) for more info. 🤩
