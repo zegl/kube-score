@@ -8,15 +8,30 @@ import (
 
 func TestCronJobHasDeadline(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "cronjob-deadline-set.yaml", "CronJob has deadline", scorecard.GradeAllOK)
+
+	for _, v := range []string{"batchv1beta1", "batchv1"} {
+		t.Run(v, func(t *testing.T) {
+			testExpectedScore(t, "cronjob-"+v+"-deadline-set.yaml", "CronJob has deadline", scorecard.GradeAllOK)
+		})
+	}
 }
 
 func TestCronJobNotHasDeadline(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "cronjob-deadline-not-set.yaml", "CronJob has deadline", scorecard.GradeCritical)
+
+	for _, v := range []string{"batchv1beta1", "batchv1"} {
+		t.Run(v, func(t *testing.T) {
+			testExpectedScore(t, "cronjob-"+v+"-deadline-not-set.yaml", "CronJob has deadline", scorecard.GradeCritical)
+		})
+	}
 }
 
 func TestProbesPodCronMissingReady(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "cronjob-deadline-not-set.yaml", "Pod Probes", scorecard.GradeAllOK)
+
+	for _, v := range []string{"batchv1beta1", "batchv1"} {
+		t.Run(v, func(t *testing.T) {
+			testExpectedScore(t, "cronjob-"+v+"-deadline-not-set.yaml", "Pod Probes", scorecard.GradeAllOK)
+		})
+	}
 }

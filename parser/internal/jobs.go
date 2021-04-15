@@ -2,7 +2,6 @@ package internal
 
 import (
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -29,31 +28,4 @@ func (d Batchv1Job) GetObjectMeta() metav1.ObjectMeta {
 func (d Batchv1Job) GetPodTemplateSpec() corev1.PodTemplateSpec {
 	d.Spec.Template.ObjectMeta.Namespace = d.ObjectMeta.Namespace
 	return d.Spec.Template
-}
-
-type Batchv1beta1CronJob struct {
-	Obj      batchv1beta1.CronJob
-	Location ks.FileLocation
-}
-
-func (d Batchv1beta1CronJob) FileLocation() ks.FileLocation {
-	return d.Location
-}
-
-func (d Batchv1beta1CronJob) GetTypeMeta() metav1.TypeMeta {
-	return d.Obj.TypeMeta
-}
-
-func (d Batchv1beta1CronJob) GetObjectMeta() metav1.ObjectMeta {
-	return d.Obj.ObjectMeta
-}
-
-func (d Batchv1beta1CronJob) GetPodTemplateSpec() corev1.PodTemplateSpec {
-	t := d.Obj.Spec.JobTemplate.Spec.Template
-	t.ObjectMeta.Namespace = d.Obj.ObjectMeta.Namespace
-	return t
-}
-
-func (d Batchv1beta1CronJob) CronJob() batchv1beta1.CronJob {
-	return d.Obj
 }

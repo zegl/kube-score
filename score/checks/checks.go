@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,7 +88,7 @@ type IngressCheck struct {
 	Fn IngressCheckFn
 }
 
-type CronJobCheckFn = func(batchv1beta1.CronJob) scorecard.TestScore
+type CronJobCheckFn = func(ks.CronJob) scorecard.TestScore
 type CronJobCheck struct {
 	ks.Check
 	Fn CronJobCheckFn

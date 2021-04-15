@@ -28,6 +28,7 @@ import (
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser/internal"
+	internalcronjob "github.com/zegl/kube-score/parser/internal/cronjob"
 	internalnetpol "github.com/zegl/kube-score/parser/internal/networkpolicy"
 	internalpdb "github.com/zegl/kube-score/parser/internal/pdb"
 	internalpod "github.com/zegl/kube-score/parser/internal/pod"
@@ -242,7 +243,14 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 	case batchv1beta1.SchemeGroupVersion.WithKind("CronJob"):
 		var cronjob batchv1beta1.CronJob
 		errs.AddIfErr(decode(fileContents, &cronjob))
-		cjob := internal.Batchv1beta1CronJob{cronjob, fileLocation}
+		cjob := internalcronjob.CronJobV1beta1{cronjob, fileLocation}
+		addPodSpeccer(cjob)
+		s.cronjobs = append(s.cronjobs, cjob)
+
+	case batchv1.SchemeGroupVersion.WithKind("CronJob"):
+		var cronjob batchv1.CronJob
+		errs.AddIfErr(decode(fileContents, &cronjob))
+		cjob := internalcronjob.CronJobV1{cronjob, fileLocation}
 		addPodSpeccer(cjob)
 		s.cronjobs = append(s.cronjobs, cjob)
 

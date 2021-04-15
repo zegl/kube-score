@@ -4,7 +4,6 @@ import (
 	"io"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -118,7 +117,9 @@ type Ingresses interface {
 }
 
 type CronJob interface {
-	CronJob() batchv1beta1.CronJob
+	GetTypeMeta() metav1.TypeMeta
+	GetObjectMeta() metav1.ObjectMeta
+	StartingDeadlineSeconds() *int64
 	FileLocationer
 }
 
