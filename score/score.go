@@ -121,9 +121,9 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	}
 
 	for _, cjob := range allObjects.CronJobs() {
-		o := newObject(cjob.CronJob().TypeMeta, cjob.CronJob().ObjectMeta)
+		o := newObject(cjob.GetTypeMeta(), cjob.GetObjectMeta())
 		for _, test := range allChecks.CronJobs() {
-			o.Add(test.Fn(cjob.CronJob()), test.Check, cjob)
+			o.Add(test.Fn(cjob), test.Check, cjob)
 		}
 	}
 

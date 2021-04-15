@@ -69,6 +69,19 @@ func TestCronJobBatchv1beta1(t *testing.T) {
 	testExpectedScore(t, "cronjob-batchv1beta1.yaml", "Stable version", scorecard.GradeAllOK)
 }
 
+func TestCronJobBatchv1beta1Kubernetes1dot21(t *testing.T) {
+	t.Parallel()
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:          []ks.NamedReader{testFile("cronjob-batchv1beta1.yaml")},
+		KubernetesVersion: config.Semver{1, 21},
+	}, "Stable version", scorecard.GradeWarning)
+}
+
+func TestCronJobBatchv1(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "cronjob-batchv1.yaml", "Stable version", scorecard.GradeAllOK)
+}
+
 func TestJobBatchv1(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "job-batchv1.yaml", "Stable version", scorecard.GradeAllOK)
