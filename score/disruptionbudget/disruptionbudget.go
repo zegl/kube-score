@@ -18,13 +18,12 @@ func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
 }
 
 func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, lables map[string]string) (bool, error) {
-	for _, b := range budgets {
-		budget := b.PodDisruptionBudget()
-		if budget.Namespace != namespace {
+	for _, budget := range budgets {
+		if budget.Namespace() != namespace {
 			continue
 		}
 
-		selector, err := metav1.LabelSelectorAsSelector(budget.Spec.Selector)
+		selector, err := metav1.LabelSelectorAsSelector(budget.PodDisruptionBudgetSelector())
 		if err != nil {
 			return false, fmt.Errorf("failed to create selector: %v", err)
 		}

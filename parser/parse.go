@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	policyv1 "k8s.io/api/policy/v1"
 	"log"
 	"strings"
 
@@ -322,7 +323,13 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 	case policyv1beta1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 		var disruptBudget policyv1beta1.PodDisruptionBudget
 		errs.AddIfErr(decode(fileContents, &disruptBudget))
-		dbug := internalpdb.PodDisruptionBudget{disruptBudget, fileLocation}
+		dbug := internalpdb.PodDisruptionBudgetV1beta1{disruptBudget, fileLocation}
+		s.podDisruptionBudgets = append(s.podDisruptionBudgets, dbug)
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta, dbug})
+	case policyv1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
+		var disruptBudget policyv1.PodDisruptionBudget
+		errs.AddIfErr(decode(fileContents, &disruptBudget))
+		dbug := internalpdb.PodDisruptionBudgetV1{disruptBudget, fileLocation}
 		s.podDisruptionBudgets = append(s.podDisruptionBudgets, dbug)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta, dbug})
 

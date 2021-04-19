@@ -6,7 +6,6 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -128,7 +127,8 @@ type CronJobs interface {
 }
 
 type PodDisruptionBudget interface {
-	PodDisruptionBudget() policyv1beta1.PodDisruptionBudget
+	Namespace() string
+	PodDisruptionBudgetSelector() *metav1.LabelSelector
 	FileLocationer
 }
 
