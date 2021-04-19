@@ -39,6 +39,9 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 			"batch/v1beta1": {
 				"CronJob": recommendedApi{"batch/v1", config.Semver{1, 21}},
 			},
+			"policy/v1beta1": {
+				"PodDisruptionBudget": recommendedApi{"policy/v1", config.Semver{1, 21}},
+			},
 		}
 
 		score.Grade = scorecard.GradeAllOK
