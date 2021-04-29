@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "11:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: k8s.io/apimachinery
+    versions:
+    - 0.20.4
+    - 0.20.5
+    - 0.21.0
