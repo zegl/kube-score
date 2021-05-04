@@ -14,6 +14,7 @@ type Configuration struct {
 	VerboseOutput                         int
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool
+	IgnoredNamespaces                     map[string]struct{}
 	IgnoredTests                          map[string]struct{}
 	EnabledOptionalTests                  map[string]struct{}
 	UseIgnoreChecksAnnotation             bool
