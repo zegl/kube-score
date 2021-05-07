@@ -36,6 +36,12 @@ func TestProbesPodIdenticalTCP(t *testing.T) {
 	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }
 
+func TestProbesPodTCPDifferentThresholds(t *testing.T) {
+	t.Parallel()
+	comments := testExpectedScore(t, "pod-probes-tcp-different-thresholds.yaml", "Pod Probes", scorecard.GradeAllOK)
+	assert.Len(t, comments, 0)
+}
+
 func TestProbesPodIdenticalExec(t *testing.T) {
 	t.Parallel()
 	comments := testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", scorecard.GradeCritical)

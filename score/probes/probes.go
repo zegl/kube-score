@@ -84,6 +84,13 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 					}
 				}
 
+				// Accept if readiness/liveness probes are the same (e.g. port) but differ in threshold.
+				// Use case: restart container if application not ready for a longer time, which may work
+				// if application stalled or deadlocked.
+				if r.InitialDelaySeconds != l.InitialDelaySeconds || r.PeriodSeconds != l.PeriodSeconds || r.FailureThreshold != l.FailureThreshold {
+					probesAreIdentical = false
+				}
+
 			}
 		}
 
