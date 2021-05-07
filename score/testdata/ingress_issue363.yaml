@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: testspace
+spec:
+  rules:
+    - host: foo.bar.network
+      http:
+        # Note: This input does _NOT_ match the spec.
+        # This test is here to make sure that there are no panics on invalid inputs.
+        paths:
+          - backend:
+              serviceName: app-service
+              servicePort: http
+  tls:
+    - hosts:
+        - foo.bar.network
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-service
+  namespace: testspace
+spec:
+  selector:
+    app: kibana
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5601

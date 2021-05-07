@@ -22,6 +22,10 @@ func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []ks.Service) (
 	allRulesHaveMatches := true
 
 	for _, rule := range ingress.Rules() {
+		if rule.IngressRuleValue.HTTP == nil {
+			continue
+		}
+
 		for _, path := range rule.IngressRuleValue.HTTP.Paths {
 
 			pathHasMatch := false
@@ -30,6 +34,9 @@ func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []ks.Service) (
 				service := srv.Service()
 
 				if service.Namespace != ingress.GetObjectMeta().Namespace {
+					continue
+				}
+				if path.Backend.Service == nil {
 					continue
 				}
 

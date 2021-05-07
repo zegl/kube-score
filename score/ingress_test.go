@@ -40,3 +40,8 @@ func TestNetworkPolicyV1InvalidBackend(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "ingress-v1-invalid-backend.yaml", "Ingress targets Service", scorecard.GradeCritical)
 }
+
+func TestIngressNoPanicIssue363(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "ingress_issue363.yaml", "Ingress targets Service", scorecard.GradeCritical)
+}
