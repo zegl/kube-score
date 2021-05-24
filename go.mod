@@ -2,7 +2,7 @@ module github.com/zegl/kube-score
 
 require (
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
-	github.com/fatih/color v1.11.0
+	github.com/fatih/color v1.12.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
