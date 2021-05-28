@@ -21,10 +21,10 @@ and enable one or more of the following optional checks:
 The checks that has container-security-context preformed has been split into three different checks, which where all introduced in v1.10.
 
 * v1.10: Introduce the three new checks (opt-in), and officially deprecate `container-security-context`.
-* v1.11: Make `container-security-context` optional (opt-in), and make the three new checks run by default.
-* v1.12: Remove `container-security-context`.
+* v1.12: Make `container-security-context` optional (opt-in), and make the three new checks run by default.
+* v1.13: Remove `container-security-context`.
 
-In v1.10, run kube-score with the following flags to ensure compatability with v1.11 and later:
+In v1.10, run kube-score with the following flags to ensure compatability with v1.12 and later:
 
 ```bash
 kube-score score \
@@ -33,3 +33,7 @@ kube-score score \
     --enable-optional-test container-security-context-readonlyrootfilesystem \
     --ignore-test container-security-context
 ```
+
+----
+
+_Note:_ The "flip" and the deletion of the tests where originally scheduled to happen in v1.11 and v1.12. This did not happend, and the migration is now scheduled for v1.12 and v1.13 instead.
