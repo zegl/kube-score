@@ -88,12 +88,17 @@ func TestStatefulsetHasServiceNameDifferentNamespace(t *testing.T) {
 	testExpectedScore(t, "statefulset-service-name-not-headless.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
 }
 
+func TestStatefulsetHasServiceNameNotHeadless(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "statefulset-service-name-not-headless.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
+}
+
 func TestStatefulsetHasServiceNameDifferentLabel(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "statefulset-service-name-different-label.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
 }
 
-func TestStatefulsetHasServiceNameNotHeadless(t *testing.T) {
+func TestStatefulsetSelectorLabels(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "statefulset-service-name-not-headless.yaml", "StatefulSet has ServiceName", scorecard.GradeCritical)
+	testExpectedScore(t, "statefulset-different-labels.yaml", "StatefulSet Pod Selector labels match template metadata labels", scorecard.GradeCritical)
 }

@@ -2,12 +2,13 @@ package score
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
-	"testing"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -192,6 +193,11 @@ func TestPodSecurityContext(test *testing.T) {
 				APIVersion: "apps/v1",
 			},
 			Spec: appsv1.StatefulSetSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": "foo",
+					},
+				},
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						SecurityContext: tc.podCtx,

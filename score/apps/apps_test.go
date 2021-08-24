@@ -1,12 +1,13 @@
 package apps
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
@@ -526,7 +527,7 @@ func TestStatefulSetHasServiceName(t *testing.T) {
 			expectedSkipped: false,
 		},
 
-		// Match (multiple namespaces, revesed)
+		// Match (multiple namespaces, reversed)
 		{
 			statefulset: appsv1.StatefulSet{
 				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
@@ -646,6 +647,70 @@ func TestStatefulSetHasServiceName(t *testing.T) {
 		assert.Equal(t, tc.expectedErr, err)
 		assert.Equal(t, tc.expectedGrade, score.Grade)
 		assert.Equal(t, tc.expectedSkipped, score.Skipped)
+	}
+}
+
+func TestStatefulSetSelectorLabels(t *testing.T) {
+	t.Parallel()
+
+	testcases := []struct {
+		statefulset   appsv1.StatefulSet
+		expectedErr   error
+		expectedGrade scorecard.Grade
+	}{
+		// Match
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeAllOK,
+		},
+
+		// No match (labels differ)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeCritical,
+		},
+	}
+
+	for _, tc := range testcases {
+		score, err := statefulsetSelectorLabelsMatchTemplateMetadataLabels(tc.statefulset)
+		assert.Equal(t, tc.expectedErr, err)
+		assert.Equal(t, tc.expectedGrade, score.Grade)
 	}
 }
 

@@ -18,6 +18,9 @@ metadata:
   name: statefulset-test-1
   namespace: ns-test-1
 spec:
+  selector:
+    matchLabels:
+      app: foo
   serviceName: svc-test-1
   template:
     metadata:

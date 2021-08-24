@@ -15,6 +15,9 @@ kind: StatefulSet
 metadata:
   name: statefulset-test-1
 spec:
+  selector:
+    matchLabels:
+      app: foo
   template:
     metadata:
       labels:

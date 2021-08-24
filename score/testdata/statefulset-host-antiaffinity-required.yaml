@@ -3,6 +3,9 @@ kind: StatefulSet
 metadata:
   name: statefulset-required-anti-affinity
 spec:
+  selector:
+    matchLabels:
+      app: foo
   replicas: 10
   template:
     metadata:
