@@ -2,7 +2,7 @@ package internal
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-// Implements the Kubernetes Labels interface
+// MapLables implements the Kubernetes Labels interface
 type MapLables map[string]string
 
 func (l MapLables) Has(key string) bool {
