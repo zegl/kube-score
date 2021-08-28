@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"fmt"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -16,9 +17,12 @@ import (
 func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter, allServices []ks.Service) {
 	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
 	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
+
 	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
 	allChecks.RegisterStatefulSetCheck("StatefulSet has ServiceName", "Makes sure that StatefulSets have an existing headless serviceName.", statefulsetHasServiceName(allServices))
-	allChecks.RegisterStatefulSetCheck("StatefulSet Pod Selector labels match template metadata labels", "Ensure the StatefulSet selector labels match the template metadata labels.", statefulsetSelectorLabelsMatchTemplateMetadataLabels)
+
+	allChecks.RegisterDeploymentCheck("Deployment Pod Selector labels match template metadata labels", "Ensure the StatefulSet selector labels match the template metadata labels.", deploymentSelectorLabelsMatching)
+	allChecks.RegisterStatefulSetCheck("StatefulSet Pod Selector labels match template metadata labels", "Ensure the StatefulSet selector labels match the template metadata labels.", statefulSetSelectorLabelsMatching)
 }
 
 func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
@@ -161,16 +165,38 @@ func statefulsetHasServiceName(allServices []ks.Service) func(statefulset appsv1
 	}
 }
 
-func statefulsetSelectorLabelsMatchTemplateMetadataLabels(statefulset appsv1.StatefulSet) (score scorecard.TestScore, err error) {
-	if internal.LabelSelectorMatchesLabels(
-		statefulset.Spec.Selector.MatchLabels,
-		statefulset.Spec.Template.GetObjectMeta().GetLabels(),
-	) {
+func statefulSetSelectorLabelsMatching(statefulset appsv1.StatefulSet) (score scorecard.TestScore, err error) {
+	selector, err := metav1.LabelSelectorAsSelector(statefulset.Spec.Selector)
+	if err != nil {
+		score.Grade = scorecard.GradeCritical
+		score.AddComment("", "StatefulSet selector labels are not matching template metadata labels", fmt.Sprintf("Invalid selector: %s", err))
+		return
+	}
+
+	if selector.Matches(internal.MapLables(statefulset.Spec.Template.GetObjectMeta().GetLabels())) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}
 
 	score.Grade = scorecard.GradeCritical
-	score.AddComment("", "StatefulSet selector labels not matching template metadata labels", "StatefulSets require `.spec.selector.matchLabels` to match `.spec.template.metadata.labels`. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-selector")
+	score.AddComment("", "StatefulSet selector labels not matching template metadata labels", "StatefulSets require `.spec.selector` to match `.spec.template.metadata.labels`. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-selector")
+	return
+}
+
+func deploymentSelectorLabelsMatching(deployment appsv1.Deployment) (score scorecard.TestScore, err error) {
+	selector, err := metav1.LabelSelectorAsSelector(deployment.Spec.Selector)
+	if err != nil {
+		score.Grade = scorecard.GradeCritical
+		score.AddComment("", "Deployment selector labels are not matching template metadata labels", fmt.Sprintf("Invalid selector: %s", err))
+		return
+	}
+
+	if selector.Matches(internal.MapLables(deployment.Spec.Template.GetObjectMeta().GetLabels())) {
+		score.Grade = scorecard.GradeAllOK
+		return
+	}
+
+	score.Grade = scorecard.GradeCritical
+	score.AddComment("", "Deployment selector labels not matching template metadata labels", "Deployment require `.spec.selector` to match `.spec.template.metadata.labels`. https://kubernetes.io/docs/concepts/workloads/controllers/deployment/")
 	return
 }

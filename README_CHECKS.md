@@ -14,10 +14,10 @@
 | pod-networkpolicy | Pod | Makes sure that all Pods are targeted by a NetworkPolicy | default |
 | networkpolicy-targets-pod | NetworkPolicy | Makes sure that all NetworkPolicies targets at least one Pod | default |
 | pod-probes | Pod | Makes sure that all Pods have safe probe configurations | default |
-| container-security-context | Pod | Makes sure that all pods have good securityContexts configured (*deprecated*, see [README_SECURITYCONTEXT.md](README_SECURITYCONTEXT.md) | default |
-| container-security-context-user-group-id | Pod | Makes sure that user and group ID are set and > 10000 | optional |
-| container-security-context-privileged | Pod | Makes sure that no Containers run in privileged mode | optional |
-| container-security-context-readonlyrootfilesystem | Pod | Makes sure that all Containers have a read only root filesystem | optional |
+| container-security-context | Pod | Makes sure that all pods have good securityContexts configured | default |
+| container-security-context-user-group-id | Pod | Makes sure that all pods have a security context with valid UID and GID set  | optional |
+| container-security-context-privileged | Pod | Makes sure that all pods have a unprivileged security context set | optional |
+| container-security-context-readonlyrootfilesystem | Pod | Makes sure that all pods have a security context with read only filesystem set | optional |
 | container-seccomp-profile | Pod | Makes sure that all pods have at a seccomp policy configured. | optional |
 | service-targets-pod | Service | Makes sure that all Services targets a Pod | default |
 | service-type | Service | Makes sure that the Service type is not NodePort | default |
@@ -25,6 +25,6 @@
 | deployment-has-host-podantiaffinity | Deployment | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | default |
 | statefulset-has-host-podantiaffinity | StatefulSet | Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ | default |
 | deployment-targeted-by-hpa-does-not-have-replicas-configured | Deployment | Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set | default |
-| statefulset-has-servicename | StatefulSet | Makes sure that StatefulSets have a existing serviceName that is headless. | default |
+| statefulset-has-servicename | StatefulSet | Makes sure that StatefulSets have a existing headless serviceName. | default |
 | label-values | all | Validates label values | default |
 | horizontalpodautoscaler-has-target | HorizontalPodAutoscaler | Makes sure that the HPA targets a valid object | default |

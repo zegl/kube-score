@@ -705,10 +705,186 @@ func TestStatefulSetSelectorLabels(t *testing.T) {
 			expectedErr:   nil,
 			expectedGrade: scorecard.GradeCritical,
 		},
+
+		// Match (expression)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					Selector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "app",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"aaa", "bbb", "bar"},
+							},
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeAllOK,
+		},
+
+		// No match (expression)
+		{
+			statefulset: appsv1.StatefulSet{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.StatefulSetSpec{
+					Selector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "app",
+								Operator: metav1.LabelSelectorOpNotIn,
+								Values:   []string{"aaa", "bbb", "bar"},
+							},
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeCritical,
+		},
 	}
 
 	for _, tc := range testcases {
-		score, err := statefulsetSelectorLabelsMatchTemplateMetadataLabels(tc.statefulset)
+		score, err := statefulSetSelectorLabelsMatching(tc.statefulset)
+		assert.Equal(t, tc.expectedErr, err)
+		assert.Equal(t, tc.expectedGrade, score.Grade)
+	}
+}
+
+func TestDeploymentSelectorLabels(t *testing.T) {
+	t.Parallel()
+
+	testcases := []struct {
+		statefulset   appsv1.Deployment
+		expectedErr   error
+		expectedGrade scorecard.Grade
+	}{
+		// Match
+		{
+			statefulset: appsv1.Deployment{
+				TypeMeta:   metav1.TypeMeta{Kind: "Deployment"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.DeploymentSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeAllOK,
+		},
+
+		// No match (labels differ)
+		{
+			statefulset: appsv1.Deployment{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.DeploymentSpec{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeCritical,
+		},
+
+		// Match (expression)
+		{
+			statefulset: appsv1.Deployment{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.DeploymentSpec{
+					Selector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "app",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"aaa", "bbb", "bar"},
+							},
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeAllOK,
+		},
+
+		// No match (expression)
+		{
+			statefulset: appsv1.Deployment{
+				TypeMeta:   metav1.TypeMeta{Kind: "StatefulSet"},
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Spec: appsv1.DeploymentSpec{
+					Selector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "app",
+								Operator: metav1.LabelSelectorOpNotIn,
+								Values:   []string{"aaa", "bbb", "bar"},
+							},
+						},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app": "bar",
+							},
+						},
+					},
+				},
+			},
+			expectedErr:   nil,
+			expectedGrade: scorecard.GradeCritical,
+		},
+	}
+
+	for _, tc := range testcases {
+		score, err := deploymentSelectorLabelsMatching(tc.statefulset)
 		assert.Equal(t, tc.expectedErr, err)
 		assert.Equal(t, tc.expectedGrade, score.Grade)
 	}
