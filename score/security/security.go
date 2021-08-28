@@ -9,11 +9,11 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterPodCheck("Container Security Context", `Makes sure that all pods have good securityContexts configured`, containerSecurityContext)
+	allChecks.RegisterOptionalPodCheck("Container Security Context", `Makes sure that all pods have good securityContexts configured`, containerSecurityContext)
 
-	allChecks.RegisterOptionalPodCheck("Container Security Context User Group ID", `Makes sure that all pods have a security context with valid UID and GID set `, containerSecurityContextUserGroupID)
-	allChecks.RegisterOptionalPodCheck("Container Security Context Privileged", "Makes sure that all pods have a unprivileged security context set", containerSecurityContextPrivileged)
-	allChecks.RegisterOptionalPodCheck("Container Security Context ReadOnlyRootFilesystem", "Makes sure that all pods have a security context with read only filesystem set", containerSecurityContextReadOnlyRootFilesystem)
+	allChecks.RegisterPodCheck("Container Security Context User Group ID", `Makes sure that all pods have a security context with valid UID and GID set `, containerSecurityContextUserGroupID)
+	allChecks.RegisterPodCheck("Container Security Context Privileged", "Makes sure that all pods have a unprivileged security context set", containerSecurityContextPrivileged)
+	allChecks.RegisterPodCheck("Container Security Context ReadOnlyRootFilesystem", "Makes sure that all pods have a security context with read only filesystem set", containerSecurityContextReadOnlyRootFilesystem)
 
 	allChecks.RegisterOptionalPodCheck("Container Seccomp Profile", `Makes sure that all pods have at a seccomp policy configured.`, podSeccompProfile)
 }
