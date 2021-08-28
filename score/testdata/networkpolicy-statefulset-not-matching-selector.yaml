@@ -17,6 +17,9 @@ metadata:
   name: statefulset-test-1
   namespace: testspace
 spec:
+  selector:
+    matchLabels:
+      app: foo
   template:
     metadata:
       labels:

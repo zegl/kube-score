@@ -6,12 +6,12 @@ spec:
   selector:
     matchLabels:
       app: foo
+  serviceName: svc-test-1
   template:
+    metadata:
+      labels:
+        app: bar
     spec:
       containers:
       - name: foobar
         image: foo/bar:123
-        resources:
-          limits:
-            cpu: 200m
-            memory: 1Gi

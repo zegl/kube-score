@@ -3,6 +3,9 @@ kind: StatefulSet
 metadata:
   name: statefulset-preffered-anti-affinity
 spec:
+  selector:
+    matchLabels:
+      app: foo
   replicas: 10
   template:
     metadata:
@@ -16,8 +19,8 @@ spec:
             podAffinityTerm:
               labelSelector:
                 matchExpressions:
-                - key: app 
-                  operator: In 
+                - key: app
+                  operator: In
                   values:
                   - foo
               topologyKey: kubernetes.io/hostname

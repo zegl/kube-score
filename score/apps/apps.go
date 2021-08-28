@@ -1,10 +1,11 @@
 package apps
 
 import (
+	"strings"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
@@ -16,7 +17,8 @@ func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter, allServices []
 	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
 	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
 	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
-	allChecks.RegisterStatefulSetCheck("StatefulSet has ServiceName", "Makes sure that StatefulSets have a existing headless serviceName.", statefulsetHasServiceName(allServices))
+	allChecks.RegisterStatefulSetCheck("StatefulSet has ServiceName", "Makes sure that StatefulSets have an existing headless serviceName.", statefulsetHasServiceName(allServices))
+	allChecks.RegisterStatefulSetCheck("StatefulSet Pod Selector labels match template metadata labels", "Ensure the StatefulSet selector labels match the template metadata labels.", statefulsetSelectorLabelsMatchTemplateMetadataLabels)
 }
 
 func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
@@ -157,4 +159,18 @@ func statefulsetHasServiceName(allServices []ks.Service) func(statefulset appsv1
 		score.AddComment("", "StatefulSet does not have a valid serviceName", "StatefulSets currently require a Headless Service to be responsible for the network identity of the Pods. You are responsible for creating this Service. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations")
 		return
 	}
+}
+
+func statefulsetSelectorLabelsMatchTemplateMetadataLabels(statefulset appsv1.StatefulSet) (score scorecard.TestScore, err error) {
+	if internal.LabelSelectorMatchesLabels(
+		statefulset.Spec.Selector.MatchLabels,
+		statefulset.Spec.Template.GetObjectMeta().GetLabels(),
+	) {
+		score.Grade = scorecard.GradeAllOK
+		return
+	}
+
+	score.Grade = scorecard.GradeCritical
+	score.AddComment("", "StatefulSet selector labels not matching template metadata labels", "StatefulSets require `.spec.selector.matchLabels` to match `.spec.template.metadata.labels`. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-selector")
+	return
 }
