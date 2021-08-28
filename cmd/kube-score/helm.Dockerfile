@@ -1,7 +1,7 @@
 FROM debian:stretch as downloader
 
-ARG HELM_VERSION=v2.14.3
-ARG HELM_SHA256SUM="38614a665859c0f01c9c1d84fa9a5027364f936814d1e47839b05327e400bf55"
+ARG HELM_VERSION=v2.17.0
+ARG HELM_SHA256SUM="f3bec3c7c55f6a9eb9e6586b8c503f370af92fe987fcbf741f37707606d70296"
 
 RUN apt-get update && \
     apt-get install -y curl && \
@@ -10,7 +10,7 @@ RUN apt-get update && \
     tar xzvf helm.tar.gz && \
     chmod +x /linux-amd64/helm
 
-FROM alpine:3.10.1
+FROM alpine:3.14.2
 RUN apk update && \
     apk upgrade && \
     apk add bash ca-certificates
