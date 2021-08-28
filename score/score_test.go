@@ -61,17 +61,6 @@ func testExpectedScore(t *testing.T, filename string, testcase string, expectedS
 	}, testcase, expectedScore)
 }
 
-func testExpectedScoreReader(t *testing.T, content io.Reader, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
-	return testExpectedScoreWithConfig(
-		t, config.Configuration{
-			AllFiles:          []ks.NamedReader{unnamedReader{content}},
-			KubernetesVersion: config.Semver{1, 18},
-		},
-		testcase,
-		expectedScore,
-	)
-}
-
 type unnamedReader struct {
 	io.Reader
 }

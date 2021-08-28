@@ -215,7 +215,19 @@ func TestPodSecurityContext(test *testing.T) {
 		output, err := yaml.Marshal(s)
 		assert.Nil(test, err, "caseID=%d", caseID)
 
-		comments := testExpectedScoreReader(test, bytes.NewReader(output), "Container Security Context", tc.expectedGrade)
+		comments := testExpectedScoreWithConfig(
+			test, config.Configuration{
+				AllFiles:          []ks.NamedReader{unnamedReader{bytes.NewReader(output)}},
+				KubernetesVersion: config.Semver{1, 18},
+				EnabledOptionalTests: map[string]struct{}{
+					"container-security-context": {},
+				},
+			},
+			"Container Security Context",
+			tc.expectedGrade,
+		)
+
+		// comments := testExpectedScoreReader(test, bytes.NewReader(output), "Container Security Context", tc.expectedGrade)
 
 		if tc.expectedComment != nil {
 			assert.Contains(test, comments, *tc.expectedComment, "caseID=%d", caseID)
@@ -225,27 +237,52 @@ func TestPodSecurityContext(test *testing.T) {
 
 func TestContainerSecurityContextPrivileged(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "pod-security-context-privileged.yaml", "Container Security Context", scorecard.GradeCritical)
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("pod-security-context-privileged.yaml")},
+		EnabledOptionalTests: map[string]struct{}{
+			"container-security-context": {},
+		},
+	}, "Container Security Context", scorecard.GradeCritical)
 }
 
 func TestContainerSecurityContextLowUser(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "pod-security-context-low-user-id.yaml", "Container Security Context", scorecard.GradeCritical)
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("pod-security-context-low-user-id.yaml")},
+		EnabledOptionalTests: map[string]struct{}{
+			"container-security-context": {},
+		},
+	}, "Container Security Context", scorecard.GradeCritical)
 }
 
 func TestContainerSecurityContextLowGroup(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "pod-security-context-low-group-id.yaml", "Container Security Context", scorecard.GradeCritical)
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("pod-security-context-low-group-id.yaml")},
+		EnabledOptionalTests: map[string]struct{}{
+			"container-security-context": {},
+		},
+	}, "Container Security Context", scorecard.GradeCritical)
 }
 
 func TestPodSecurityContextInherited(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "security-inherit-pod-security-context.yaml", "Container Security Context", scorecard.GradeAllOK)
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("security-inherit-pod-security-context.yaml")},
+		EnabledOptionalTests: map[string]struct{}{
+			"container-security-context": {},
+		},
+	}, "Container Security Context", scorecard.GradeAllOK)
 }
 
 func TestContainerSecurityContextAllGood(t *testing.T) {
 	t.Parallel()
-	c := testExpectedScore(t, "pod-security-context-all-good.yaml", "Container Security Context", scorecard.GradeAllOK)
+	c := testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
+		EnabledOptionalTests: map[string]struct{}{
+			"container-security-context": {},
+		},
+	}, "Container Security Context", scorecard.GradeAllOK)
 	assert.Empty(t, c)
 }
 
