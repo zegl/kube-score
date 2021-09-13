@@ -1,0 +1,12 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: testspace
+spec:
+  rules:
+    - host: foo.bar.network
+      # No http block — such ingresses can be used for redirects in nginx-ingress
+  tls:
+    - hosts:
+        - foo.bar.network

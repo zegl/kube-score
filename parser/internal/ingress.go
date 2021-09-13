@@ -73,12 +73,17 @@ func (i IngressV1beta1) Rules() []networkingv1.IngressRule {
 	}
 
 	for _, rule := range i.Spec.Rules {
+		var http *networkingv1.HTTPIngressRuleValue
+		if rule.HTTP != nil {
+			http = &networkingv1.HTTPIngressRuleValue{
+				Paths: paths(rule.HTTP.Paths),
+			}
+		}
+
 		res = append(res, networkingv1.IngressRule{
 			Host: rule.Host,
 			IngressRuleValue: networkingv1.IngressRuleValue{
-				HTTP: &networkingv1.HTTPIngressRuleValue{
-					Paths: paths(rule.HTTP.Paths),
-				},
+				HTTP: http,
 			},
 		})
 	}
@@ -121,12 +126,17 @@ func (i ExtensionsIngressV1beta1) Rules() []networkingv1.IngressRule {
 	}
 
 	for _, rule := range i.Spec.Rules {
+		var http *networkingv1.HTTPIngressRuleValue
+		if rule.HTTP != nil {
+			http = &networkingv1.HTTPIngressRuleValue{
+				Paths: paths(rule.HTTP.Paths),
+			}
+		}
+
 		res = append(res, networkingv1.IngressRule{
 			Host: rule.Host,
 			IngressRuleValue: networkingv1.IngressRuleValue{
-				HTTP: &networkingv1.HTTPIngressRuleValue{
-					Paths: paths(rule.HTTP.Paths),
-				},
+				HTTP: http,
 			},
 		})
 	}
