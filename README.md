@@ -6,7 +6,7 @@
 [![Build Status](https://circleci.com/gh/zegl/kube-score.svg?style=shield)](https://app.circleci.com/pipelines/github/zegl/kube-score?branch=master)
 [![Releases](https://img.shields.io/github/release-pre/zegl/kube-score.svg)](https://github.com/zegl/kube-score/releases)
 ![GitHub stars](https://img.shields.io/github/stars/zegl/kube-score.svg?label=github%20stars)
-[![Downloads](https://img.shields.io/github/downloads/zegl/kube-score/total.svg)]()
+![Downloads](https://img.shields.io/github/downloads/zegl/kube-score/total.svg)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/zegl/kube-score/blob/master/LICENSE)
 
 ---
