@@ -17,7 +17,7 @@ func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
 	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", `Makes sure that all Deployments are targeted by a PDB`, deploymentHas(budgets.PodDisruptionBudgets()))
 }
 
-func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, lables map[string]string) (bool, error) {
+func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[string]string) (bool, error) {
 	for _, budget := range budgets {
 		if budget.Namespace() != namespace {
 			continue
@@ -28,7 +28,7 @@ func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, lables map[
 			return false, fmt.Errorf("failed to create selector: %v", err)
 		}
 
-		if selector.Matches(internal.MapLables(lables)) {
+		if selector.Matches(internal.MapLables(labels)) {
 			return true, nil
 		}
 	}
