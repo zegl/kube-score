@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	policyv1 "k8s.io/api/policy/v1"
 	"log"
 	"strings"
 
@@ -21,6 +20,7 @@ import (
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -53,6 +53,7 @@ func addToScheme(scheme *runtime.Scheme) {
 	batchv1.AddToScheme(scheme)
 	batchv1beta1.AddToScheme(scheme)
 	policyv1beta1.AddToScheme(scheme)
+	policyv1.AddToScheme(scheme)
 }
 
 type detectKind struct {

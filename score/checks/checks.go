@@ -27,6 +27,7 @@ func New(cnf config.Configuration) *Checks {
 		ingresses:                make(map[string]IngressCheck),
 		cronjobs:                 make(map[string]CronJobCheck),
 		horizontalPodAutoscalers: make(map[string]HorizontalPodAutoscalerCheck),
+		poddisruptionbudgets:     make(map[string]PodDisruptionBudgetCheck),
 	}
 }
 
@@ -100,6 +101,12 @@ type HorizontalPodAutoscalerCheck struct {
 	Fn HorizontalPodAutoscalerCheckFn
 }
 
+type PodDisruptionBudgetCheckFn = func(ks.PodDisruptionBudget) scorecard.TestScore
+type PodDisruptionBudgetCheck struct {
+	ks.Check
+	Fn PodDisruptionBudgetCheckFn
+}
+
 type Checks struct {
 	all                      []ks.Check
 	metas                    map[string]MetaCheck
@@ -111,6 +118,7 @@ type Checks struct {
 	ingresses                map[string]IngressCheck
 	cronjobs                 map[string]CronJobCheck
 	horizontalPodAutoscalers map[string]HorizontalPodAutoscalerCheck
+	poddisruptionbudgets     map[string]PodDisruptionBudgetCheck
 
 	cnf config.Configuration
 }
@@ -315,6 +323,24 @@ func (c *Checks) registerNetworkPolicyCheck(ch NetworkPolicyCheck) {
 
 func (c *Checks) NetworkPolicies() map[string]NetworkPolicyCheck {
 	return c.networkpolicies
+}
+
+func (c *Checks) RegisterPodDisruptionBudgetCheck(name, comment string, fn PodDisruptionBudgetCheckFn) {
+	ch := NewCheck(name, "PodDisruptionBudget", comment, false)
+	c.registerPodDisruptionBudgetCheck(PodDisruptionBudgetCheck{ch, fn})
+}
+
+func (c *Checks) registerPodDisruptionBudgetCheck(ch PodDisruptionBudgetCheck) {
+	c.all = append(c.all, ch.Check)
+
+	if !c.isEnabled(ch.Check) {
+		return
+	}
+	c.poddisruptionbudgets[machineFriendlyName(ch.Name)] = ch
+}
+
+func (c *Checks) PodDisruptionBudgets() map[string]PodDisruptionBudgetCheck {
+	return c.poddisruptionbudgets
 }
 
 func (c *Checks) RegisterServiceCheck(name, comment string, fn ServiceCheckFn) {
