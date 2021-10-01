@@ -53,6 +53,66 @@ func antiAffinityTestCases() []testcase {
 			expectedSkipped: false,
 		},
 		{
+			// OK! (required) ( topology.kubernetes.io/zone )
+			expectedGrade: scorecard.GradeAllOK,
+			replicas:      i(5),
+			affinity: &corev1.Affinity{
+				PodAntiAffinity: &corev1.PodAntiAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
+						{
+							TopologyKey: "topology.kubernetes.io/zone",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app": "foo",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
+			// OK! (required) ( topology.kubernetes.io/region )
+			expectedGrade: scorecard.GradeAllOK,
+			replicas:      i(5),
+			affinity: &corev1.Affinity{
+				PodAntiAffinity: &corev1.PodAntiAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
+						{
+							TopologyKey: "topology.kubernetes.io/region",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app": "foo",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
+			// Not OK! (required) ( some other topology key )
+			expectedGrade: scorecard.GradeWarning,
+			replicas:      i(5),
+			affinity: &corev1.Affinity{
+				PodAntiAffinity: &corev1.PodAntiAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
+						{
+							TopologyKey: "topology.kubernetes.io/what-is-this-key",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app": "foo",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
 			// OK (preferred)
 			expectedGrade: scorecard.GradeAllOK,
 			replicas:      i(5),

@@ -117,11 +117,21 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 	return
 }
 
-func hasPodAntiAffinity(selfLables internal.MapLables, affinity *corev1.Affinity) bool {
+func hasPodAntiAffinity(selfLabels internal.MapLables, affinity *corev1.Affinity) bool {
+	approvedTopologyKeys := map[string]struct{}{
+		"kubernetes.io/hostname":        {},
+		"topology.kubernetes.io/region": {},
+		"topology.kubernetes.io/zone":   {},
+
+		// Deprecated in Kubernetes v1.17
+		"failure-domain.beta.kubernetes.io/region": {},
+		"failure-domain.beta.kubernetes.io/zone":   {},
+	}
+
 	for _, pref := range affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
-		if pref.PodAffinityTerm.TopologyKey == "kubernetes.io/hostname" {
+		if _, ok := approvedTopologyKeys[pref.PodAffinityTerm.TopologyKey]; ok {
 			if selector, err := metav1.LabelSelectorAsSelector(pref.PodAffinityTerm.LabelSelector); err == nil {
-				if selector.Matches(internal.MapLables(selfLables)) {
+				if selector.Matches(selfLabels) {
 					return true
 				}
 			}
@@ -129,9 +139,9 @@ func hasPodAntiAffinity(selfLables internal.MapLables, affinity *corev1.Affinity
 	}
 
 	for _, req := range affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution {
-		if req.TopologyKey == "kubernetes.io/hostname" {
+		if _, ok := approvedTopologyKeys[req.TopologyKey]; ok {
 			if selector, err := metav1.LabelSelectorAsSelector(req.LabelSelector); err == nil {
-				if selector.Matches(internal.MapLables(selfLables)) {
+				if selector.Matches(selfLabels) {
 					return true
 				}
 			}
