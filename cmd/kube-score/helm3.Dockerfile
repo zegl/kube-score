@@ -1,7 +1,7 @@
 FROM debian:stretch as downloader
 
-ARG HELM_VERSION=v3.6.3
-ARG HELM_SHA256SUM="07c100849925623dc1913209cd1a30f0a9b80a5b4d6ff2153c609d11b043e262"
+ARG HELM_VERSION=v3.7.0
+ARG HELM_SHA256SUM="096e30f54c3ccdabe30a8093f8e128dba76bb67af697b85db6ed0453a2701bf9"
 
 RUN apt-get update && \
     apt-get install -y curl && \
