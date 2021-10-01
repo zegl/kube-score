@@ -11,6 +11,7 @@
 | container-image-pull-policy | Pod | Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated. | default |
 | statefulset-has-poddisruptionbudget | StatefulSet | Makes sure that all StatefulSets are targeted by a PDB | default |
 | deployment-has-poddisruptionbudget | Deployment | Makes sure that all Deployments are targeted by a PDB | default |
+| poddisruptionbudget-has-policy | PodDisruptionBudget | Makes sure that PodDisruptionBudgets specify minAvailable or maxUnavailable | default |
 | pod-networkpolicy | Pod | Makes sure that all Pods are targeted by a NetworkPolicy | default |
 | networkpolicy-targets-pod | NetworkPolicy | Makes sure that all NetworkPolicies targets at least one Pod | default |
 | pod-probes | Pod | Makes sure that all Pods have safe probe configurations | default |
