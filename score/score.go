@@ -134,5 +134,12 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 		}
 	}
 
+	for _, pdb := range allObjects.PodDisruptionBudgets() {
+		o := newObject(pdb.GetTypeMeta(), pdb.GetObjectMeta())
+		for _, test := range allChecks.PodDisruptionBudgets() {
+			o.Add(test.Fn(pdb), test.Check, pdb)
+		}
+	}
+
 	return &scoreCard, nil
 }

@@ -15,9 +15,10 @@ import (
 func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
 	allChecks.RegisterStatefulSetCheck("StatefulSet has PodDisruptionBudget", `Makes sure that all StatefulSets are targeted by a PDB`, statefulSetHas(budgets.PodDisruptionBudgets()))
 	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", `Makes sure that all Deployments are targeted by a PDB`, deploymentHas(budgets.PodDisruptionBudgets()))
+	allChecks.RegisterPodDisruptionBudgetCheck("PodDisruptionBudget has policy", `Makes sure that PodDisruptionBudgets specify minAvailable or maxUnavailable`, hasPolicy)
 }
 
-func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, lables map[string]string) (bool, error) {
+func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[string]string) (bool, error) {
 	for _, budget := range budgets {
 		if budget.Namespace() != namespace {
 			continue
@@ -28,7 +29,7 @@ func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, lables map[
 			return false, fmt.Errorf("failed to create selector: %v", err)
 		}
 
-		if selector.Matches(internal.MapLables(lables)) {
+		if selector.Matches(internal.MapLables(labels)) {
 			return true, nil
 		}
 	}
@@ -84,4 +85,16 @@ func deploymentHas(budgets []ks.PodDisruptionBudget) func(appsv1.Deployment) (sc
 
 		return
 	}
+}
+
+func hasPolicy(pdb ks.PodDisruptionBudget) (score scorecard.TestScore) {
+	spec := pdb.Spec()
+	if spec.MinAvailable == nil && spec.MaxUnavailable == nil {
+		score.AddComment("", "PodDisruptionBudget missing policy", "PodDisruptionBudget should specify minAvailable or maxUnavailable.")
+		score.Grade = scorecard.GradeCritical
+	} else {
+		score.Grade = scorecard.GradeAllOK
+	}
+
+	return
 }
