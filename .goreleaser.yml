@@ -27,7 +27,7 @@ archives:
 dockers:
 - goos: linux
   goarch: amd64
-  binaries:
+  ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}"
@@ -36,7 +36,7 @@ dockers:
 
 - goos: linux
   goarch: amd64
-  binaries:
+  ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-helm"
@@ -45,7 +45,7 @@ dockers:
 
 - goos: linux
   goarch: amd64
-  binaries:
+  ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-helm3"
@@ -54,7 +54,7 @@ dockers:
 
 - goos: linux
   goarch: amd64
-  binaries:
+  ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-kustomize"
@@ -72,7 +72,7 @@ changelog:
 
 brews:
   - name: kube-score
-    github:
+    tap:
       owner: kube-score
       name: homebrew-tap
     folder: Formula
