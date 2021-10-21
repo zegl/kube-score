@@ -41,7 +41,7 @@ func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.De
 				}
 
 				score.Grade = scorecard.GradeCritical
-				score.AddComment("", "The deployment is targeted by a HPA, but a static replica count is configured in the DeploymentSpec", "When replicas is both statically set and managed by the HPA, the replicas will be changed to the statically configured count when the spec is applied, even if the HPA wants the replica count to be higher.")
+				score.AddComment("", "The deployment is targeted by a HPA, but a static replica count is configured in the DeploymentSpec", "When replicas are both statically set and managed by the HPA, the replicas will be changed to the statically configured count when the spec is applied, even if the HPA wants the replica count to be higher.")
 				return
 			}
 		}
