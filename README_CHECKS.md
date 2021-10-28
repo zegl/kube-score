@@ -15,7 +15,6 @@
 | pod-networkpolicy | Pod | Makes sure that all Pods are targeted by a NetworkPolicy | default |
 | networkpolicy-targets-pod | NetworkPolicy | Makes sure that all NetworkPolicies targets at least one Pod | default |
 | pod-probes | Pod | Makes sure that all Pods have safe probe configurations | default |
-| container-security-context | Pod | Makes sure that all pods have good securityContexts configured | optional |
 | container-security-context-user-group-id | Pod | Makes sure that all pods have a security context with valid UID and GID set  | default |
 | container-security-context-privileged | Pod | Makes sure that all pods have a unprivileged security context set | default |
 | container-security-context-readonlyrootfilesystem | Pod | Makes sure that all pods have a security context with read only filesystem set | default |
