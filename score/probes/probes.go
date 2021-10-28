@@ -99,6 +99,7 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 
 		if !isTargetedByService {
 			score.Grade = scorecard.GradeAllOK
+			score.Skipped = true
 			score.AddComment("", "The pod is not targeted by a service, skipping probe checks.", "")
 			return score
 		}
