@@ -25,7 +25,7 @@ kube-score is easy to install, and is available from the following sources:
 |-----------------------------------------------------|-----------------------------------------------------------------------------------------|
 | Pre-built binaries for macOS, Linux, and Windows    | [GitHub releases](https://github.com/zegl/kube-score/releases)                          |
 | Docker                                              | `docker pull zegl/kube-score` ([Docker Hub)](https://hub.docker.com/r/zegl/kube-score/) |
-| Homebrew  (macOS and Linux)                         | `brew install kube-score/tap/kube-score`                                                |
+| Homebrew  (macOS and Linux)                         | `brew install kube-score`                                                |
 | [Krew](https://krew.sigs.k8s.io/) (macOS and Linux) | `kubectl krew install score`                                                            |
 
 
