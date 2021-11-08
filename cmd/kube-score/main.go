@@ -34,7 +34,7 @@ func main() {
 	cmds := map[string]cmdFunc{
 		"score": func(helpName string, args []string) {
 			if err := scoreFiles(helpName, args); err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "Failed to score files: %v", err)
+				_, _ = fmt.Fprintf(os.Stderr, "Failed to score files: %v\n", err)
 				os.Exit(1)
 			}
 		},
