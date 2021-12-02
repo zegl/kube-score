@@ -23,9 +23,10 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 
 		withStable := map[string]map[string]recommendedApi{
 			"extensions/v1beta1": {
-				"Deployment": recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"DaemonSet":  recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"Ingress":    recommendedApi{"networking.k8s.io/v1beta1", config.Semver{1, 14}},
+				"Deployment":   recommendedApi{"apps/v1", config.Semver{1, 9}},
+				"DaemonSet":    recommendedApi{"apps/v1", config.Semver{1, 9}},
+				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
+				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
 			},
 			"apps/v1beta1": {
 				"Deployment":  recommendedApi{"apps/v1", config.Semver{1, 9}},
@@ -41,6 +42,10 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 			},
 			"policy/v1beta1": {
 				"PodDisruptionBudget": recommendedApi{"policy/v1", config.Semver{1, 21}},
+			},
+			"networking.k8s.io/v1beta1": {
+				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
+				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
 			},
 		}
 
