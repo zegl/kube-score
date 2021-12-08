@@ -44,9 +44,13 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 // Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
 // Additional configuration and tuning parameters can be provided via the config.
 func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
-	allChecks := RegisterAllChecks(allObjects, cnf)
-	scoreCard := scorecard.New()
+	return ForChecks(RegisterAllChecks(allObjects, cnf), allObjects, cnf)
+}
 
+// ForChecks runs the given list of tests against the files defined in the configuration and returns a scorecard.
+// Additional configuration and tuning parameters can be provided via the config.
+func ForChecks(allChecks *checks.Checks, allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
+	scoreCard := scorecard.New()
 	newObject := func(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *scorecard.ScoredObject {
 		return scoreCard.NewObject(typeMeta, objectMeta, cnf.UseIgnoreChecksAnnotation)
 	}
