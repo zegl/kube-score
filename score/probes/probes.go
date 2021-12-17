@@ -11,6 +11,10 @@ import (
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
+	CheckPodProbes(allChecks, services)
+}
+
+func CheckPodProbes(allChecks *checks.Checks, services ks.Services) {
 	allChecks.RegisterPodCheck("Pod Probes", `Makes sure that all Pods have safe probe configurations`, containerProbes(services.Services()))
 }
 

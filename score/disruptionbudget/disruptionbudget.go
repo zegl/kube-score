@@ -13,9 +13,33 @@ import (
 )
 
 func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
-	allChecks.RegisterStatefulSetCheck("StatefulSet has PodDisruptionBudget", `Makes sure that all StatefulSets are targeted by a PDB`, statefulSetHas(budgets.PodDisruptionBudgets()))
-	allChecks.RegisterDeploymentCheck("Deployment has PodDisruptionBudget", `Makes sure that all Deployments are targeted by a PDB`, deploymentHas(budgets.PodDisruptionBudgets()))
-	allChecks.RegisterPodDisruptionBudgetCheck("PodDisruptionBudget has policy", `Makes sure that PodDisruptionBudgets specify minAvailable or maxUnavailable`, hasPolicy)
+	CheckPodDisruptionBudgetHasPolicy(allChecks)
+	CheckStatefulSetHasPodDisruptionBudget(allChecks, budgets)
+	CheckDeploymentHasPodDisruptionBudget(allChecks, budgets)
+}
+
+func CheckStatefulSetHasPodDisruptionBudget(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
+	allChecks.RegisterStatefulSetCheck(
+		"StatefulSet has PodDisruptionBudget",
+		`Makes sure that all StatefulSets are targeted by a PDB`,
+		statefulSetHas(budgets.PodDisruptionBudgets()),
+	)
+}
+
+func CheckDeploymentHasPodDisruptionBudget(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
+	allChecks.RegisterDeploymentCheck(
+		"Deployment has PodDisruptionBudget",
+		`Makes sure that all Deployments are targeted by a PDB`,
+		deploymentHas(budgets.PodDisruptionBudgets()),
+	)
+}
+
+func CheckPodDisruptionBudgetHasPolicy(allChecks *checks.Checks) {
+	allChecks.RegisterPodDisruptionBudgetCheck(
+		"PodDisruptionBudget has policy",
+		`Makes sure that PodDisruptionBudgets specify minAvailable or maxUnavailable`,
+		hasPolicy,
+	)
 }
 
 func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[string]string) (bool, error) {

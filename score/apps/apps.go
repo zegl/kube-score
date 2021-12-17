@@ -15,14 +15,61 @@ import (
 )
 
 func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter, allServices []ks.Service) {
-	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
-	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
+	CheckDeploymentHasHostPodAntiAffinity(allChecks)
+	CheckStatefulSetHasHostPodAntiAffinity(allChecks)
+	CheckDeploymentTargetedByHPADoesNotHaveReplicasConfigured(allChecks, allHPAs)
+	CheckStatefulSetHasServiceName(allChecks, allServices)
 
-	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
-	allChecks.RegisterStatefulSetCheck("StatefulSet has ServiceName", "Makes sure that StatefulSets have an existing headless serviceName.", statefulsetHasServiceName(allServices))
+	CheckDeploymentPodSelectorLabelsMatchTemplateMetadataLabels(allChecks)
+	CheckStatefulSetPodSelectorLabelsMatchTemplateMetadataLabels(allChecks)
+}
 
-	allChecks.RegisterDeploymentCheck("Deployment Pod Selector labels match template metadata labels", "Ensure the StatefulSet selector labels match the template metadata labels.", deploymentSelectorLabelsMatching)
-	allChecks.RegisterStatefulSetCheck("StatefulSet Pod Selector labels match template metadata labels", "Ensure the StatefulSet selector labels match the template metadata labels.", statefulSetSelectorLabelsMatching)
+func CheckDeploymentHasHostPodAntiAffinity(allChecks *checks.Checks) {
+	allChecks.RegisterDeploymentCheck(
+		"Deployment has host PodAntiAffinity",
+		"Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/",
+		deploymentHasAntiAffinity,
+	)
+}
+
+func CheckStatefulSetHasHostPodAntiAffinity(allChecks *checks.Checks) {
+	allChecks.RegisterStatefulSetCheck(
+		"StatefulSet has host PodAntiAffinity",
+		"Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/",
+		statefulsetHasAntiAffinity,
+	)
+}
+
+func CheckDeploymentTargetedByHPADoesNotHaveReplicasConfigured(allChecks *checks.Checks, allHPAs []ks.HpaTargeter) {
+	allChecks.RegisterDeploymentCheck(
+		"Deployment targeted by HPA does not have replicas configured",
+		"Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set",
+		hpaDeploymentNoReplicas(allHPAs),
+	)
+}
+
+func CheckStatefulSetHasServiceName(allChecks *checks.Checks, allServices []ks.Service) {
+	allChecks.RegisterStatefulSetCheck(
+		"StatefulSet has ServiceName",
+		"Makes sure that StatefulSets have an existing headless serviceName.",
+		statefulsetHasServiceName(allServices),
+	)
+}
+
+func CheckDeploymentPodSelectorLabelsMatchTemplateMetadataLabels(allChecks *checks.Checks) {
+	allChecks.RegisterDeploymentCheck(
+		"Deployment Pod Selector labels match template metadata labels",
+		"Ensure the StatefulSet selector labels match the template metadata labels.",
+		deploymentSelectorLabelsMatching,
+	)
+}
+
+func CheckStatefulSetPodSelectorLabelsMatchTemplateMetadataLabels(allChecks *checks.Checks) {
+	allChecks.RegisterStatefulSetCheck(
+		"StatefulSet Pod Selector labels match template metadata labels",
+		"Ensure the StatefulSet selector labels match the template metadata labels.",
+		statefulSetSelectorLabelsMatching,
+	)
 }
 
 func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.Deployment) (scorecard.TestScore, error) {
@@ -31,8 +78,7 @@ func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.De
 		for _, hpa := range allHPAs {
 			target := hpa.HpaTarget()
 
-			if hpa.GetObjectMeta().Namespace == deployment.Namespace &&
-				strings.ToLower(target.Kind) == strings.ToLower(deployment.Kind) &&
+			if hpa.GetObjectMeta().Namespace == deployment.Namespace && strings.EqualFold(target.Kind, deployment.Kind) &&
 				target.Name == deployment.Name {
 
 				if deployment.Spec.Replicas == nil {

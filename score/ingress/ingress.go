@@ -9,6 +9,10 @@ import (
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
+	CheckIngressTargetsService(allChecks, services)
+}
+
+func CheckIngressTargetsService(allChecks *checks.Checks, services ks.Services) {
 	allChecks.RegisterIngressCheck("Ingress targets Service", `Makes sure that the Ingress targets a Service`, ingressTargetsService(services.Services()))
 }
 

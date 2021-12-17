@@ -9,7 +9,12 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
+	CheckLabelValues(allChecks)
+}
+
+func CheckLabelValues(allChecks *checks.Checks) {
 	allChecks.RegisterMetaCheck("Label values", "Validates label values", validateLabelValues)
+
 }
 
 func validateLabelValues(meta domain.BothMeta) (score scorecard.TestScore) {

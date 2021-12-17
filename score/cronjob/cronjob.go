@@ -7,6 +7,10 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
+	CheckCronJobHasDeadline(allChecks)
+}
+
+func CheckCronJobHasDeadline(allChecks *checks.Checks) {
 	allChecks.RegisterCronJobCheck("CronJob has deadline", `Makes sure that all CronJobs has a configured deadline`, cronJobHasDeadline)
 }
 

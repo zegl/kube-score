@@ -10,6 +10,10 @@ import (
 )
 
 func Register(kubernetesVersion config.Semver, allChecks *checks.Checks) {
+	CheckStableVersion(kubernetesVersion, allChecks)
+}
+
+func CheckStableVersion(kubernetesVersion config.Semver, allChecks *checks.Checks) {
 	allChecks.RegisterMetaCheck("Stable version", `Checks if the object is using a deprecated apiVersion`, metaStableAvailable(kubernetesVersion))
 }
 

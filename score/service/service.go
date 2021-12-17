@@ -10,7 +10,15 @@ import (
 )
 
 func Register(allChecks *checks.Checks, pods ks.Pods, podspeccers ks.PodSpeccers) {
+	CheckServiceTargetsPod(allChecks, pods, podspeccers)
+	CheckServiceType(allChecks)
+}
+
+func CheckServiceTargetsPod(allChecks *checks.Checks, pods ks.Pods, podspeccers ks.PodSpeccers) {
 	allChecks.RegisterServiceCheck("Service Targets Pod", `Makes sure that all Services targets a Pod`, serviceTargetsPod(pods.Pods(), podspeccers.PodSpeccers()))
+}
+
+func CheckServiceType(allChecks *checks.Checks) {
 	allChecks.RegisterServiceCheck("Service Type", `Makes sure that the Service type is not NodePort`, serviceType)
 }
 

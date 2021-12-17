@@ -3,20 +3,69 @@ package container
 import (
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/zegl/kube-score/config"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Register(allChecks *checks.Checks, cnf config.Configuration) {
-	allChecks.RegisterPodCheck("Container Resources", `Makes sure that all pods have resource limits and requests set. The --ignore-container-cpu-limit flag can be used to disable the requirement of having a CPU limit`, containerResources(!cnf.IgnoreContainerCpuLimitRequirement, !cnf.IgnoreContainerMemoryLimitRequirement))
-	allChecks.RegisterOptionalPodCheck("Container Resource Requests Equal Limits", `Makes sure that all pods have the same requests as limits on resources set.`, containerResourceRequestsEqualLimits)
-	allChecks.RegisterOptionalPodCheck("Container CPU Requests Equal Limits", `Makes sure that all pods have the same CPU requests as limits set.`, containerCPURequestsEqualLimits)
-	allChecks.RegisterOptionalPodCheck("Container Memory Requests Equal Limits", `Makes sure that all pods have the same memory requests as limits set.`, containerMemoryRequestsEqualLimits)
-	allChecks.RegisterPodCheck("Container Image Tag", `Makes sure that a explicit non-latest tag is used`, containerImageTag)
-	allChecks.RegisterPodCheck("Container Image Pull Policy", `Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated.`, containerImagePullPolicy)
+	CheckContainerResources(allChecks, cnf.IgnoreContainerCpuLimitRequirement, cnf.IgnoreContainerMemoryLimitRequirement)
+	CheckContainerResourceRequestsEqualLimits(allChecks)
+	CheckContainerCPURequestsEqualLimits(allChecks)
+	CheckContainerMemoryRequestsEqualLimits(allChecks)
+	CheckContainerImageTag(allChecks)
+	CheckContainerImagePullPolicy(allChecks)
+}
+
+func CheckContainerResources(allChecks *checks.Checks, ignoreContainerCpuLimitRequirement, ignoreContainerMemoryLimitRequirement bool) {
+	allChecks.RegisterPodCheck(
+		"Container Resources",
+		`Makes sure that all pods have resource limits and requests set. The --ignore-container-cpu-limit flag can be used to disable the requirement of having a CPU limit`,
+		containerResources(!ignoreContainerCpuLimitRequirement, !ignoreContainerMemoryLimitRequirement),
+	)
+}
+
+func CheckContainerResourceRequestsEqualLimits(allChecks *checks.Checks) {
+	allChecks.RegisterOptionalPodCheck(
+		"Container Resource Requests Equal Limits",
+		`Makes sure that all pods have the same requests as limits on resources set.`,
+		containerResourceRequestsEqualLimits,
+	)
+}
+
+func CheckContainerCPURequestsEqualLimits(allChecks *checks.Checks) {
+	allChecks.RegisterOptionalPodCheck(
+		"Container CPU Requests Equal Limits",
+		`Makes sure that all pods have the same CPU requests as limits set.`,
+		containerCPURequestsEqualLimits,
+	)
+}
+
+func CheckContainerMemoryRequestsEqualLimits(allChecks *checks.Checks) {
+	allChecks.RegisterOptionalPodCheck(
+		"Container Memory Requests Equal Limits",
+		`Makes sure that all pods have the same memory requests as limits set.`,
+		containerMemoryRequestsEqualLimits,
+	)
+}
+
+func CheckContainerImageTag(allChecks *checks.Checks) {
+	allChecks.RegisterPodCheck(
+		"Container Image Tag",
+		`Makes sure that a explicit non-latest tag is used`,
+		containerImageTag,
+	)
+}
+
+func CheckContainerImagePullPolicy(allChecks *checks.Checks) {
+	allChecks.RegisterPodCheck(
+		"Container Image Pull Policy",
+		`Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated.`,
+		containerImagePullPolicy,
+	)
 }
 
 // containerResources makes sure that the container has resource requests and limits set

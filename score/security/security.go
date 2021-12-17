@@ -9,15 +9,47 @@ import (
 )
 
 func Register(allChecks *checks.Checks) {
-	allChecks.RegisterPodCheck("Container Security Context User Group ID", `Makes sure that all pods have a security context with valid UID and GID set `, containerSecurityContextUserGroupID)
-	allChecks.RegisterPodCheck("Container Security Context Privileged", "Makes sure that all pods have a unprivileged security context set", containerSecurityContextPrivileged)
-	allChecks.RegisterPodCheck("Container Security Context ReadOnlyRootFilesystem", "Makes sure that all pods have a security context with read only filesystem set", containerSecurityContextReadOnlyRootFilesystem)
+	CheckContainerSecurityContextUserGroupID(allChecks)
+	CheckContainerSecurityContextPrivileged(allChecks)
+	CheckContainerSecurityContextReadOnlyRootFilesystem(allChecks)
 
-	allChecks.RegisterOptionalPodCheck("Container Seccomp Profile", `Makes sure that all pods have at a seccomp policy configured.`, podSeccompProfile)
+	CheckContainerSeccompProfile(allChecks)
+}
+
+func CheckContainerSecurityContextUserGroupID(allChecks *checks.Checks) {
+	allChecks.RegisterPodCheck(
+		"Container Security Context User Group ID",
+		`Makes sure that all pods have a security context with valid UID and GID set `,
+		containerSecurityContextUserGroupID,
+	)
+}
+
+func CheckContainerSecurityContextPrivileged(allChecks *checks.Checks) {
+	allChecks.RegisterPodCheck(
+		"Container Security Context Privileged",
+		"Makes sure that all pods have a unprivileged security context set",
+		containerSecurityContextPrivileged,
+	)
+}
+
+func CheckContainerSecurityContextReadOnlyRootFilesystem(allChecks *checks.Checks) {
+	allChecks.RegisterPodCheck(
+		"Container Security Context ReadOnlyRootFilesystem",
+		"Makes sure that all pods have a security context with read only filesystem set",
+		containerSecurityContextReadOnlyRootFilesystem,
+	)
+}
+
+func CheckContainerSeccompProfile(allChecks *checks.Checks) {
+	allChecks.RegisterOptionalPodCheck(
+		"Container Seccomp Profile",
+		`Makes sure that all pods have at a seccomp policy configured.`,
+		podSeccompProfile,
+	)
 }
 
 // containerSecurityContextReadOnlyRootFilesystem checks for pods using writeable root filesystems
-func containerSecurityContextReadOnlyRootFilesystem(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+func containerSecurityContextReadOnlyRootFilesystem(podTemplate corev1.PodTemplateSpec, _ metav1.TypeMeta) (score scorecard.TestScore) {
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)
 

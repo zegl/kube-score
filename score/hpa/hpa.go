@@ -7,6 +7,10 @@ import (
 )
 
 func Register(allChecks *checks.Checks, allTargetableObjs []domain.BothMeta) {
+	CheckHorizontalPodAutoscalerHasTarget(allChecks, allTargetableObjs)
+}
+
+func CheckHorizontalPodAutoscalerHasTarget(allChecks *checks.Checks, allTargetableObjs []domain.BothMeta) {
 	allChecks.RegisterHorizontalPodAutoscalerCheck("HorizontalPodAutoscaler has target", `Makes sure that the HPA targets a valid object`, hpaHasTarget(allTargetableObjs))
 }
 
