@@ -59,7 +59,7 @@ type ScoredObject struct {
 
 func (s ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
 	for _, o := range s.Checks {
-		if o.Skipped == false && o.Grade <= threshold {
+		if !o.Skipped && o.Grade <= threshold {
 			return true
 		}
 	}
