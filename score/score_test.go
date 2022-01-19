@@ -5,12 +5,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser"
 	"github.com/zegl/kube-score/scorecard"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func testFile(name string) *os.File {

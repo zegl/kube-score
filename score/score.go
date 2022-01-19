@@ -1,6 +1,8 @@
 package score
 
 import (
+	"kube-score/score/ephemeralstorage"
+
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/apps"
@@ -8,6 +10,7 @@ import (
 	"github.com/zegl/kube-score/score/container"
 	"github.com/zegl/kube-score/score/cronjob"
 	"github.com/zegl/kube-score/score/disruptionbudget"
+	"github.com/zegl/kube-score/score/ephemeralstorage"
 	"github.com/zegl/kube-score/score/hpa"
 	"github.com/zegl/kube-score/score/ingress"
 	"github.com/zegl/kube-score/score/meta"
@@ -17,7 +20,6 @@ import (
 	"github.com/zegl/kube-score/score/service"
 	"github.com/zegl/kube-score/score/stable"
 	"github.com/zegl/kube-score/scorecard"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -37,6 +39,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers(), allObjects.Services())
 	meta.Register(allChecks)
 	hpa.Register(allChecks, allObjects.Metas())
+	ephemeralstorage.Register(allChecks)
 
 	return allChecks
 }
