@@ -1,8 +1,6 @@
 package score
 
 import (
-	"kube-score/score/ephemeralstorage"
-
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/apps"
