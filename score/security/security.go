@@ -31,7 +31,7 @@ func containerSecurityContextReadOnlyRootFilesystem(podTemplate corev1.PodTempla
 			continue
 		}
 		sec := container.SecurityContext
-		if sec.ReadOnlyRootFilesystem == nil || *sec.ReadOnlyRootFilesystem == false {
+		if sec.ReadOnlyRootFilesystem == nil || !*sec.ReadOnlyRootFilesystem {
 			hasWritableRootFS = true
 			score.AddComment(container.Name, "The pod has a container with a writable root filesystem", "Set securityContext.readOnlyRootFilesystem to true")
 		}
