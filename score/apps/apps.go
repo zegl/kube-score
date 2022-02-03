@@ -32,7 +32,7 @@ func hpaDeploymentNoReplicas(allHPAs []ks.HpaTargeter) func(deployment appsv1.De
 			target := hpa.HpaTarget()
 
 			if hpa.GetObjectMeta().Namespace == deployment.Namespace &&
-				strings.ToLower(target.Kind) == strings.ToLower(deployment.Kind) &&
+				strings.EqualFold(target.Kind, deployment.Kind) &&
 				target.Name == deployment.Name {
 
 				if deployment.Spec.Replicas == nil {
