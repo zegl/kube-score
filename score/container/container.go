@@ -17,6 +17,8 @@ func Register(allChecks *checks.Checks, cnf config.Configuration) {
 	allChecks.RegisterOptionalPodCheck("Container Memory Requests Equal Limits", `Makes sure that all pods have the same memory requests as limits set.`, containerMemoryRequestsEqualLimits)
 	allChecks.RegisterPodCheck("Container Image Tag", `Makes sure that a explicit non-latest tag is used`, containerImageTag)
 	allChecks.RegisterPodCheck("Container Image Pull Policy", `Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated.`, containerImagePullPolicy)
+	allChecks.RegisterPodCheck("Container Ephemeral Storage Request and Limit", "Makes sure all pods have ephemeral-storage requests and limits set", containerStorageEphemeralRequestAndLimit)
+	allChecks.RegisterOptionalPodCheck("Container Ephemeral Storage Request Equals Limit", "Make sure all pods have matching ephemeral-storage requests and limits", containerStorageEphemeralRequestEqualsLimit)
 }
 
 // containerResources makes sure that the container has resource requests and limits set
@@ -201,4 +203,47 @@ func containerTag(image string) string {
 		return imageVersion
 	}
 	return ""
+}
+
+func containerStorageEphemeralRequestAndLimit(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+
+	allContainers := podTemplate.Spec.InitContainers
+	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+
+	score.Grade = scorecard.GradeAllOK
+
+	for _, container := range allContainers {
+		if container.Resources.Limits.StorageEphemeral().IsZero() {
+			score.AddComment(container.Name, "Ephemeral Storage limit is not set",
+				"Resource limits are recommended to avoid resource DDOS. Set resources.limits.ephemeral-storage")
+			score.Grade = scorecard.GradeCritical
+		} else if container.Resources.Requests.StorageEphemeral().IsZero() {
+			score.AddComment(container.Name, "Ephemeral Storage request is not set",
+				"Resource requests are recommended to make sure the application can start and run without crashing. Set resource.requests.ephemeral-storage")
+			score.Grade = scorecard.GradeWarning
+		}
+	}
+
+	return
+}
+
+func containerStorageEphemeralRequestEqualsLimit(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+
+	allContainers := podTemplate.Spec.InitContainers
+	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+
+	score.Grade = scorecard.GradeAllOK
+
+	for _, container := range allContainers {
+		if !container.Resources.Limits.StorageEphemeral().IsZero() && !container.Resources.Requests.StorageEphemeral().IsZero() {
+			requests := &container.Resources.Requests
+			limits := &container.Resources.Limits
+			if !requests.StorageEphemeral().Equal(*limits.StorageEphemeral()) {
+				score.AddComment(container.Name, "Ephemeral Storage request does not match limit", "Having equal requests and limits is recommended to avoid node resource DDOS during spikes")
+				score.Grade = scorecard.GradeCritical
+			}
+		}
+	}
+
+	return
 }

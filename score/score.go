@@ -8,7 +8,6 @@ import (
 	"github.com/zegl/kube-score/score/container"
 	"github.com/zegl/kube-score/score/cronjob"
 	"github.com/zegl/kube-score/score/disruptionbudget"
-	"github.com/zegl/kube-score/score/ephemeralstorage"
 	"github.com/zegl/kube-score/score/hpa"
 	"github.com/zegl/kube-score/score/ingress"
 	"github.com/zegl/kube-score/score/meta"
@@ -37,7 +36,6 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers(), allObjects.Services())
 	meta.Register(allChecks)
 	hpa.Register(allChecks, allObjects.Metas())
-	ephemeralstorage.Register(allChecks)
 
 	return allChecks
 }
