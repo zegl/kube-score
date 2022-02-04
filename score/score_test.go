@@ -307,6 +307,13 @@ func TestList(t *testing.T) {
 	assert.True(t, hasDeployment)
 }
 
+// Note the input file specifies a condition that would fail the optional matching request and limit test, but returns GradeAllOK
+// when only the default case is evaluated
+func TestPodContainerStorageEphemeralRequestAndLimitOK(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "pod-ephemeral-storage-request-nomatch-limit.yaml", "Container Ephemeral Storage Request and Limit", scorecard.GradeAllOK)
+}
+
 func TestPodContainerStorageEphemeralNoLimit(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "pod-ephemeral-storage-missing-limit.yaml", "Container Ephemeral Storage Request and Limit", scorecard.GradeCritical)
