@@ -249,6 +249,9 @@ func containerStorageEphemeralRequestEqualsLimit(podTemplate corev1.PodTemplateS
 	return
 }
 
+// List of ports to expose from the container. This is primarily informational. Not specifying a port here
+// does not prevent it from being exposed. Specifying it does not expose the port outside the cluster; that
+// requires a Service object. However misspecifying elements of this optional Container
 func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
 
 	allContainers := podTemplate.Spec.InitContainers
@@ -257,13 +260,19 @@ func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.Typ
 	score.Grade = scorecard.GradeAllOK
 
 	for _, container := range allContainers {
+		names := make(map[string]bool)
 		for _, port := range container.Ports {
+			if len(port.Name) > 0 {
+				if _, ok := names[port.Name]; !ok {
+					names[port.Name] = true
+				} else {
+					score.AddComment(container.Name, "Container Port Check", "Container ports.containerPort named ports must be unique")
+					score.Grade = scorecard.GradeCritical
+				}
+			}
 			if port.ContainerPort == 0 {
 				score.AddComment(container.Name, "Container Port Check", "Container ports.containerPort cannot be empty")
 				score.Grade = scorecard.GradeCritical
-			} else if port.HostPort == 0 {
-				score.AddComment(container.Name, "Container Port Check", "Container ports.hostPort not set. Do you intend to expose this service outside the cluster?")
-				score.Grade = scorecard.GradeWarning
 			}
 		}
 	}
