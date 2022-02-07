@@ -19,6 +19,7 @@ func Register(allChecks *checks.Checks, cnf config.Configuration) {
 	allChecks.RegisterPodCheck("Container Image Pull Policy", `Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated.`, containerImagePullPolicy)
 	allChecks.RegisterPodCheck("Container Ephemeral Storage Request and Limit", "Makes sure all pods have ephemeral-storage requests and limits set", containerStorageEphemeralRequestAndLimit)
 	allChecks.RegisterOptionalPodCheck("Container Ephemeral Storage Request Equals Limit", "Make sure all pods have matching ephemeral-storage requests and limits", containerStorageEphemeralRequestEqualsLimit)
+	allChecks.RegisterOptionalPodCheck("Container Ports Check", "Container Ports Checks", containerPortsCheck)
 }
 
 // containerResources makes sure that the container has resource requests and limits set
@@ -241,6 +242,28 @@ func containerStorageEphemeralRequestEqualsLimit(podTemplate corev1.PodTemplateS
 			if !requests.StorageEphemeral().Equal(*limits.StorageEphemeral()) {
 				score.AddComment(container.Name, "Ephemeral Storage request does not match limit", "Having equal requests and limits is recommended to avoid node resource DDOS during spikes")
 				score.Grade = scorecard.GradeCritical
+			}
+		}
+	}
+
+	return
+}
+
+func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+
+	allContainers := podTemplate.Spec.InitContainers
+	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+
+	score.Grade = scorecard.GradeAllOK
+
+	for _, container := range allContainers {
+		for _, port := range container.Ports {
+			if port.ContainerPort == 0 {
+				score.AddComment(container.Name, "Container Port Check", "Container ports.containerPort cannot be empty")
+				score.Grade = scorecard.GradeCritical
+			} else if port.HostPort == 0 {
+				score.AddComment(container.Name, "Container Port Check", "Container ports.hostPort not set. Do you intend to expose this service outside the cluster?")
+				score.Grade = scorecard.GradeWarning
 			}
 		}
 	}
