@@ -359,16 +359,16 @@ func TestPodContainerPortsContainerPortMissing(t *testing.T) {
 	}, "Container Ports Check", scorecard.GradeCritical)
 }
 
-func TestPodContainerPortsHostPortMissing(t *testing.T) {
+func TestPodContainerPortsDuplicateNames(t *testing.T) {
 	t.Parallel()
 
 	structMap := make(map[string]struct{})
 	structMap["container-ports-check"] = struct{}{}
 
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-missing-hostport.yaml")},
+		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-duplicate-names.yaml")},
 		EnabledOptionalTests: structMap,
-	}, "Container Ports Check", scorecard.GradeWarning)
+	}, "Container Ports Check", scorecard.GradeCritical)
 }
 
 func TestPodContainerPortsOK(t *testing.T) {
@@ -381,5 +381,4 @@ func TestPodContainerPortsOK(t *testing.T) {
 		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-ok.yaml")},
 		EnabledOptionalTests: structMap,
 	}, "Container Ports Check", scorecard.GradeAllOK)
-
 }
