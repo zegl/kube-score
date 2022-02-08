@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: app
+spec:
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+      - name: app
+        image: app:dev
+        imagePullPolicy: "Always"
+        ports:
+        - name: app
+          containerPort: 80
+          hostPort: 8080
+          protocol: TCP
+        - name: smtp
+          containerPort: 25
+          hostPort: 465
+          protocol: TCP

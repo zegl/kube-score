@@ -347,3 +347,38 @@ func TestPodContainerStorageEphemeralRequestNoMatchLimit(t *testing.T) {
 		EnabledOptionalTests: structMap,
 	}, "Container Ephemeral Storage Request Equals Limit", scorecard.GradeCritical)
 }
+
+func TestPodContainerPortsContainerPortMissing(t *testing.T) {
+	t.Parallel()
+	structMap := make(map[string]struct{})
+	structMap["container-ports-check"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-missing-containerport.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Ports Check", scorecard.GradeCritical)
+}
+
+func TestPodContainerPortsDuplicateNames(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-ports-check"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-duplicate-names.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Ports Check", scorecard.GradeCritical)
+}
+
+func TestPodContainerPortsOK(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-ports-check"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-ok.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Ports Check", scorecard.GradeAllOK)
+}
