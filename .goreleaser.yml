@@ -27,39 +27,68 @@ archives:
 dockers:
 - goos: linux
   goarch: amd64
+  use: buildx
   ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}"
   - "zegl/kube-score:latest"
   dockerfile: cmd/kube-score/Dockerfile
+  build_flag_templates:
+    - "--pull"
+    - "--platform=linux/amd64"
+
+- goos: linux
+  goarch: arm64
+  use: buildx
+  ids:
+    - kube-score
+  image_templates:
+    - "zegl/kube-score:{{ .Tag }}-arm64"
+    - "zegl/kube-score:latest-arm64"
+  dockerfile: cmd/kube-score/Dockerfile
+  build_flag_templates:
+    - "--pull"
+    - "--platform=linux/arm64"
 
 - goos: linux
   goarch: amd64
+  use: buildx
   ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-helm"
   - "zegl/kube-score:latest-helm"
   dockerfile: cmd/kube-score/helm.Dockerfile
+  build_flag_templates:
+    - "--pull"
+    - "--platform=linux/amd64"
 
 - goos: linux
   goarch: amd64
+  use: buildx
   ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-helm3"
   - "zegl/kube-score:latest-helm3"
   dockerfile: cmd/kube-score/helm3.Dockerfile
+  build_flag_templates:
+    - "--pull"
+    - "--platform=linux/amd64"
 
 - goos: linux
   goarch: amd64
+  use: buildx
   ids:
   - kube-score
   image_templates:
   - "zegl/kube-score:{{ .Tag }}-kustomize"
   - "zegl/kube-score:latest-kustomize"
   dockerfile: cmd/kube-score/kustomize.Dockerfile
+  build_flag_templates:
+    - "--pull"
+    - "--platform=linux/amd64"
 
 checksum:
   name_template: 'checksums.txt'
@@ -72,10 +101,13 @@ changelog:
 
 brews:
   - name: kube-score
+    ids:
+    - default
     tap:
       owner: kube-score
       name: homebrew-tap
     folder: Formula
+    license: MIT
     url_template: "https://github.com/zegl/kube-score/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     homepage: "https://kube-score.com/"
     install: |
