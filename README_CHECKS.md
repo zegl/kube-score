@@ -9,6 +9,9 @@
 | container-memory-requests-equal-limits | Pod | Makes sure that all pods have the same memory requests as limits set. | optional |
 | container-image-tag | Pod | Makes sure that a explicit non-latest tag is used | default |
 | container-image-pull-policy | Pod | Makes sure that the pullPolicy is set to Always. This makes sure that imagePullSecrets are always validated. | default |
+| container-ephemeral-storage-request-and-limit | Pod | Makes sure all pods have ephemeral-storage requests and limits set | default |
+| container-ephemeral-storage-request-equals-limit | Pod | Make sure all pods have matching ephemeral-storage requests and limits | optional |
+| container-ports-check | Pod | Container Ports Checks | optional |
 | statefulset-has-poddisruptionbudget | StatefulSet | Makes sure that all StatefulSets are targeted by a PDB | default |
 | deployment-has-poddisruptionbudget | Deployment | Makes sure that all Deployments are targeted by a PDB | default |
 | poddisruptionbudget-has-policy | PodDisruptionBudget | Makes sure that PodDisruptionBudgets specify minAvailable or maxUnavailable | default |
