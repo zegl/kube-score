@@ -158,3 +158,9 @@ go test -v github.com/zegl/kube-score/...
 ## Contributing?
 
 Do you want to help out? Take a look at the [Contributing Guidelines](./.github/CONTRIBUTING.md) for more info. 🤩
+
+## Sponsors
+
+The development of kube-score is proudly sponsored by [Sturdy](https://github.com/sturdy-dev/sturdy). 🐥
+
+<p align="center"><a href="https://getsturdy.com/?ref=kube-score"><img src="https://getsturdy.com/img/Sturdy-Logotype-Transparent.png" height="200"></a></p>
