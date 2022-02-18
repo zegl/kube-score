@@ -3,3 +3,4 @@
 /cmd/kube-score/dist/
 /cmd/kube-score/kube-score
 vendor
+coverage.txt
