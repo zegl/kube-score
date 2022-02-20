@@ -133,7 +133,7 @@ func ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 		}
 
 		// Convert to unix style newlines
-		fullFile = bytes.Replace(fullFile, []byte("\r\n"), []byte("\n"), -1)
+		fullFile = bytes.ReplaceAll(fullFile, []byte("\r\n"), []byte("\n"))
 
 		offset := 1 // Line numbers are 1 indexed
 

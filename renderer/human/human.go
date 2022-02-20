@@ -39,11 +39,12 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.
 		// Adjust to termsize
 		fmt.Fprintf(w, safeRepeat(" ", min(80, termWidth)-writtenHeaderChars-2))
 
-		if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
+		switch {
+		case scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical):
 			fmt.Fprintf(w, "💥\n")
-		} else if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeWarning) {
+		case scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeWarning):
 			fmt.Fprintf(w, "🤔\n")
-		} else {
+		default:
 			fmt.Fprintf(w, "✅\n")
 		}
 
@@ -66,7 +67,8 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int)
 
 	var col color.Attribute
 
-	if card.Skipped || card.Grade >= scorecard.GradeAllOK {
+	switch {
+	case card.Skipped || card.Grade >= scorecard.GradeAllOK:
 		// Higher than or equal to --threshold-ok
 		col = color.FgGreen
 
@@ -75,10 +77,10 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int)
 			return w
 		}
 
-	} else if card.Grade >= scorecard.GradeWarning {
+	case card.Grade >= scorecard.GradeWarning:
 		// Higher than or equal to --threshold-warning
 		col = color.FgYellow
-	} else {
+	default:
 		// All lower than both --threshold-ok and --threshold-warning are critical
 		col = color.FgRed
 	}

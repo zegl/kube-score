@@ -1,7 +1,6 @@
 package score
 
 import (
-	"io"
 	"os"
 	"testing"
 
@@ -58,14 +57,6 @@ func testExpectedScore(t *testing.T, filename string, testcase string, expectedS
 		AllFiles:          []ks.NamedReader{testFile(filename)},
 		KubernetesVersion: config.Semver{1, 18},
 	}, testcase, expectedScore)
-}
-
-type unnamedReader struct {
-	io.Reader
-}
-
-func (unnamedReader) Name() string {
-	return ""
 }
 
 func TestPodContainerNoResources(t *testing.T) {

@@ -53,14 +53,15 @@ func containerResources(requireCPULimit bool, requireMemoryLimit bool) func(core
 			}
 		}
 
-		if len(allContainers) == 0 {
+		switch {
+		case len(allContainers) == 0:
 			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "No containers defined", "")
-		} else if hasMissingLimit {
+		case hasMissingLimit:
 			score.Grade = scorecard.GradeCritical
-		} else if hasMissingRequest {
+		case hasMissingRequest:
 			score.Grade = scorecard.GradeWarning
-		} else {
+		default:
 			score.Grade = scorecard.GradeAllOK
 		}
 

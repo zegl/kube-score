@@ -1,10 +1,11 @@
 package hpa
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	"github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"

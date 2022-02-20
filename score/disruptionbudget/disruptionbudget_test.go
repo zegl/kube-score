@@ -1,9 +1,10 @@
 package disruptionbudget
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	"testing"
 
 	"github.com/zegl/kube-score/scorecard"
 )

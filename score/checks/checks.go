@@ -43,7 +43,7 @@ func NewCheck(name, targetType, comment string, optional bool) ks.Check {
 
 func machineFriendlyName(in string) string {
 	in = strings.ToLower(in)
-	in = strings.Replace(in, " ", "-", -1)
+	in = strings.ReplaceAll(in, " ", "-")
 	return in
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	ks "github.com/zegl/kube-score/domain"
