@@ -19,7 +19,7 @@ func TestParse(t *testing.T) {
 	}{
 		{
 			"testdata/invalid-yaml.yaml",
-			fmt.Errorf("Failed to parse /v1, Kind=Service: err=v1.Service.Spec: v1.ServiceSpec.Ports: []v1.ServicePort: v1.ServicePort.NodePort: readUint32: unexpected character: \xff, error found in #10 byte of ...|odePort\":\"${PORT}\",\"|..., bigger context ...|\"namespace\":\"test\"},\"spec\":{\"ports\":[{\"nodePort\":\"${PORT}\",\"port\":\"${PORT_EXPOSE}\",\"targetPort\":\"${P|..."),
+			fmt.Errorf("Failed to parse /v1, Kind=Service: err=json: cannot unmarshal string into Go struct field ServicePort.spec.ports.nodePort of type int32"),
 		}, {
 			"testdata/valid-yaml.yaml",
 			nil,
