@@ -65,15 +65,16 @@ func podHasNetworkPolicy(allNetpols []ks.NetworkPolicy) func(spec corev1.PodTemp
 			}
 		}
 
-		if hasMatchingEgressNetpol && hasMatchingIngressNetpol {
+		switch {
+		case hasMatchingEgressNetpol && hasMatchingIngressNetpol:
 			score.Grade = scorecard.GradeAllOK
-		} else if hasMatchingEgressNetpol && !hasMatchingIngressNetpol {
+		case hasMatchingEgressNetpol && !hasMatchingIngressNetpol:
 			score.Grade = scorecard.GradeWarning
 			score.AddComment("", "The pod does not have a matching ingress NetworkPolicy", "Add a ingress policy to the pods NetworkPolicy")
-		} else if hasMatchingIngressNetpol && !hasMatchingEgressNetpol {
+		case hasMatchingIngressNetpol && !hasMatchingEgressNetpol:
 			score.Grade = scorecard.GradeWarning
 			score.AddComment("", "The pod does not have a matching egress NetworkPolicy", "Add a egress policy to the pods NetworkPolicy")
-		} else {
+		default:
 			score.Grade = scorecard.GradeCritical
 			score.AddComment("", "The pod does not have a matching NetworkPolicy", "Create a NetworkPolicy that targets this pod to control who/what can communicate with this pod. Note, this feature needs to be supported by the CNI implementation used in the Kubernetes cluster to have an effect.")
 		}

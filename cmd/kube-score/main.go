@@ -111,7 +111,7 @@ func scoreFiles(binName string, args []string) error {
 
 	err := fs.Parse(args)
 	if err != nil {
-		return fmt.Errorf("failed to parse files: %s", err)
+		return fmt.Errorf("failed to parse files: %w", err)
 	}
 
 	if *printHelp {
@@ -183,11 +183,12 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	}
 
 	var exitCode int
-	if scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical) {
+	switch {
+	case scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeCritical):
 		exitCode = 1
-	} else if *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeWarning) {
+	case *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeWarning):
 		exitCode = 1
-	} else {
+	default:
 		exitCode = 0
 	}
 
@@ -195,25 +196,26 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 
 	version := getOutputVersion(*outputVersion, *outputFormat)
 
-	if *outputFormat == "json" && version == "v1" {
+	switch {
+	case *outputFormat == "json" && version == "v1":
 		d, _ := json.MarshalIndent(scoreCard, "", "    ")
 		w := bytes.NewBufferString("")
 		w.WriteString(string(d))
 		r = w
-	} else if *outputFormat == "json" && version == "v2" {
+	case *outputFormat == "json" && version == "v2":
 		r = json_v2.Output(scoreCard)
-	} else if *outputFormat == "human" && version == "v1" {
+	case *outputFormat == "human" && version == "v1":
 		termWidth, _, err := terminal.GetSize(int(os.Stdin.Fd()))
 		// Assume a width of 80 if it can't be detected
 		if err != nil {
 			termWidth = 80
 		}
 		r = human.Human(scoreCard, *verboseOutput, termWidth)
-	} else if *outputFormat == "ci" && version == "v1" {
+	case *outputFormat == "ci" && version == "v1":
 		r = ci.CI(scoreCard)
-	} else if *outputFormat == "sarif" {
+	case *outputFormat == "sarif":
 		r = sarif.Output(scoreCard)
-	} else {
+	default:
 		return fmt.Errorf("error: Unknown --output-format or --output-version")
 	}
 

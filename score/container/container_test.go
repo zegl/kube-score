@@ -1,8 +1,9 @@
 package container
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"

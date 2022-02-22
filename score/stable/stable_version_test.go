@@ -1,9 +1,10 @@
 package stable
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
