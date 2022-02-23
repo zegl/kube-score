@@ -1,26 +1,25 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
 )
 
-type parseError []error
+type parseErrors []error
 
-func (p parseError) Error() string {
+func (p parseErrors) Error() string {
 	var s []string
 	for _, e := range p {
 		s = append(s, e.Error())
 	}
-	return fmt.Sprintf(strings.Join(s, "\n"))
+	return strings.Join(s, "\n")
 }
 
-func (p *parseError) AddIfErr(err error) {
+func (p *parseErrors) AddIfErr(err error) {
 	if err != nil {
 		*p = append(*p, err)
 	}
 }
 
-func (p parseError) Any() bool {
+func (p parseErrors) Any() bool {
 	return len(p) > 0
 }

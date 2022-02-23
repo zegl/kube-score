@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 
 	flag "github.com/spf13/pflag"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -205,7 +205,7 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	case *outputFormat == "json" && version == "v2":
 		r = json_v2.Output(scoreCard)
 	case *outputFormat == "human" && version == "v1":
-		termWidth, _, err := terminal.GetSize(int(os.Stdin.Fd()))
+		termWidth, _, err := term.GetSize(int(os.Stdin.Fd()))
 		// Assume a width of 80 if it can't be detected
 		if err != nil {
 			termWidth = 80
@@ -242,7 +242,10 @@ func listChecks(binName string, args []string) {
 	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
 	setDefault(fs, binName, "list", false)
-	fs.Parse(args)
+	err := fs.Parse(args)
+	if err != nil {
+		panic(err)
+	}
 
 	if *printHelp {
 		fs.Usage()
@@ -257,7 +260,10 @@ func listChecks(binName string, args []string) {
 		if c.Optional {
 			optionalString = "optional"
 		}
-		output.Write([]string{c.ID, c.TargetType, c.Comment, optionalString})
+		err := output.Write([]string{c.ID, c.TargetType, c.Comment, optionalString})
+		if err != nil {
+			panic(err)
+		}
 	}
 	output.Flush()
 }

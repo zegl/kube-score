@@ -43,17 +43,58 @@ func init() {
 	addToScheme(scheme)
 }
 
-func addToScheme(scheme *runtime.Scheme) {
-	corev1.AddToScheme(scheme)
-	appsv1.AddToScheme(scheme)
-	networkingv1.AddToScheme(scheme)
-	extensionsv1beta1.AddToScheme(scheme)
-	appsv1beta1.AddToScheme(scheme)
-	appsv1beta2.AddToScheme(scheme)
-	batchv1.AddToScheme(scheme)
-	batchv1beta1.AddToScheme(scheme)
-	policyv1beta1.AddToScheme(scheme)
-	policyv1.AddToScheme(scheme)
+func addToScheme(scheme *runtime.Scheme) error {
+	err := corev1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = appsv1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = networkingv1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = extensionsv1beta1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = appsv1beta1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = appsv1beta2.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = batchv1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = batchv1beta1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = policyv1beta1.AddToScheme(scheme)
+	if err != nil {
+		return err
+	}
+
+	err = policyv1.AddToScheme(scheme)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
 }
 
 type detectKind struct {
@@ -222,44 +263,44 @@ func detectFileLocation(fileName string, fileOffset int, fileContents []byte) ks
 func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileName string, fileOffset int, fileContents []byte) error {
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		s.podspecers = append(s.podspecers, ps)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{ps.GetTypeMeta(), ps.GetObjectMeta(), ps})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ps.GetTypeMeta(), ObjectMeta: ps.GetObjectMeta(), FileLocationer: ps})
 	}
 
 	fileLocation := detectFileLocation(fileName, fileOffset, fileContents)
 
-	var errs parseError
+	var errs parseErrors
 
 	switch detectedVersion {
 	case corev1.SchemeGroupVersion.WithKind("Pod"):
 		var pod corev1.Pod
 		errs.AddIfErr(decode(fileContents, &pod))
-		p := internalpod.Pod{pod, fileLocation}
+		p := internalpod.Pod{Obj: pod, Location: fileLocation}
 		s.pods = append(s.pods, p)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{pod.TypeMeta, pod.ObjectMeta, p})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: pod.TypeMeta, ObjectMeta: pod.ObjectMeta, FileLocationer: p})
 
 	case batchv1.SchemeGroupVersion.WithKind("Job"):
 		var job batchv1.Job
 		errs.AddIfErr(decode(fileContents, &job))
-		addPodSpeccer(internal.Batchv1Job{job, fileLocation})
+		addPodSpeccer(internal.Batchv1Job{Job: job, Location: fileLocation})
 
 	case batchv1beta1.SchemeGroupVersion.WithKind("CronJob"):
 		var cronjob batchv1beta1.CronJob
 		errs.AddIfErr(decode(fileContents, &cronjob))
-		cjob := internalcronjob.CronJobV1beta1{cronjob, fileLocation}
+		cjob := internalcronjob.CronJobV1beta1{Obj: cronjob, Location: fileLocation}
 		addPodSpeccer(cjob)
 		s.cronjobs = append(s.cronjobs, cjob)
 
 	case batchv1.SchemeGroupVersion.WithKind("CronJob"):
 		var cronjob batchv1.CronJob
 		errs.AddIfErr(decode(fileContents, &cronjob))
-		cjob := internalcronjob.CronJobV1{cronjob, fileLocation}
+		cjob := internalcronjob.CronJobV1{Obj: cronjob, Location: fileLocation}
 		addPodSpeccer(cjob)
 		s.cronjobs = append(s.cronjobs, cjob)
 
 	case appsv1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1.Deployment
 		errs.AddIfErr(decode(fileContents, &deployment))
-		deploy := internal.Appsv1Deployment{deployment, fileLocation}
+		deploy := internal.Appsv1Deployment{Obj: deployment, Location: fileLocation}
 		addPodSpeccer(deploy)
 
 		// TODO: Support older versions of Deployment as well?
@@ -267,20 +308,20 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 	case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1beta1.Deployment
 		errs.AddIfErr(decode(fileContents, &deployment))
-		addPodSpeccer(internal.Appsv1beta1Deployment{deployment, fileLocation})
+		addPodSpeccer(internal.Appsv1beta1Deployment{Deployment: deployment, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1beta2.Deployment
 		errs.AddIfErr(decode(fileContents, &deployment))
-		addPodSpeccer(internal.Appsv1beta2Deployment{deployment, fileLocation})
+		addPodSpeccer(internal.Appsv1beta2Deployment{Deployment: deployment, Location: fileLocation})
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment extensionsv1beta1.Deployment
 		errs.AddIfErr(decode(fileContents, &deployment))
-		addPodSpeccer(internal.Extensionsv1beta1Deployment{deployment, fileLocation})
+		addPodSpeccer(internal.Extensionsv1beta1Deployment{Deployment: deployment, Location: fileLocation})
 
 	case appsv1.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1.StatefulSet
 		errs.AddIfErr(decode(fileContents, &statefulSet))
-		sset := internal.Appsv1StatefulSet{statefulSet, fileLocation}
+		sset := internal.Appsv1StatefulSet{Obj: statefulSet, Location: fileLocation}
 		addPodSpeccer(sset)
 
 		// TODO: Support older versions of StatefulSet as well?
@@ -288,93 +329,101 @@ func decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion sche
 	case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta1.StatefulSet
 		errs.AddIfErr(decode(fileContents, &statefulSet))
-		addPodSpeccer(internal.Appsv1beta1StatefulSet{statefulSet, fileLocation})
+		addPodSpeccer(internal.Appsv1beta1StatefulSet{StatefulSet: statefulSet, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta2.StatefulSet
 		errs.AddIfErr(decode(fileContents, &statefulSet))
-		addPodSpeccer(internal.Appsv1beta2StatefulSet{statefulSet, fileLocation})
+		addPodSpeccer(internal.Appsv1beta2StatefulSet{StatefulSet: statefulSet, Location: fileLocation})
 
 	case appsv1.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset appsv1.DaemonSet
 		errs.AddIfErr(decode(fileContents, &daemonset))
-		addPodSpeccer(internal.Appsv1DaemonSet{daemonset, fileLocation})
+		addPodSpeccer(internal.Appsv1DaemonSet{DaemonSet: daemonset, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset appsv1beta2.DaemonSet
 		errs.AddIfErr(decode(fileContents, &daemonset))
-		addPodSpeccer(internal.Appsv1beta2DaemonSet{daemonset, fileLocation})
+		addPodSpeccer(internal.Appsv1beta2DaemonSet{DaemonSet: daemonset, Location: fileLocation})
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset extensionsv1beta1.DaemonSet
 		errs.AddIfErr(decode(fileContents, &daemonset))
-		addPodSpeccer(internal.Extensionsv1beta1DaemonSet{daemonset, fileLocation})
+		addPodSpeccer(internal.Extensionsv1beta1DaemonSet{DaemonSet: daemonset, Location: fileLocation})
 
 	case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 		var netpol networkingv1.NetworkPolicy
 		errs.AddIfErr(decode(fileContents, &netpol))
-		np := internalnetpol.NetworkPolicy{netpol, fileLocation}
+		np := internalnetpol.NetworkPolicy{Obj: netpol, Location: fileLocation}
 		s.networkPolicies = append(s.networkPolicies, np)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{netpol.TypeMeta, netpol.ObjectMeta, np})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: netpol.TypeMeta, ObjectMeta: netpol.ObjectMeta, FileLocationer: np})
 
 	case corev1.SchemeGroupVersion.WithKind("Service"):
 		var service corev1.Service
 		errs.AddIfErr(decode(fileContents, &service))
-		serv := internalservice.Service{service, fileLocation}
+		serv := internalservice.Service{Obj: service, Location: fileLocation}
 		s.services = append(s.services, serv)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{service.TypeMeta, service.ObjectMeta, serv})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: service.TypeMeta, ObjectMeta: service.ObjectMeta, FileLocationer: serv})
 
 	case policyv1beta1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 		var disruptBudget policyv1beta1.PodDisruptionBudget
 		errs.AddIfErr(decode(fileContents, &disruptBudget))
-		dbug := internalpdb.PodDisruptionBudgetV1beta1{disruptBudget, fileLocation}
+		dbug := internalpdb.PodDisruptionBudgetV1beta1{Obj: disruptBudget, Location: fileLocation}
 		s.podDisruptionBudgets = append(s.podDisruptionBudgets, dbug)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta, dbug})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: disruptBudget.TypeMeta, ObjectMeta: disruptBudget.ObjectMeta, FileLocationer: dbug})
 	case policyv1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 		var disruptBudget policyv1.PodDisruptionBudget
 		errs.AddIfErr(decode(fileContents, &disruptBudget))
-		dbug := internalpdb.PodDisruptionBudgetV1{disruptBudget, fileLocation}
+		dbug := internalpdb.PodDisruptionBudgetV1{Obj: disruptBudget, Location: fileLocation}
 		s.podDisruptionBudgets = append(s.podDisruptionBudgets, dbug)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{disruptBudget.TypeMeta, disruptBudget.ObjectMeta, dbug})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{
+			TypeMeta:       disruptBudget.TypeMeta,
+			ObjectMeta:     disruptBudget.ObjectMeta,
+			FileLocationer: dbug,
+		})
 
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress extensionsv1beta1.Ingress
 		errs.AddIfErr(decode(fileContents, &ingress))
-		ing := internal.ExtensionsIngressV1beta1{ingress, fileLocation}
+		ing := internal.ExtensionsIngressV1beta1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta, ing})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
 
 	case networkingv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress networkingv1beta1.Ingress
 		errs.AddIfErr(decode(fileContents, &ingress))
-		ing := internal.IngressV1beta1{ingress, fileLocation}
+		ing := internal.IngressV1beta1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta, ing})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
 
 	case networkingv1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress networkingv1.Ingress
 		errs.AddIfErr(decode(fileContents, &ingress))
-		ing := internal.IngressV1{ingress, fileLocation}
+		ing := internal.IngressV1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{ingress.TypeMeta, ingress.ObjectMeta, ing})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
 
 	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv1.HorizontalPodAutoscaler
 		errs.AddIfErr(decode(fileContents, &hpa))
-		h := internal.HPAv1{hpa, fileLocation}
+		h := internal.HPAv1{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta, h})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
 
 	case autoscalingv2beta1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv2beta1.HorizontalPodAutoscaler
 		errs.AddIfErr(decode(fileContents, &hpa))
-		h := internal.HPAv2beta1{hpa, fileLocation}
+		h := internal.HPAv2beta1{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta, h})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
 
 	case autoscalingv2beta2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv2beta2.HorizontalPodAutoscaler
 		errs.AddIfErr(decode(fileContents, &hpa))
-		h := internal.HPAv2beta2{hpa, fileLocation}
+		h := internal.HPAv2beta2{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{hpa.TypeMeta, hpa.ObjectMeta, h})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{
+			TypeMeta:       hpa.TypeMeta,
+			ObjectMeta:     hpa.ObjectMeta,
+			FileLocationer: h,
+		})
 
 	default:
 		if cnf.VerboseOutput > 1 {
