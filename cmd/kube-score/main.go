@@ -79,7 +79,7 @@ Actions:
 	score	 Checks all files in the input, and gives them a score and recommendations
 	list	 Prints a CSV list of all available score checks
 	version	 Print the version of kube-score
-	mkconfig Creates a .kube-score.yml configuration file from kube-score's registered checks in the current working directory
+	mkconfig Create a configuration file from kube-score's registered checks 
 	help	 Print this message`+"\n\n", binName, binName)
 
 		if displayForMoreInfo {
@@ -158,13 +158,10 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		allFilePointers = append(allFilePointers, namedReader{Reader: fp, name: filename})
 	}
 
-	// load kube-score.yml configuration file (if present)
+	// load configuration file
 	cfg := loadConfigFile(*configFile)
 	excludeChks := excludeChecks(&cfg)
 	includeChks := includeChecks(&cfg)
-
-	fmt.Println("excludeChks <- ", excludeChks)
-	fmt.Println("includeChks <- ", includeChks)
 
 	*ignoreTests = append(*ignoreTests, excludeChks...)
 	*optionalTests = append(*optionalTests, includeChks...)
@@ -172,8 +169,9 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	ignoredTests := listToStructMap(ignoreTests)
 	enabledOptionalTests := listToStructMap(optionalTests)
 
-	fmt.Println("ignoredTest <- ", ignoredTests)
-	fmt.Println("enabledOptionalTests <- ", optionalTests)
+	if cfg.DisableIgnoreChecksAnnotations {
+		disableIgnoreChecksAnnotation = &cfg.DisableIgnoreChecksAnnotations
+	}
 
 	kubeVer, err := config.ParseSemver(*kubernetesVersion)
 	if err != nil {
