@@ -15,7 +15,7 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.Reader {
+func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) (io.Reader, error) {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
@@ -52,13 +52,13 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.
 			r := outputHumanStep(card, verboseOutput, termWidth)
 			_, err := io.Copy(w, r)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 
 		}
 	}
 
-	return w
+	return w, nil
 }
 
 func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int) io.Reader {

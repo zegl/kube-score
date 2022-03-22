@@ -40,7 +40,9 @@ var scheme = runtime.NewScheme()
 var codecs = serializer.NewCodecFactory(scheme)
 
 func init() {
-	addToScheme(scheme)
+	if err := addToScheme(scheme); err != nil {
+		panic(err)
+	}
 }
 
 func addToScheme(scheme *runtime.Scheme) error {
@@ -91,7 +93,7 @@ func addToScheme(scheme *runtime.Scheme) error {
 
 	err = policyv1.AddToScheme(scheme)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	return nil

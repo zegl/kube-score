@@ -40,7 +40,10 @@ func main() {
 		},
 
 		"list": func(helpName string, args []string) {
-			listChecks(helpName, args)
+			if err := listChecks(helpName, args); err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Failed to list checks: %v\n", err)
+				os.Exit(1)
+			}
 		},
 
 		"version": func(helpName string, args []string) {
@@ -210,7 +213,8 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		if err != nil {
 			termWidth = 80
 		}
-		r = human.Human(scoreCard, *verboseOutput, termWidth)
+		_, err = human.Human(scoreCard, *verboseOutput, termWidth)
+		return err
 	case *outputFormat == "ci" && version == "v1":
 		r = ci.CI(scoreCard)
 	case *outputFormat == "sarif":
@@ -238,18 +242,18 @@ func getOutputVersion(flagValue, format string) string {
 	}
 }
 
-func listChecks(binName string, args []string) {
+func listChecks(binName string, args []string) error {
 	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
 	setDefault(fs, binName, "list", false)
 	err := fs.Parse(args)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	if *printHelp {
 		fs.Usage()
-		return
+		return nil
 	}
 
 	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
@@ -262,10 +266,12 @@ func listChecks(binName string, args []string) {
 		}
 		err := output.Write([]string{c.ID, c.TargetType, c.Comment, optionalString})
 		if err != nil {
-			panic(err)
+			return nil
 		}
 	}
 	output.Flush()
+
+	return nil
 }
 
 func listToStructMap(items *[]string) map[string]struct{} {
