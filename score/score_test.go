@@ -339,6 +339,31 @@ func TestPodContainerStorageEphemeralRequestNoMatchLimit(t *testing.T) {
 	}, "Container Ephemeral Storage Request Equals Limit", scorecard.GradeCritical)
 }
 
+func TestPodContainerStorageEphemeralIgnoreAnnotation(t *testing.T) {
+
+	t.Parallel()
+	s, err := testScore(config.Configuration{
+		VerboseOutput:             0,
+		AllFiles:                  []ks.NamedReader{testFile("pod-ephemeral-storage-annotation-ignore.yaml")},
+		UseIgnoreChecksAnnotation: true,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			if c.Check.ID == "container-resources" {
+				assert.True(t, c.Skipped)
+				tested = true
+			}
+		}
+		assert.Equal(t, "pod-ephemeral-storage-annotation-ignore", o.ObjectMeta.Name)
+	}
+	assert.True(t, tested)
+}
+
 func TestPodContainerPortsContainerPortMissing(t *testing.T) {
 	t.Parallel()
 	structMap := make(map[string]struct{})
