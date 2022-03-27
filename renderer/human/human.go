@@ -15,7 +15,7 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.Reader {
+func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) (io.Reader, error) {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
@@ -37,7 +37,7 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.
 		}
 
 		// Adjust to termsize
-		fmt.Fprintf(w, safeRepeat(" ", min(80, termWidth)-writtenHeaderChars-2))
+		fmt.Fprint(w, safeRepeat(" ", min(80, termWidth)-writtenHeaderChars-2))
 
 		switch {
 		case scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical):
@@ -50,11 +50,15 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) io.
 
 		for _, card := range scoredObject.Checks {
 			r := outputHumanStep(card, verboseOutput, termWidth)
-			io.Copy(w, r)
+			_, err := io.Copy(w, r)
+			if err != nil {
+				return nil, err
+			}
+
 		}
 	}
 
-	return w
+	return w, nil
 }
 
 func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int) io.Reader {
@@ -108,7 +112,7 @@ func outputHumanStep(card scorecard.TestScore, verboseOutput int, termWidth int)
 			wrapper := wordwrap.Wrapper(wrapWidth, false)
 			wrapped := wrapper(comment.Description)
 			fmt.Fprintln(w)
-			fmt.Fprintf(w, wordwrap.Indent(wrapped, strings.Repeat(" ", 12), false))
+			fmt.Fprint(w, wordwrap.Indent(wrapped, strings.Repeat(" ", 12), false))
 		}
 
 		if len(comment.DocumentationURL) > 0 {

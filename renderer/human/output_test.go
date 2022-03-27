@@ -95,7 +95,8 @@ func getTestCard() *scorecard.Scorecard {
 
 func TestHumanOutputDefault(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCard(), 0, 100)
+	r, err := Human(getTestCard(), 0, 100)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -117,7 +118,8 @@ v1/Testing bar-no-namespace                                                   �
 
 func TestHumanOutputVerbose1(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCard(), 1, 100)
+	r, err := Human(getTestCard(), 1, 100)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -145,7 +147,8 @@ v1/Testing bar-no-namespace                                                   �
 
 func TestHumanOutputVerbose2(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCard(), 2, 100)
+	r, err := Human(getTestCard(), 2, 100)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -262,7 +265,8 @@ func getTestCardAllOK() *scorecard.Scorecard {
 
 func TestHumanOutputAllOKDefault(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCardAllOK(), 0, 100)
+	r, err := Human(getTestCardAllOK(), 0, 100)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      ✅
@@ -304,7 +308,8 @@ func getTestCardLongDescription() *scorecard.Scorecard {
 
 func TestHumanOutputLogDescription120Width(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCardLongDescription(), 0, 120)
+	r, err := Human(getTestCardLongDescription(), 0, 120)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -319,7 +324,8 @@ func TestHumanOutputLogDescription120Width(t *testing.T) {
 
 func TestHumanOutputLogDescription100Width(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCardLongDescription(), 0, 100)
+	r, err := Human(getTestCardLongDescription(), 0, 100)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -335,7 +341,8 @@ func TestHumanOutputLogDescription100Width(t *testing.T) {
 
 func TestHumanOutputLogDescription80Width(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCardLongDescription(), 0, 80)
+	r, err := Human(getTestCardLongDescription(), 0, 80)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
@@ -352,7 +359,8 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
 
 func TestHumanOutputLogDescription0Width(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCardLongDescription(), 0, 0)
+	r, err := Human(getTestCardLongDescription(), 0, 0)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo🤔
@@ -405,7 +413,8 @@ func getTestCardLongTitle() *scorecard.Scorecard {
 
 func TestHumanOutputWithLongObjectNames(t *testing.T) {
 	t.Parallel()
-	r := Human(getTestCardLongTitle(), 0, 80)
+	r, err := Human(getTestCardLongTitle(), 0, 80)
+	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title in foofoo🤔

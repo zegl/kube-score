@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 
 	flag "github.com/spf13/pflag"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -40,7 +40,10 @@ func main() {
 		},
 
 		"list": func(helpName string, args []string) {
-			listChecks(helpName, args)
+			if err := listChecks(helpName, args); err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Failed to list checks: %v\n", err)
+				os.Exit(1)
+			}
 		},
 
 		"version": func(helpName string, args []string) {
@@ -205,12 +208,13 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	case *outputFormat == "json" && version == "v2":
 		r = json_v2.Output(scoreCard)
 	case *outputFormat == "human" && version == "v1":
-		termWidth, _, err := terminal.GetSize(int(os.Stdin.Fd()))
+		termWidth, _, err := term.GetSize(int(os.Stdin.Fd()))
 		// Assume a width of 80 if it can't be detected
 		if err != nil {
 			termWidth = 80
 		}
-		r = human.Human(scoreCard, *verboseOutput, termWidth)
+		_, err = human.Human(scoreCard, *verboseOutput, termWidth)
+		return err
 	case *outputFormat == "ci" && version == "v1":
 		r = ci.CI(scoreCard)
 	case *outputFormat == "sarif":
@@ -238,15 +242,18 @@ func getOutputVersion(flagValue, format string) string {
 	}
 }
 
-func listChecks(binName string, args []string) {
+func listChecks(binName string, args []string) error {
 	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
 	setDefault(fs, binName, "list", false)
-	fs.Parse(args)
+	err := fs.Parse(args)
+	if err != nil {
+		return nil
+	}
 
 	if *printHelp {
 		fs.Usage()
-		return
+		return nil
 	}
 
 	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
@@ -257,9 +264,14 @@ func listChecks(binName string, args []string) {
 		if c.Optional {
 			optionalString = "optional"
 		}
-		output.Write([]string{c.ID, c.TargetType, c.Comment, optionalString})
+		err := output.Write([]string{c.ID, c.TargetType, c.Comment, optionalString})
+		if err != nil {
+			return nil
+		}
 	}
 	output.Flush()
+
+	return nil
 }
 
 func listToStructMap(items *[]string) map[string]struct{} {

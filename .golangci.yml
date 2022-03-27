@@ -3,11 +3,11 @@ linters:
   disable-all: true
   enable:
     - deadcode
-    # - errcheck
+    - errcheck
     - gosimple
-    # - govet
+    - govet
     - ineffassign
-    # - staticcheck
+    - staticcheck
     - structcheck
     - typecheck
     - unused
@@ -16,7 +16,7 @@ linters:
     - contextcheck
     - cyclop
     - durationcheck
-    # - errname
+    - errname
     - errorlint
     - exportloopref
     - goimports

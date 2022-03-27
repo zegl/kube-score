@@ -17,7 +17,7 @@ func TestStatefulSetAppsv1beta1Kubernetes1dot4(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:          []ks.NamedReader{testFile("statefulset-appsv1beta1.yaml")},
-		KubernetesVersion: config.Semver{1, 4},
+		KubernetesVersion: config.Semver{Major: 1, Minor: 4},
 	}, "Stable version", scorecard.GradeAllOK)
 }
 
@@ -25,7 +25,7 @@ func TestStatefulSetAppsv1beta1Kubernetes1dot18(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:          []ks.NamedReader{testFile("statefulset-appsv1beta1.yaml")},
-		KubernetesVersion: config.Semver{1, 18},
+		KubernetesVersion: config.Semver{Major: 1, Minor: 18},
 	}, "Stable version", scorecard.GradeWarning)
 }
 
@@ -73,7 +73,7 @@ func TestCronJobBatchv1beta1Kubernetes1dot21(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:          []ks.NamedReader{testFile("cronjob-batchv1beta1.yaml")},
-		KubernetesVersion: config.Semver{1, 21},
+		KubernetesVersion: config.Semver{Major: 1, Minor: 21},
 	}, "Stable version", scorecard.GradeWarning)
 }
 

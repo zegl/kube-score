@@ -55,7 +55,7 @@ func testScore(config config.Configuration) (scorecard.Scorecard, error) {
 func testExpectedScore(t *testing.T, filename string, testcase string, expectedScore scorecard.Grade) []scorecard.TestScoreComment {
 	return testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:          []ks.NamedReader{testFile(filename)},
-		KubernetesVersion: config.Semver{1, 18},
+		KubernetesVersion: config.Semver{Major: 1, Minor: 18},
 	}, testcase, expectedScore)
 }
 

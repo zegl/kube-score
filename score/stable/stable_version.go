@@ -23,29 +23,29 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 
 		withStable := map[string]map[string]recommendedApi{
 			"extensions/v1beta1": {
-				"Deployment":   recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"DaemonSet":    recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
-				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
+				"Deployment":   recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
+				"DaemonSet":    recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
+				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{Major: 1, Minor: 19}},
+				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{Major: 1, Minor: 19}},
 			},
 			"apps/v1beta1": {
-				"Deployment":  recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"StatefulSet": recommendedApi{"apps/v1", config.Semver{1, 9}},
+				"Deployment":  recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
+				"StatefulSet": recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
 			},
 			"apps/v1beta2": {
-				"Deployment":  recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"StatefulSet": recommendedApi{"apps/v1", config.Semver{1, 9}},
-				"DaemonSet":   recommendedApi{"apps/v1", config.Semver{1, 9}},
+				"Deployment":  recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
+				"StatefulSet": recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
+				"DaemonSet":   recommendedApi{"apps/v1", config.Semver{Major: 1, Minor: 9}},
 			},
 			"batch/v1beta1": {
-				"CronJob": recommendedApi{"batch/v1", config.Semver{1, 21}},
+				"CronJob": recommendedApi{"batch/v1", config.Semver{Major: 1, Minor: 21}},
 			},
 			"policy/v1beta1": {
-				"PodDisruptionBudget": recommendedApi{"policy/v1", config.Semver{1, 21}},
+				"PodDisruptionBudget": recommendedApi{"policy/v1", config.Semver{Major: 1, Minor: 21}},
 			},
 			"networking.k8s.io/v1beta1": {
-				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
-				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{1, 19}},
+				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{Major: 1, Minor: 19}},
+				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{Major: 1, Minor: 19}},
 			},
 		}
 
