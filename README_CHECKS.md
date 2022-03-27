@@ -33,3 +33,4 @@
 | statefulset-pod-selector-labels-match-template-metadata-labels | StatefulSet | Ensure the StatefulSet selector labels match the template metadata labels. | default |
 | label-values | all | Validates label values | default |
 | horizontalpodautoscaler-has-target | HorizontalPodAutoscaler | Makes sure that the HPA targets a valid object | default |
+| environment-variable-key-duplication | Pod | Makes sure that no duplicated environment variable keys. | default |
