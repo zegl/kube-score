@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	ks "github.com/zegl/kube-score/domain"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	ignoredChecksAnnotation = "kube-score/ignore"
 )
+
+// if this, then that
+var impliedIgnoreAnnotations = map[string][]string{
+	"container-resources": {"container-ephemeral-storage-request-and-limit"},
+}
 
 type Scorecard map[string]*ScoredObject
 
@@ -72,6 +76,11 @@ func (so *ScoredObject) setIgnoredTests() {
 	if ignoredCSV, ok := so.ObjectMeta.Annotations[ignoredChecksAnnotation]; ok {
 		for _, ignored := range strings.Split(ignoredCSV, ",") {
 			ignoredMap[strings.TrimSpace(ignored)] = struct{}{}
+			if _, ok := impliedIgnoreAnnotations[ignored]; ok {
+				for _, impliedIgnore := range impliedIgnoreAnnotations[ignored] {
+					ignoredMap[impliedIgnore] = struct{}{}
+				}
+			}
 		}
 	}
 	so.ignoredChecks = ignoredMap
