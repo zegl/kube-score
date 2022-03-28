@@ -296,7 +296,7 @@ func environmentVariableKeyDuplication(podTemplate corev1.PodTemplateSpec, _ met
 		envs := make(map[string]struct{})
 		for _, env := range container.Env {
 			if _, duplicated := envs[env.Name]; duplicated {
-				msg := fmt.Sprintf("Container environment variable key '%s' duplicated", env.Name)
+				msg := fmt.Sprintf("Container environment variable key '%s' is duplicated", env.Name)
 				score.AddComment(container.Name, "Environment Variable Key Duplication", msg)
 				score.Grade = scorecard.GradeCritical
 				continue
