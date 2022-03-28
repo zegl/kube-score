@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/zegl/kube-score/config"
@@ -20,6 +21,7 @@ func Register(allChecks *checks.Checks, cnf config.Configuration) {
 	allChecks.RegisterPodCheck("Container Ephemeral Storage Request and Limit", "Makes sure all pods have ephemeral-storage requests and limits set", containerStorageEphemeralRequestAndLimit)
 	allChecks.RegisterOptionalPodCheck("Container Ephemeral Storage Request Equals Limit", "Make sure all pods have matching ephemeral-storage requests and limits", containerStorageEphemeralRequestEqualsLimit)
 	allChecks.RegisterOptionalPodCheck("Container Ports Check", "Container Ports Checks", containerPortsCheck)
+	allChecks.RegisterPodCheck("Environment Variable Key Duplication", "Makes sure that duplicated environment variable keys are not duplicated", environmentVariableKeyDuplication)
 }
 
 // containerResources makes sure that the container has resource requests and limits set
@@ -278,5 +280,29 @@ func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.Typ
 		}
 	}
 
+	return
+}
+
+// environmentVariableKeyDuplication checks that no duplicated environment variable keys.
+func environmentVariableKeyDuplication(podTemplate corev1.PodTemplateSpec, _ metav1.TypeMeta) (score scorecard.TestScore) {
+	pod := podTemplate.Spec
+
+	allContainers := pod.InitContainers
+	allContainers = append(allContainers, pod.Containers...)
+
+	score.Grade = scorecard.GradeAllOK
+
+	for _, container := range allContainers {
+		envs := make(map[string]struct{})
+		for _, env := range container.Env {
+			if _, duplicated := envs[env.Name]; duplicated {
+				msg := fmt.Sprintf("Container environment variable key '%s' is duplicated", env.Name)
+				score.AddComment(container.Name, "Environment Variable Key Duplication", msg)
+				score.Grade = scorecard.GradeCritical
+				continue
+			}
+			envs[env.Name] = struct{}{}
+		}
+	}
 	return
 }

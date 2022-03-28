@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -397,4 +398,43 @@ func TestPodContainerPortsOK(t *testing.T) {
 		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-ok.yaml")},
 		EnabledOptionalTests: structMap,
 	}, "Container Ports Check", scorecard.GradeAllOK)
+}
+
+func TestPodEnvOK(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["environment-variable-key-duplication"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("pod-env-ok.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Environment Variable Key Duplication", scorecard.GradeAllOK)
+}
+
+func TestPodEnvDuplicated(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["environment-variable-key-duplication"] = struct{}{}
+
+	actual := testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("pod-env-duplicated.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Environment Variable Key Duplication", scorecard.GradeCritical)
+
+	expected := []scorecard.TestScoreComment{
+		{
+			Path:        "foobar",
+			Summary:     "Environment Variable Key Duplication",
+			Description: "Container environment variable key 'bar' is duplicated",
+		},
+		{
+			Path:        "foobar",
+			Summary:     "Environment Variable Key Duplication",
+			Description: "Container environment variable key 'baz' is duplicated",
+		},
+	}
+	diff := cmp.Diff(expected, actual)
+	assert.Empty(t, diff)
 }
