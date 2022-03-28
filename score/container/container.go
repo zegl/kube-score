@@ -21,7 +21,7 @@ func Register(allChecks *checks.Checks, cnf config.Configuration) {
 	allChecks.RegisterPodCheck("Container Ephemeral Storage Request and Limit", "Makes sure all pods have ephemeral-storage requests and limits set", containerStorageEphemeralRequestAndLimit)
 	allChecks.RegisterOptionalPodCheck("Container Ephemeral Storage Request Equals Limit", "Make sure all pods have matching ephemeral-storage requests and limits", containerStorageEphemeralRequestEqualsLimit)
 	allChecks.RegisterOptionalPodCheck("Container Ports Check", "Container Ports Checks", containerPortsCheck)
-	allChecks.RegisterPodCheck("Environment Variable Key Duplication", "`Makes sure that no duplicated environment variable keys.`", environmentVariableKeyDuplication)
+	allChecks.RegisterPodCheck("Environment Variable Key Duplication", "Makes sure that duplicated environment variable keys are duplicated", environmentVariableKeyDuplication)
 }
 
 // containerResources makes sure that the container has resource requests and limits set
