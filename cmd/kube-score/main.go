@@ -12,8 +12,6 @@ import (
 	"path/filepath"
 
 	flag "github.com/spf13/pflag"
-	"golang.org/x/term"
-
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser"
@@ -23,6 +21,7 @@ import (
 	"github.com/zegl/kube-score/renderer/sarif"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/scorecard"
+	"golang.org/x/term"
 )
 
 func main() {
@@ -44,6 +43,10 @@ func main() {
 				_, _ = fmt.Fprintf(os.Stderr, "Failed to list checks: %v\n", err)
 				os.Exit(1)
 			}
+		},
+
+		"mkconfig": func(helpName string, args []string) {
+			mkConfigFile(helpName, args)
 		},
 
 		"version": func(helpName string, args []string) {
@@ -76,10 +79,11 @@ func setDefault(fs *flag.FlagSet, binName, actionName string, displayForMoreInfo
 %s [action] --flags
 
 Actions:
-	score	Checks all files in the input, and gives them a score and recommendations
-	list	Prints a CSV list of all available score checks
-	version	Print the version of kube-score
-	help	Print this message`+"\n\n", binName, binName)
+	score    Checks all files in the input, and gives them a score and recommendations
+	list	 Prints a CSV list of all available score checks
+	mkconfig Create a configuration file from kube-score's registered checks 
+	version	 Print the version of kube-score
+	help	 Print this message`+"\n\n", binName, binName)
 
 		if displayForMoreInfo {
 			usage += fmt.Sprintf(`Run "%s [action] --help" for more information about a particular command`, binName)
@@ -110,6 +114,7 @@ func scoreFiles(binName string, args []string) error {
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
+	configFile := fs.String("config", ".kube-score.yml", "Optional kube-score configuration file")
 	setDefault(fs, binName, "score", false)
 
 	err := fs.Parse(args)
@@ -156,8 +161,20 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		allFilePointers = append(allFilePointers, namedReader{Reader: fp, name: filename})
 	}
 
+	// load configuration file
+	cfg := loadConfigFile(*configFile)
+	excludeChks := excludeChecks(&cfg)
+	includeChks := includeChecks(&cfg)
+
+	*ignoreTests = append(*ignoreTests, excludeChks...)
+	*optionalTests = append(*optionalTests, includeChks...)
+
 	ignoredTests := listToStructMap(ignoreTests)
 	enabledOptionalTests := listToStructMap(optionalTests)
+
+	if cfg.DisableIgnoreChecksAnnotations {
+		disableIgnoreChecksAnnotation = &cfg.DisableIgnoreChecksAnnotations
+	}
 
 	kubeVer, err := config.ParseSemver(*kubernetesVersion)
 	if err != nil {
