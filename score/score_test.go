@@ -402,12 +402,12 @@ func TestPodEnvDuplicated(t *testing.T) {
 		{
 			Path:        "foobar",
 			Summary:     "Environment Variable Key Duplication",
-			Description: "Container environment variable key 'bar' duplicated",
+			Description: "Container environment variable key 'bar' is duplicated",
 		},
 		{
 			Path:        "foobar",
 			Summary:     "Environment Variable Key Duplication",
-			Description: "Container environment variable key 'baz' duplicated",
+			Description: "Container environment variable key 'baz' is duplicated",
 		},
 	}
 	diff := cmp.Diff(expected, actual)
