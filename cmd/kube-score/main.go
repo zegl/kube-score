@@ -213,8 +213,10 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		if err != nil {
 			termWidth = 80
 		}
-		_, err = human.Human(scoreCard, *verboseOutput, termWidth)
-		return err
+		r, err = human.Human(scoreCard, *verboseOutput, termWidth)
+		if err != nil {
+			return err
+		}
 	case *outputFormat == "ci" && version == "v1":
 		r = ci.CI(scoreCard)
 	case *outputFormat == "sarif":
