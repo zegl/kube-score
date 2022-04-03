@@ -29,7 +29,7 @@ func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[
 			return false, fmt.Errorf("failed to create selector: %w", err)
 		}
 
-		if selector.Matches(internal.MapLables(labels)) {
+		if selector.Matches(internal.MapLabels(labels)) {
 			return true, nil
 		}
 	}
