@@ -43,7 +43,7 @@ func mkConfigFile(binName string, args []string) {
 		if !*cfgForce {
 			errmsg := fmt.Errorf("File %s exists. Use --force flag to overwrite\n", *cfgFile)
 			fmt.Println(errmsg)
-			fs.Usage()
+			//fs.Usage()
 			return
 		}
 	}
@@ -81,7 +81,7 @@ func loadConfigFile(fp string) (config kubescorechecks) {
 
 	// if the file does not exist, create it
 	if err != nil {
-		mkConfigFile("mkconfig", []string{fp})
+		panic(err)
 	}
 
 	err2 := yaml.Unmarshal(content, &config)

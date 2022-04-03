@@ -114,7 +114,7 @@ func scoreFiles(binName string, args []string) error {
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
-	configFile := fs.String("config", ".kube-score.yml", "Optional kube-score configuration file")
+	configFile := fs.String("config", "", "Optional kube-score configuration file")
 	setDefault(fs, binName, "score", false)
 
 	err := fs.Parse(args)
@@ -162,19 +162,22 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	}
 
 	// load configuration file
-	cfg := loadConfigFile(*configFile)
-	excludeChks := excludeChecks(&cfg)
-	includeChks := includeChecks(&cfg)
 
-	*ignoreTests = append(*ignoreTests, excludeChks...)
-	*optionalTests = append(*optionalTests, includeChks...)
+	if len(*configFile) > 0 {
+		cfg := loadConfigFile(*configFile)
+		excludeChks := excludeChecks(&cfg)
+		includeChks := includeChecks(&cfg)
+
+		*ignoreTests = append(*ignoreTests, excludeChks...)
+		*optionalTests = append(*optionalTests, includeChks...)
+
+		if cfg.DisableIgnoreChecksAnnotations {
+			disableIgnoreChecksAnnotation = &cfg.DisableIgnoreChecksAnnotations
+		}
+	}
 
 	ignoredTests := listToStructMap(ignoreTests)
 	enabledOptionalTests := listToStructMap(optionalTests)
-
-	if cfg.DisableIgnoreChecksAnnotations {
-		disableIgnoreChecksAnnotation = &cfg.DisableIgnoreChecksAnnotations
-	}
 
 	kubeVer, err := config.ParseSemver(*kubernetesVersion)
 	if err != nil {
