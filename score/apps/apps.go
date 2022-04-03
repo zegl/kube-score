@@ -74,9 +74,9 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 		return
 	}
 
-	lables := internal.MapLables(deployment.Spec.Template.GetObjectMeta().GetLabels())
+	labels := internal.MapLabels(deployment.Spec.Template.GetObjectMeta().GetLabels())
 
-	if hasPodAntiAffinity(lables, affinity) {
+	if hasPodAntiAffinity(labels, affinity) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}
@@ -106,9 +106,9 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 		return
 	}
 
-	lables := internal.MapLables(statefulset.Spec.Template.GetObjectMeta().GetLabels())
+	labels := internal.MapLabels(statefulset.Spec.Template.GetObjectMeta().GetLabels())
 
-	if hasPodAntiAffinity(lables, affinity) {
+	if hasPodAntiAffinity(labels, affinity) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}
@@ -117,7 +117,7 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 	return
 }
 
-func hasPodAntiAffinity(selfLabels internal.MapLables, affinity *corev1.Affinity) bool {
+func hasPodAntiAffinity(selfLabels internal.MapLabels, affinity *corev1.Affinity) bool {
 	approvedTopologyKeys := map[string]struct{}{
 		"kubernetes.io/hostname":        {},
 		"topology.kubernetes.io/region": {},
@@ -183,7 +183,7 @@ func statefulSetSelectorLabelsMatching(statefulset appsv1.StatefulSet) (score sc
 		return
 	}
 
-	if selector.Matches(internal.MapLables(statefulset.Spec.Template.GetObjectMeta().GetLabels())) {
+	if selector.Matches(internal.MapLabels(statefulset.Spec.Template.GetObjectMeta().GetLabels())) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}
@@ -201,7 +201,7 @@ func deploymentSelectorLabelsMatching(deployment appsv1.Deployment) (score score
 		return
 	}
 
-	if selector.Matches(internal.MapLables(deployment.Spec.Template.GetObjectMeta().GetLabels())) {
+	if selector.Matches(internal.MapLabels(deployment.Spec.Template.GetObjectMeta().GetLabels())) {
 		score.Grade = scorecard.GradeAllOK
 		return
 	}

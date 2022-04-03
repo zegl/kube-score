@@ -32,7 +32,7 @@ func podHasNetworkPolicy(allNetpols []ks.NetworkPolicy) func(spec corev1.PodTemp
 			}
 
 			if selector, err := metav1.LabelSelectorAsSelector(&netPol.Spec.PodSelector); err == nil {
-				if selector.Matches(internal.MapLables(podSpec.Labels)) {
+				if selector.Matches(internal.MapLabels(podSpec.Labels)) {
 
 					// Documentation of PolicyTypes
 					//
@@ -94,7 +94,7 @@ func networkPolicyTargetsPod(pods []ks.Pod, podspecers []ks.PodSpecer) func(netw
 			}
 
 			if selector, err := metav1.LabelSelectorAsSelector(&netpol.Spec.PodSelector); err == nil {
-				if selector.Matches(internal.MapLables(pod.Labels)) {
+				if selector.Matches(internal.MapLabels(pod.Labels)) {
 					hasMatch = true
 					break
 				}
@@ -108,7 +108,7 @@ func networkPolicyTargetsPod(pods []ks.Pod, podspecers []ks.PodSpecer) func(netw
 				}
 
 				if selector, err := metav1.LabelSelectorAsSelector(&netpol.Spec.PodSelector); err == nil {
-					if selector.Matches(internal.MapLables(pod.GetPodTemplateSpec().Labels)) {
+					if selector.Matches(internal.MapLabels(pod.GetPodTemplateSpec().Labels)) {
 						hasMatch = true
 						break
 					}
