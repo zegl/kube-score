@@ -11,7 +11,7 @@ func Register(allChecks *checks.Checks) {
 	allChecks.RegisterCronJobCheck("CronJob RestartPolicy", `Makes sure CronJobs have a valid RestartPolicy`, cronJobHasRestartPolicy)
 }
 
-func cronJobHasDeadline(job ks.CronJob) (score scorecard.TestScore) {
+func cronJobHasDeadline(job ks.CronJob) (score scorecard.TestScore, err error) {
 	if job.StartingDeadlineSeconds() == nil {
 		score.Grade = scorecard.GradeCritical
 		score.AddComment("", "The CronJob should have startingDeadlineSeconds configured",
@@ -24,8 +24,7 @@ func cronJobHasDeadline(job ks.CronJob) (score scorecard.TestScore) {
 }
 
 // CronJob restartPolicy must be "OnFailure" or "Never". It cannot be empty (unspecified)
-func cronJobHasRestartPolicy(job ks.CronJob) (score scorecard.TestScore) {
-
+func cronJobHasRestartPolicy(job ks.CronJob) (score scorecard.TestScore, err error) {
 	podTmpl := job.GetPodTemplateSpec()
 	restartPolicy := podTmpl.Spec.RestartPolicy
 

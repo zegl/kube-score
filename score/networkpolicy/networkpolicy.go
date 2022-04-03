@@ -83,8 +83,8 @@ func podHasNetworkPolicy(allNetpols []ks.NetworkPolicy) func(spec corev1.PodTemp
 	}
 }
 
-func networkPolicyTargetsPod(pods []ks.Pod, podspecers []ks.PodSpecer) func(networkingv1.NetworkPolicy) scorecard.TestScore {
-	return func(netpol networkingv1.NetworkPolicy) (score scorecard.TestScore) {
+func networkPolicyTargetsPod(pods []ks.Pod, podspecers []ks.PodSpecer) func(networkingv1.NetworkPolicy) (scorecard.TestScore, error) {
+	return func(netpol networkingv1.NetworkPolicy) (score scorecard.TestScore, err error) {
 		hasMatch := false
 
 		for _, p := range pods {

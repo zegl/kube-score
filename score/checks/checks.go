@@ -18,16 +18,16 @@ func New(cnf config.Configuration) *Checks {
 		cnf: cnf,
 
 		all:                      make([]ks.Check, 0),
-		metas:                    make(map[string]MetaCheck),
+		metas:                    make(map[string]GenCheck[ks.BothMeta]),
 		pods:                     make(map[string]PodCheck),
-		services:                 make(map[string]ServiceCheck),
-		statefulsets:             make(map[string]StatefulSetCheck),
-		deployments:              make(map[string]DeploymentCheck),
-		networkpolicies:          make(map[string]NetworkPolicyCheck),
-		ingresses:                make(map[string]IngressCheck),
-		cronjobs:                 make(map[string]CronJobCheck),
-		horizontalPodAutoscalers: make(map[string]HorizontalPodAutoscalerCheck),
-		poddisruptionbudgets:     make(map[string]PodDisruptionBudgetCheck),
+		services:                 make(map[string]GenCheck[corev1.Service]),
+		statefulsets:             make(map[string]GenCheck[appsv1.StatefulSet]),
+		deployments:              make(map[string]GenCheck[appsv1.Deployment]),
+		networkpolicies:          make(map[string]GenCheck[networkingv1.NetworkPolicy]),
+		ingresses:                make(map[string]GenCheck[ks.Ingress]),
+		cronjobs:                 make(map[string]GenCheck[ks.CronJob]),
+		horizontalPodAutoscalers: make(map[string]GenCheck[ks.HpaTargeter]),
+		poddisruptionbudgets:     make(map[string]GenCheck[ks.PodDisruptionBudget]),
 	}
 }
 
@@ -59,66 +59,25 @@ type PodCheck struct {
 	Fn PodCheckFn
 }
 
-type ServiceCheckFn = func(corev1.Service) scorecard.TestScore
-type ServiceCheck struct {
-	ks.Check
-	Fn ServiceCheckFn
-}
+type CheckFunc[T any] func(T) (scorecard.TestScore, error)
 
-type StatefulSetCheckFn = func(appsv1.StatefulSet) (scorecard.TestScore, error)
-type StatefulSetCheck struct {
+type GenCheck[T any] struct {
 	ks.Check
-	Fn StatefulSetCheckFn
-}
-
-type DeploymentCheckFn = func(appsv1.Deployment) (scorecard.TestScore, error)
-type DeploymentCheck struct {
-	ks.Check
-	Fn DeploymentCheckFn
-}
-
-type NetworkPolicyCheckFn = func(networkingv1.NetworkPolicy) scorecard.TestScore
-type NetworkPolicyCheck struct {
-	ks.Check
-	Fn NetworkPolicyCheckFn
-}
-
-type IngressCheckFn = func(ks.Ingress) scorecard.TestScore
-type IngressCheck struct {
-	ks.Check
-	Fn IngressCheckFn
-}
-
-type CronJobCheckFn = func(ks.CronJob) scorecard.TestScore
-type CronJobCheck struct {
-	ks.Check
-	Fn CronJobCheckFn
-}
-
-type HorizontalPodAutoscalerCheckFn = func(ks.HpaTargeter) scorecard.TestScore
-type HorizontalPodAutoscalerCheck struct {
-	ks.Check
-	Fn HorizontalPodAutoscalerCheckFn
-}
-
-type PodDisruptionBudgetCheckFn = func(ks.PodDisruptionBudget) scorecard.TestScore
-type PodDisruptionBudgetCheck struct {
-	ks.Check
-	Fn PodDisruptionBudgetCheckFn
+	Fn CheckFunc[T]
 }
 
 type Checks struct {
 	all                      []ks.Check
-	metas                    map[string]MetaCheck
+	metas                    map[string]GenCheck[ks.BothMeta]
 	pods                     map[string]PodCheck
-	services                 map[string]ServiceCheck
-	statefulsets             map[string]StatefulSetCheck
-	deployments              map[string]DeploymentCheck
-	networkpolicies          map[string]NetworkPolicyCheck
-	ingresses                map[string]IngressCheck
-	cronjobs                 map[string]CronJobCheck
-	horizontalPodAutoscalers map[string]HorizontalPodAutoscalerCheck
-	poddisruptionbudgets     map[string]PodDisruptionBudgetCheck
+	services                 map[string]GenCheck[corev1.Service]
+	statefulsets             map[string]GenCheck[appsv1.StatefulSet]
+	deployments              map[string]GenCheck[appsv1.Deployment]
+	networkpolicies          map[string]GenCheck[networkingv1.NetworkPolicy]
+	ingresses                map[string]GenCheck[ks.Ingress]
+	cronjobs                 map[string]GenCheck[ks.CronJob]
+	horizontalPodAutoscalers map[string]GenCheck[ks.HpaTargeter]
+	poddisruptionbudgets     map[string]GenCheck[ks.PodDisruptionBudget]
 
 	cnf config.Configuration
 }
@@ -128,17 +87,17 @@ func (c Checks) isEnabled(check ks.Check) bool {
 	return !ok
 }
 
-func (c *Checks) RegisterMetaCheck(name, comment string, fn MetaCheckFn) {
+func (c *Checks) RegisterMetaCheck(name, comment string, fn CheckFunc[ks.BothMeta]) {
 	ch := NewCheck(name, "all", comment, false)
-	c.registerMetaCheck(MetaCheck{ch, fn})
+	c.registerMetaCheck(GenCheck[ks.BothMeta]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalMetaCheck(name, comment string, fn MetaCheckFn) {
+func (c *Checks) RegisterOptionalMetaCheck(name, comment string, fn CheckFunc[ks.BothMeta]) {
 	ch := NewCheck(name, "all", comment, true)
-	c.registerMetaCheck(MetaCheck{ch, fn})
+	c.registerMetaCheck(GenCheck[ks.BothMeta]{ch, fn})
 }
 
-func (c *Checks) registerMetaCheck(ch MetaCheck) {
+func (c *Checks) registerMetaCheck(ch GenCheck[ks.BothMeta]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -147,7 +106,7 @@ func (c *Checks) registerMetaCheck(ch MetaCheck) {
 	c.metas[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) Metas() map[string]MetaCheck {
+func (c *Checks) Metas() map[string]GenCheck[ks.BothMeta] {
 	return c.metas
 }
 
@@ -174,17 +133,17 @@ func (c *Checks) Pods() map[string]PodCheck {
 	return c.pods
 }
 
-func (c *Checks) RegisterHorizontalPodAutoscalerCheck(name, comment string, fn HorizontalPodAutoscalerCheckFn) {
+func (c *Checks) RegisterHorizontalPodAutoscalerCheck(name, comment string, fn CheckFunc[ks.HpaTargeter]) {
 	ch := NewCheck(name, "HorizontalPodAutoscaler", comment, false)
-	c.registerHorizontalPodAutoscalerCheck(HorizontalPodAutoscalerCheck{ch, fn})
+	c.registerHorizontalPodAutoscalerCheck(GenCheck[ks.HpaTargeter]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalHorizontalPodAutoscalerCheck(name, comment string, fn HorizontalPodAutoscalerCheckFn) {
+func (c *Checks) RegisterOptionalHorizontalPodAutoscalerCheck(name, comment string, fn CheckFunc[ks.HpaTargeter]) {
 	ch := NewCheck(name, "HorizontalPodAutoscaler", comment, true)
-	c.registerHorizontalPodAutoscalerCheck(HorizontalPodAutoscalerCheck{ch, fn})
+	c.registerHorizontalPodAutoscalerCheck(GenCheck[ks.HpaTargeter]{ch, fn})
 }
 
-func (c *Checks) registerHorizontalPodAutoscalerCheck(ch HorizontalPodAutoscalerCheck) {
+func (c *Checks) registerHorizontalPodAutoscalerCheck(ch GenCheck[ks.HpaTargeter]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -193,21 +152,21 @@ func (c *Checks) registerHorizontalPodAutoscalerCheck(ch HorizontalPodAutoscaler
 	c.horizontalPodAutoscalers[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) HorizontalPodAutoscalers() map[string]HorizontalPodAutoscalerCheck {
+func (c *Checks) HorizontalPodAutoscalers() map[string]GenCheck[ks.HpaTargeter] {
 	return c.horizontalPodAutoscalers
 }
 
-func (c *Checks) RegisterCronJobCheck(name, comment string, fn CronJobCheckFn) {
+func (c *Checks) RegisterCronJobCheck(name, comment string, fn CheckFunc[ks.CronJob]) {
 	ch := NewCheck(name, "CronJob", comment, false)
-	c.registerCronJobCheck(CronJobCheck{ch, fn})
+	c.registerCronJobCheck(GenCheck[ks.CronJob]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalCronJobCheck(name, comment string, fn CronJobCheckFn) {
+func (c *Checks) RegisterOptionalCronJobCheck(name, comment string, fn CheckFunc[ks.CronJob]) {
 	ch := NewCheck(name, "CronJob", comment, true)
-	c.registerCronJobCheck(CronJobCheck{ch, fn})
+	c.registerCronJobCheck(GenCheck[ks.CronJob]{ch, fn})
 }
 
-func (c *Checks) registerCronJobCheck(ch CronJobCheck) {
+func (c *Checks) registerCronJobCheck(ch GenCheck[ks.CronJob]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -216,21 +175,21 @@ func (c *Checks) registerCronJobCheck(ch CronJobCheck) {
 	c.cronjobs[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) CronJobs() map[string]CronJobCheck {
+func (c *Checks) CronJobs() map[string]GenCheck[ks.CronJob] {
 	return c.cronjobs
 }
 
-func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn StatefulSetCheckFn) {
+func (c *Checks) RegisterStatefulSetCheck(name, comment string, fn CheckFunc[appsv1.StatefulSet]) {
 	ch := NewCheck(name, "StatefulSet", comment, false)
-	c.registerStatefulSetCheck(StatefulSetCheck{ch, fn})
+	c.registerStatefulSetCheck(GenCheck[appsv1.StatefulSet]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalStatefulSetCheck(name, comment string, fn StatefulSetCheckFn) {
+func (c *Checks) RegisterOptionalStatefulSetCheck(name, comment string, fn CheckFunc[appsv1.StatefulSet]) {
 	ch := NewCheck(name, "StatefulSet", comment, true)
-	c.registerStatefulSetCheck(StatefulSetCheck{ch, fn})
+	c.registerStatefulSetCheck(GenCheck[appsv1.StatefulSet]{ch, fn})
 }
 
-func (c *Checks) registerStatefulSetCheck(ch StatefulSetCheck) {
+func (c *Checks) registerStatefulSetCheck(ch GenCheck[appsv1.StatefulSet]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -239,21 +198,21 @@ func (c *Checks) registerStatefulSetCheck(ch StatefulSetCheck) {
 	c.statefulsets[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) StatefulSets() map[string]StatefulSetCheck {
+func (c *Checks) StatefulSets() map[string]GenCheck[appsv1.StatefulSet] {
 	return c.statefulsets
 }
 
-func (c *Checks) RegisterDeploymentCheck(name, comment string, fn DeploymentCheckFn) {
+func (c *Checks) RegisterDeploymentCheck(name, comment string, fn CheckFunc[appsv1.Deployment]) {
 	ch := NewCheck(name, "Deployment", comment, false)
-	c.registerDeploymentCheck(DeploymentCheck{ch, fn})
+	c.registerDeploymentCheck(GenCheck[appsv1.Deployment]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalDeploymentCheck(name, comment string, fn DeploymentCheckFn) {
+func (c *Checks) RegisterOptionalDeploymentCheck(name, comment string, fn CheckFunc[appsv1.Deployment]) {
 	ch := NewCheck(name, "Deployment", comment, true)
-	c.registerDeploymentCheck(DeploymentCheck{ch, fn})
+	c.registerDeploymentCheck(GenCheck[appsv1.Deployment]{ch, fn})
 }
 
-func (c *Checks) registerDeploymentCheck(ch DeploymentCheck) {
+func (c *Checks) registerDeploymentCheck(ch GenCheck[appsv1.Deployment]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -262,21 +221,21 @@ func (c *Checks) registerDeploymentCheck(ch DeploymentCheck) {
 	c.deployments[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) Deployments() map[string]DeploymentCheck {
+func (c *Checks) Deployments() map[string]GenCheck[appsv1.Deployment] {
 	return c.deployments
 }
 
-func (c *Checks) RegisterIngressCheck(name, comment string, fn IngressCheckFn) {
+func (c *Checks) RegisterIngressCheck(name, comment string, fn CheckFunc[ks.Ingress]) {
 	ch := NewCheck(name, "Ingress", comment, false)
-	c.registerIngressCheck(IngressCheck{ch, fn})
+	c.registerIngressCheck(GenCheck[ks.Ingress]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalIngressCheck(name, comment string, fn IngressCheckFn) {
+func (c *Checks) RegisterOptionalIngressCheck(name, comment string, fn CheckFunc[ks.Ingress]) {
 	ch := NewCheck(name, "Ingress", comment, true)
-	c.registerIngressCheck(IngressCheck{ch, fn})
+	c.registerIngressCheck(GenCheck[ks.Ingress]{ch, fn})
 }
 
-func (c *Checks) registerIngressCheck(ch IngressCheck) {
+func (c *Checks) registerIngressCheck(ch GenCheck[ks.Ingress]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -285,21 +244,21 @@ func (c *Checks) registerIngressCheck(ch IngressCheck) {
 	c.ingresses[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) Ingresses() map[string]IngressCheck {
+func (c *Checks) Ingresses() map[string]GenCheck[ks.Ingress] {
 	return c.ingresses
 }
 
-func (c *Checks) RegisterNetworkPolicyCheck(name, comment string, fn NetworkPolicyCheckFn) {
+func (c *Checks) RegisterNetworkPolicyCheck(name, comment string, fn CheckFunc[networkingv1.NetworkPolicy]) {
 	ch := NewCheck(name, "NetworkPolicy", comment, false)
-	c.registerNetworkPolicyCheck(NetworkPolicyCheck{ch, fn})
+	c.registerNetworkPolicyCheck(GenCheck[networkingv1.NetworkPolicy]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalNetworkPolicyCheck(name, comment string, fn NetworkPolicyCheckFn) {
+func (c *Checks) RegisterOptionalNetworkPolicyCheck(name, comment string, fn CheckFunc[networkingv1.NetworkPolicy]) {
 	ch := NewCheck(name, "NetworkPolicy", comment, true)
-	c.registerNetworkPolicyCheck(NetworkPolicyCheck{ch, fn})
+	c.registerNetworkPolicyCheck(GenCheck[networkingv1.NetworkPolicy]{ch, fn})
 }
 
-func (c *Checks) registerNetworkPolicyCheck(ch NetworkPolicyCheck) {
+func (c *Checks) registerNetworkPolicyCheck(ch GenCheck[networkingv1.NetworkPolicy]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -308,39 +267,40 @@ func (c *Checks) registerNetworkPolicyCheck(ch NetworkPolicyCheck) {
 	c.networkpolicies[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) NetworkPolicies() map[string]NetworkPolicyCheck {
+func (c *Checks) NetworkPolicies() map[string]GenCheck[networkingv1.NetworkPolicy] {
 	return c.networkpolicies
 }
 
-func (c *Checks) RegisterPodDisruptionBudgetCheck(name, comment string, fn PodDisruptionBudgetCheckFn) {
+func (c *Checks) RegisterPodDisruptionBudgetCheck(name, comment string, fn CheckFunc[ks.PodDisruptionBudget]) {
 	ch := NewCheck(name, "PodDisruptionBudget", comment, false)
-	c.registerPodDisruptionBudgetCheck(PodDisruptionBudgetCheck{ch, fn})
+	c.registerPodDisruptionBudgetCheck(GenCheck[ks.PodDisruptionBudget]{ch, fn})
 }
 
-func (c *Checks) registerPodDisruptionBudgetCheck(ch PodDisruptionBudgetCheck) {
+func (c *Checks) registerPodDisruptionBudgetCheck(ch GenCheck[ks.PodDisruptionBudget]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
 		return
 	}
+
 	c.poddisruptionbudgets[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) PodDisruptionBudgets() map[string]PodDisruptionBudgetCheck {
+func (c *Checks) PodDisruptionBudgets() map[string]GenCheck[ks.PodDisruptionBudget] {
 	return c.poddisruptionbudgets
 }
 
-func (c *Checks) RegisterServiceCheck(name, comment string, fn ServiceCheckFn) {
+func (c *Checks) RegisterServiceCheck(name, comment string, fn CheckFunc[corev1.Service]) {
 	ch := NewCheck(name, "Service", comment, false)
-	c.registerServiceCheck(ServiceCheck{ch, fn})
+	c.registerServiceCheck(GenCheck[corev1.Service]{ch, fn})
 }
 
-func (c *Checks) RegisterOptionalServiceCheck(name, comment string, fn ServiceCheckFn) {
+func (c *Checks) RegisterOptionalServiceCheck(name, comment string, fn CheckFunc[corev1.Service]) {
 	ch := NewCheck(name, "Service", comment, true)
-	c.registerServiceCheck(ServiceCheck{ch, fn})
+	c.registerServiceCheck(GenCheck[corev1.Service]{ch, fn})
 }
 
-func (c *Checks) registerServiceCheck(ch ServiceCheck) {
+func (c *Checks) registerServiceCheck(ch GenCheck[corev1.Service]) {
 	c.all = append(c.all, ch.Check)
 
 	if !c.isEnabled(ch.Check) {
@@ -349,7 +309,7 @@ func (c *Checks) registerServiceCheck(ch ServiceCheck) {
 	c.services[machineFriendlyName(ch.Name)] = ch
 }
 
-func (c *Checks) Services() map[string]ServiceCheck {
+func (c *Checks) Services() map[string]GenCheck[corev1.Service] {
 	return c.services
 }
 

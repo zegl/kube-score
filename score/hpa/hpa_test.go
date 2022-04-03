@@ -160,7 +160,7 @@ func TestHpaHasTarget(t *testing.T) {
 
 	for _, tc := range testcases {
 		fn := hpaHasTarget(tc.allTargets)
-		score := fn(hpav1{tc.hpa})
+		score, _ := fn(hpav1{tc.hpa})
 		assert.Equal(t, tc.expectedGrade, score.Grade)
 	}
 }
