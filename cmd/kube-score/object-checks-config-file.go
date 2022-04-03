@@ -43,7 +43,6 @@ func mkConfigFile(binName string, args []string) {
 		if !*cfgForce {
 			errmsg := fmt.Errorf("File %s exists. Use --force flag to overwrite\n", *cfgFile)
 			fmt.Println(errmsg)
-			//fs.Usage()
 			return
 		}
 	}
