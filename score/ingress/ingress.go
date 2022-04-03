@@ -12,13 +12,13 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 	allChecks.RegisterIngressCheck("Ingress targets Service", `Makes sure that the Ingress targets a Service`, ingressTargetsService(services.Services()))
 }
 
-func ingressTargetsService(allServices []ks.Service) func(ks.Ingress) scorecard.TestScore {
-	return func(ingress ks.Ingress) (score scorecard.TestScore) {
+func ingressTargetsService(allServices []ks.Service) func(ks.Ingress) (scorecard.TestScore, error) {
+	return func(ingress ks.Ingress) (scorecard.TestScore, error) {
 		return ingressTargetsServiceCommon(ingress, allServices)
 	}
 }
 
-func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []ks.Service) (score scorecard.TestScore) {
+func ingressTargetsServiceCommon(ingress ks.Ingress, allServices []ks.Service) (score scorecard.TestScore, err error) {
 	allRulesHaveMatches := true
 
 	for _, rule := range ingress.Rules() {

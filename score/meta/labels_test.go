@@ -13,7 +13,7 @@ import (
 
 func TestInvalidLabel(t *testing.T) {
 	t.Parallel()
-	s := validateLabelValues(domain.BothMeta{
+	s, _ := validateLabelValues(domain.BothMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
 				"foo": "engineering/kustomize", // label values can't contain slashes
@@ -29,7 +29,7 @@ func TestInvalidLabel(t *testing.T) {
 }
 func TestOKLabel(t *testing.T) {
 	t.Parallel()
-	s := validateLabelValues(domain.BothMeta{
+	s, _ := validateLabelValues(domain.BothMeta{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
 				"foo": "foo-bar",

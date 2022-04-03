@@ -87,7 +87,7 @@ func deploymentHas(budgets []ks.PodDisruptionBudget) func(appsv1.Deployment) (sc
 	}
 }
 
-func hasPolicy(pdb ks.PodDisruptionBudget) (score scorecard.TestScore) {
+func hasPolicy(pdb ks.PodDisruptionBudget) (score scorecard.TestScore, err error) {
 	spec := pdb.Spec()
 	if spec.MinAvailable == nil && spec.MaxUnavailable == nil {
 		score.AddComment("", "PodDisruptionBudget missing policy", "PodDisruptionBudget should specify minAvailable or maxUnavailable.")

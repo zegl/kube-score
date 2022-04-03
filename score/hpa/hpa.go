@@ -10,8 +10,8 @@ func Register(allChecks *checks.Checks, allTargetableObjs []domain.BothMeta) {
 	allChecks.RegisterHorizontalPodAutoscalerCheck("HorizontalPodAutoscaler has target", `Makes sure that the HPA targets a valid object`, hpaHasTarget(allTargetableObjs))
 }
 
-func hpaHasTarget(allTargetableObjs []domain.BothMeta) func(hpa domain.HpaTargeter) scorecard.TestScore {
-	return func(hpa domain.HpaTargeter) (score scorecard.TestScore) {
+func hpaHasTarget(allTargetableObjs []domain.BothMeta) func(hpa domain.HpaTargeter) (scorecard.TestScore, error) {
+	return func(hpa domain.HpaTargeter) (score scorecard.TestScore, err error) {
 		targetRef := hpa.HpaTarget()
 		var hasTarget bool
 		for _, t := range allTargetableObjs {
