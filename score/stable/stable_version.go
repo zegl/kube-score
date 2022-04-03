@@ -14,8 +14,8 @@ func Register(kubernetesVersion config.Semver, allChecks *checks.Checks) {
 }
 
 // ScoreMetaStableAvailable checks if the supplied TypeMeta is an unstable object type, that has a stable(r) replacement
-func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMeta) (score scorecard.TestScore) {
-	return func(meta domain.BothMeta) (score scorecard.TestScore) {
+func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMeta) (scorecard.TestScore, error) {
+	return func(meta domain.BothMeta) (score scorecard.TestScore, err error) {
 		type recommendedApi struct {
 			newAPI         string
 			availableSince config.Semver

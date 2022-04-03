@@ -54,14 +54,22 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, ingress := range allObjects.Ingresses() {
 		o := newObject(ingress.GetTypeMeta(), ingress.GetObjectMeta())
 		for _, test := range allChecks.Ingresses() {
-			o.Add(test.Fn(ingress), test.Check, ingress)
+			fn, err := test.Fn(ingress)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, ingress)
 		}
 	}
 
 	for _, meta := range allObjects.Metas() {
 		o := newObject(meta.TypeMeta, meta.ObjectMeta)
 		for _, test := range allChecks.Metas() {
-			o.Add(test.Fn(meta), test.Check, meta)
+			fn, err := test.Fn(meta)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, meta)
 		}
 	}
 
@@ -87,18 +95,22 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, service := range allObjects.Services() {
 		o := newObject(service.Service().TypeMeta, service.Service().ObjectMeta)
 		for _, test := range allChecks.Services() {
-			o.Add(test.Fn(service.Service()), test.Check, service)
+			fn, err := test.Fn(service.Service())
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, service)
 		}
 	}
 
 	for _, statefulset := range allObjects.StatefulSets() {
 		o := newObject(statefulset.StatefulSet().TypeMeta, statefulset.StatefulSet().ObjectMeta)
 		for _, test := range allChecks.StatefulSets() {
-			res, err := test.Fn(statefulset.StatefulSet())
+			fn, err := test.Fn(statefulset.StatefulSet())
 			if err != nil {
 				return nil, err
 			}
-			o.Add(res, test.Check, statefulset)
+			o.Add(fn, test.Check, statefulset)
 		}
 	}
 
@@ -116,28 +128,44 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, netpol := range allObjects.NetworkPolicies() {
 		o := newObject(netpol.NetworkPolicy().TypeMeta, netpol.NetworkPolicy().ObjectMeta)
 		for _, test := range allChecks.NetworkPolicies() {
-			o.Add(test.Fn(netpol.NetworkPolicy()), test.Check, netpol)
+			fn, err := test.Fn(netpol.NetworkPolicy())
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, netpol)
 		}
 	}
 
 	for _, cjob := range allObjects.CronJobs() {
 		o := newObject(cjob.GetTypeMeta(), cjob.GetObjectMeta())
 		for _, test := range allChecks.CronJobs() {
-			o.Add(test.Fn(cjob), test.Check, cjob)
+			fn, err := test.Fn(cjob)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, cjob)
 		}
 	}
 
 	for _, hpa := range allObjects.HorizontalPodAutoscalers() {
 		o := newObject(hpa.GetTypeMeta(), hpa.GetObjectMeta())
 		for _, test := range allChecks.HorizontalPodAutoscalers() {
-			o.Add(test.Fn(hpa), test.Check, hpa)
+			fn, err := test.Fn(hpa)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, hpa)
 		}
 	}
 
 	for _, pdb := range allObjects.PodDisruptionBudgets() {
 		o := newObject(pdb.GetTypeMeta(), pdb.GetObjectMeta())
 		for _, test := range allChecks.PodDisruptionBudgets() {
-			o.Add(test.Fn(pdb), test.Check, pdb)
+			fn, err := test.Fn(pdb)
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, pdb)
 		}
 	}
 

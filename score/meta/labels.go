@@ -12,7 +12,7 @@ func Register(allChecks *checks.Checks) {
 	allChecks.RegisterMetaCheck("Label values", "Validates label values", validateLabelValues)
 }
 
-func validateLabelValues(meta domain.BothMeta) (score scorecard.TestScore) {
+func validateLabelValues(meta domain.BothMeta) (score scorecard.TestScore, err error) {
 	score.Grade = scorecard.GradeAllOK
 	r := regexp.MustCompile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
 	for key, value := range meta.ObjectMeta.Labels {
