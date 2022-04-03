@@ -175,9 +175,14 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		KubernetesVersion:                     kubeVer,
 	}
 
-	parsedFiles, err := parser.ParseFiles(cnf)
+	p, err := parser.New()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initializer parser: %w", err)
+	}
+
+	parsedFiles, err := p.ParseFiles(cnf)
+	if err != nil {
+		return fmt.Errorf("failed to parse files: %w", err)
 	}
 
 	scoreCard, err := score.Score(parsedFiles, cnf)

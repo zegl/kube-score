@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser"
@@ -40,7 +41,12 @@ func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, test
 }
 
 func testScore(config config.Configuration) (scorecard.Scorecard, error) {
-	parsed, err := parser.ParseFiles(config)
+	p, err := parser.New()
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := p.ParseFiles(config)
 	if err != nil {
 		return nil, err
 	}
