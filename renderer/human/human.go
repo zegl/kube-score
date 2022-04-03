@@ -37,24 +37,28 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) (io
 		}
 
 		// Adjust to termsize
-		fmt.Fprint(w, safeRepeat(" ", min(80, termWidth)-writtenHeaderChars-2))
+		_, err := fmt.Fprint(w, safeRepeat(" ", min(80, termWidth)-writtenHeaderChars-2))
+		if err != nil {
+			return nil, fmt.Errorf("failed to write terminal padding: %w", err)
+		}
 
 		switch {
 		case scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeCritical):
-			fmt.Fprintf(w, "💥\n")
+			_, err = fmt.Fprintf(w, "💥\n")
 		case scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeWarning):
-			fmt.Fprintf(w, "🤔\n")
+			_, err = fmt.Fprintf(w, "🤔\n")
 		default:
-			fmt.Fprintf(w, "✅\n")
+			_, err = fmt.Fprintf(w, "✅\n")
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to write: %w", err)
 		}
 
 		for _, card := range scoredObject.Checks {
 			r := outputHumanStep(card, verboseOutput, termWidth)
-			_, err := io.Copy(w, r)
-			if err != nil {
-				return nil, err
+			if _, err := io.Copy(w, r); err != nil {
+				return nil, fmt.Errorf("failed to copy output: %w", err)
 			}
-
 		}
 	}
 

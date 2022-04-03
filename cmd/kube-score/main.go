@@ -192,9 +192,14 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		KubernetesVersion:                     kubeVer,
 	}
 
-	parsedFiles, err := parser.ParseFiles(cnf)
+	p, err := parser.New()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initializer parser: %w", err)
+	}
+
+	parsedFiles, err := p.ParseFiles(cnf)
+	if err != nil {
+		return fmt.Errorf("failed to parse files: %w", err)
 	}
 
 	scoreCard, err := score.Score(parsedFiles, cnf)
@@ -230,8 +235,10 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		if err != nil {
 			termWidth = 80
 		}
-		_, err = human.Human(scoreCard, *verboseOutput, termWidth)
-		return err
+		r, err = human.Human(scoreCard, *verboseOutput, termWidth)
+		if err != nil {
+			return err
+		}
 	case *outputFormat == "ci" && version == "v1":
 		r = ci.CI(scoreCard)
 	case *outputFormat == "sarif":

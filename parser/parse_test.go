@@ -12,7 +12,6 @@ import (
 )
 
 func TestParse(t *testing.T) {
-
 	cases := []struct {
 		fname    string
 		expected error
@@ -26,10 +25,13 @@ func TestParse(t *testing.T) {
 		},
 	}
 
+	parser, err := New()
+	assert.NoError(t, err)
+
 	for _, tc := range cases {
 		fp, err := os.Open(tc.fname)
 		assert.Nil(t, err)
-		_, err = ParseFiles(config.Configuration{
+		_, err = parser.ParseFiles(config.Configuration{
 			AllFiles: []ks.NamedReader{fp},
 		})
 		if tc.expected == nil {
