@@ -46,7 +46,10 @@ func main() {
 		},
 
 		"mkconfig": func(helpName string, args []string) {
-			mkConfigFile(helpName, args)
+			if err := mkConfigFile(helpName, args); err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Failed to make configuration file: %v\n", err)
+				os.Exit(1)
+			}
 		},
 
 		"version": func(helpName string, args []string) {
@@ -164,7 +167,12 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	// load configuration file
 
 	if len(*configFile) > 0 {
-		cfg := loadConfigFile(*configFile)
+		cfg, err := loadConfigFile(*configFile)
+
+		if err != nil {
+			return err
+		}
+
 		excludeChks := excludeChecks(&cfg)
 		includeChks := includeChecks(&cfg)
 

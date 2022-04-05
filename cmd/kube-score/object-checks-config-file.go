@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type kubescorechecks struct {
+type configuration struct {
 	AddAllDefaultChecks            bool     `yaml:"addAllDefaultChecks"`
 	AddAllOptionalChecks           bool     `yaml:"addAllOptionalChecks"`
 	DisableIgnoreChecksAnnotations bool     `yaml:"disableIgnoreChecksAnnotations"`
@@ -21,7 +21,7 @@ type kubescorechecks struct {
 	ExcludeChecks                  []string `yaml:"exclude"`
 }
 
-func mkConfigFile(binName string, args []string) {
+func mkConfigFile(binName string, args []string) error {
 	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
 	setDefault(fs, binName, "mkconfig", false)
@@ -31,25 +31,23 @@ func mkConfigFile(binName string, args []string) {
 	err := fs.Parse(args)
 
 	if err != nil {
-		panic("Failed to parse mkconfig arguments")
+		return fmt.Errorf("Failed to parse mkconfig arguments: %w", err)
 	}
 
 	if *printHelp {
 		fs.Usage()
-		return
+		return nil
 	}
 
 	if _, err := os.Stat(*cfgFile); err == nil {
 		if !*cfgForce {
-			errmsg := fmt.Errorf("File %s exists. Use --force flag to overwrite\n", *cfgFile)
-			fmt.Println(errmsg)
-			return
+			return fmt.Errorf("File %s exists. Use --force flag to overwrite\n", *cfgFile)
 		}
 	}
 
 	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
 
-	var checks kubescorechecks
+	var checks configuration
 
 	checks.AddAllDefaultChecks = true
 	checks.AddAllOptionalChecks = false
@@ -64,34 +62,32 @@ func mkConfigFile(binName string, args []string) {
 	}
 
 	if o, err := yaml.Marshal(&checks); err != nil {
-		err := fmt.Errorf("Failed to marshal checks")
-		fmt.Println(err.Error())
+		return fmt.Errorf("Failed to marshal checks %w", err)
 	} else {
 		if err := os.WriteFile(*cfgFile, []byte(o), 0600); err != nil {
-			panic(err)
+			return fmt.Errorf("Failed to write file %w,", err)
 		}
 		fmt.Println("Created kube-score configuration file ", *cfgFile)
+		return nil
 	}
 }
 
-func loadConfigFile(fp string) (config kubescorechecks) {
+func loadConfigFile(fileName string) (config configuration, err error) {
 
-	content, err := os.ReadFile(fp)
+	content, err := os.ReadFile(fileName)
 
-	// if the file does not exist, create it
 	if err != nil {
-		panic(err)
+		return config, fmt.Errorf("Failed to read file %s, error %w", fileName, err)
 	}
 
-	err2 := yaml.Unmarshal(content, &config)
-	if err2 != nil {
-		panic(err2)
+	if err := yaml.Unmarshal(content, &config); err != nil {
+		return config, fmt.Errorf("Failed to unmarshal yaml %w", err)
 	}
 
-	return config
+	return config, nil
 }
 
-func includeChecks(k *kubescorechecks) (checks []string) {
+func includeChecks(k *configuration) (checks []string) {
 	if k.AddAllOptionalChecks {
 		checks = append(checks, k.OptionalChecks...)
 	}
@@ -101,7 +97,7 @@ func includeChecks(k *kubescorechecks) (checks []string) {
 	return
 }
 
-func excludeChecks(k *kubescorechecks) (checks []string) {
+func excludeChecks(k *configuration) (checks []string) {
 	if !k.AddAllDefaultChecks {
 		checks = append(checks, k.DefaultChecks...)
 	}
