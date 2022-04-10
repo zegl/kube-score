@@ -1,0 +1,8 @@
+disable-all: false
+enable: []
+enable-all: true
+disable: 
+  - statefulset-has-poddisruptionbudget
+  - deployment-has-poddisruptionbudget
+  - poddisruptionbudget-has-policy
+  - pod-networkpolicy

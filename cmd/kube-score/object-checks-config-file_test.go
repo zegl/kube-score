@@ -1,60 +1,73 @@
 package main
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKubeScoreConfigExcludeAllDefaultChecks(t *testing.T) {
+// functionally the same as having no configuration file
+func TestKubeScoreConfigDefaultChecks(t *testing.T) {
 
-	if cfg, err := loadConfigFile("testdata/kube-score.yml"); err == nil {
-		cfg.AddAllDefaultChecks = false
-		excludeThese := excludeChecks(&cfg)
+	if cfg, err := loadConfigFile("testdata/kube-score-default.yml"); err == nil {
+		assert.Equal(t, cfg.DisableAll, false)
+		assert.Equal(t, cfg.EnableAll, false)
+		assert.Equal(t, len(cfg.DisableChecks), 0)
+		assert.Equal(t, len(cfg.EnableChecks), 0)
 
-		assert.Equal(t, len(excludeThese), len(cfg.DefaultChecks))
+		include := includeChecks(&cfg)
+		exclude := excludeChecks(&cfg)
+		dflt, _ := registeredChecks()
+		assert.Equal(t, len(include), len(dflt))
+		assert.Equal(t, len(exclude), 0)
 	}
 }
 
+// functionally means include all optional tests
 func TestKubeScoreConfigIncludeAllOptionalChecks(t *testing.T) {
 
-	if cfg, err := loadConfigFile("testdata/kube-score.yml"); err == nil {
-		cfg.AddAllOptionalChecks = true
-		includeThese := includeChecks(&cfg)
-
-		assert.Equal(t, len(includeThese), len(cfg.OptionalChecks))
+	if cfg, err := loadConfigFile("testdata/kube-score-enable-all.yml"); err == nil {
+		allChecks := allRegisteredChecks()
+		include := includeChecks(&cfg)
+		assert.Equal(t, cfg.EnableAll, true)
+		assert.Equal(t, len(include), len(allChecks))
 	}
 }
 
+// enable most tests, but disable a select few
 func TestKubeScoreConfigExcludeSelectDefaultChecks(t *testing.T) {
 
-	if cfg, err := loadConfigFile("testdata/kube-score.yml"); err == nil {
-		cfg.AddAllDefaultChecks = true
-		cfg.ExcludeChecks = append(cfg.ExcludeChecks, "pod-probes")
-		excludeThese := excludeChecks(&cfg)
-
-		assert.Contains(t, cfg.ExcludeChecks, "pod-probes")
-		assert.Equal(t, len(excludeThese), 1)
+	if cfg, err := loadConfigFile("testdata/kube-score-enable-all-select-disable.yml"); err == nil {
+		assert.Equal(t, cfg.EnableAll, true)
+		assert.True(t, len(cfg.DisableChecks) > 0)
+		excludeChecks := excludeChecks(&cfg)
+		idx := rand.Intn(len(excludeChecks))
+		assert.Contains(t, cfg.DisableChecks, excludeChecks[idx])
 	}
 }
 
 func TestKubeScoreConfigNoDefaultChecksIncludeSelectChecks(t *testing.T) {
 
-	if cfg, err := loadConfigFile("testdata/kube-score.yml"); err == nil {
-		cfg.AddAllDefaultChecks = false
+	if cfg, err := loadConfigFile("testdata/kube-score-disable-all-select-enable.yml"); err == nil {
+		allChecks := allRegisteredChecks()
+		includeChecks := includeChecks(&cfg)
+		excludeChecks := excludeChecks(&cfg)
+		assert.Equal(t, cfg.DisableAll, true)
+		assert.Equal(t, len(excludeChecks), len(allChecks))
+		idx := rand.Intn(len(includeChecks))
+		assert.Contains(t, cfg.EnableChecks, includeChecks[idx])
+	}
+}
 
-		onlyThese := []string{"container-resources", "image-tag", "image-pull-policy"}
+func TestKubeScoreConfigOnlyEnableAndDisableSelectChecks(t *testing.T) {
 
-		cfg.IncludeChecks = append(cfg.IncludeChecks, onlyThese...)
-		includeThese := includeChecks(&cfg)
-
-		for _, v := range onlyThese {
-			assert.Contains(t, cfg.IncludeChecks, v)
-		}
-
-		assert.NotContains(t, cfg.IncludeChecks, "pod-networkpolicy")
-
-		assert.Equal(t, len(includeThese), len(onlyThese))
+	if cfg, err := loadConfigFile("testdata/kube-score-only-enable-disable.yml"); err == nil {
+		includeChecks := includeChecks(&cfg)
+		excludeChecks := excludeChecks(&cfg)
+		assert.Equal(t, cfg.DisableAll, true)
+		assert.Equal(t, len(excludeChecks), len(cfg.DisableChecks))
+		assert.Equal(t, len(includeChecks), len(cfg.EnableChecks))
 	}
 }
 

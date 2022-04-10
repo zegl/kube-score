@@ -1,0 +1,12 @@
+disable-all: true # defaults to false
+enable:
+  - ingress-targets-service
+  - cronjob-has-deadline
+  - container-resources
+  - container-image-tag
+enable-all: true # defaults to false
+disable:
+  - statefulset-has-poddisruptionbudget
+  - deployment-has-poddisruptionbudget
+  - poddisruptionbudget-has-policy
+  - pod-networkpolicy

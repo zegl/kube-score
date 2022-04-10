@@ -1,0 +1,8 @@
+disable-all: true
+enable: 
+  - ingress-targets-service
+  - cronjab-has-deadline
+  - container-resources
+  - container-image-tag
+enable-all: false
+disable: []

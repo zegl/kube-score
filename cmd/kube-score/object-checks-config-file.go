@@ -11,16 +11,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Start with an empty enable and disable list
+// If enable-all is true, add all tests to the list. If it's false, add only the default tests to the list.
+// If disable-all is true, add all default tests to the disable list. If it's false, do nothing.
+// If enable is set, use it as the enable list.
+// If disable is set, use it as the disable list.
+// If --enable-optional-test is set, add the test(s) to the enable list
+// If --ignore-test is set, add the test(s) to the disable list
 type configuration struct {
-	AddAllDefaultChecks            bool     `yaml:"addAllDefaultChecks"`
-	AddAllOptionalChecks           bool     `yaml:"addAllOptionalChecks"`
-	DisableIgnoreChecksAnnotations bool     `yaml:"disableIgnoreChecksAnnotations"`
-	DefaultChecks                  []string `yaml:"defaultChecks"`
-	OptionalChecks                 []string `yaml:"optionalChecks"`
-	IncludeChecks                  []string `yaml:"include"`
-	ExcludeChecks                  []string `yaml:"exclude"`
+	DisableAll    bool     `yaml:"disable-all"`
+	EnableChecks  []string `yaml:"enable"`
+	EnableAll     bool     `yaml:"enable-all"`
+	DisableChecks []string `yaml:"disable"`
 }
 
+// Start with an empty enable and disable list
 func mkConfigFile(binName string, args []string) error {
 	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	printHelp := fs.Bool("help", false, "Print help")
@@ -45,21 +50,10 @@ func mkConfigFile(binName string, args []string) error {
 		}
 	}
 
-	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
-
 	var checks configuration
 
-	checks.AddAllDefaultChecks = true
-	checks.AddAllOptionalChecks = false
-	checks.DisableIgnoreChecksAnnotations = false
-
-	for _, c := range allChecks.All() {
-		if c.Optional {
-			checks.OptionalChecks = append(checks.OptionalChecks, c.ID)
-		} else {
-			checks.DefaultChecks = append(checks.DefaultChecks, c.ID)
-		}
-	}
+	checks.DisableAll = false
+	checks.EnableAll = false
 
 	if o, err := yaml.Marshal(&checks); err != nil {
 		return fmt.Errorf("Failed to marshal checks %w", err)
@@ -87,22 +81,65 @@ func loadConfigFile(fileName string) (config configuration, err error) {
 	return config, nil
 }
 
-func includeChecks(k *configuration) (checks []string) {
-	if k.AddAllOptionalChecks {
-		checks = append(checks, k.OptionalChecks...)
+func registeredChecks() (requiredChecks []string, optionalChecks []string) {
+
+	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
+
+	for _, c := range allChecks.All() {
+		if c.Optional {
+			optionalChecks = append(optionalChecks, c.ID)
+		} else {
+			requiredChecks = append(requiredChecks, c.ID)
+		}
 	}
-	if len(k.IncludeChecks) > 0 {
-		checks = append(checks, k.IncludeChecks...)
-	}
+
 	return
 }
 
+func allRegisteredChecks() (allChecks []string) {
+
+	registeredChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
+
+	for _, c := range registeredChecks.All() {
+		allChecks = append(allChecks, c.ID)
+	}
+
+	return
+}
+
+// If enable is set, use it as the enable list.
+// If enable-all is true, add all tests to the list.
+// By default add only the non-optional tests to the list.
+func includeChecks(k *configuration) (checks []string) {
+
+	switch {
+	case len(k.EnableChecks) > 0:
+		checks = append(checks, k.EnableChecks...)
+		return
+	case k.EnableAll:
+		checks = append(checks, allRegisteredChecks()...)
+		return
+	}
+
+	// default case
+	defaultChecks, _ := registeredChecks()
+	checks = append(checks, defaultChecks...)
+
+	return
+}
+
+// If disable is set, use it as the disable list.
+// If disable-all is true, add all tests to the disable list.
 func excludeChecks(k *configuration) (checks []string) {
-	if !k.AddAllDefaultChecks {
-		checks = append(checks, k.DefaultChecks...)
+
+	switch {
+	case len(k.DisableChecks) > 0:
+		checks = append(checks, k.DisableChecks...)
+		return
+	case k.DisableAll:
+		checks = append(checks, allRegisteredChecks()...)
+		return
 	}
-	if len(k.ExcludeChecks) > 0 {
-		checks = append(checks, k.ExcludeChecks...)
-	}
+
 	return
 }

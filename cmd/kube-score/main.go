@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/pflag"
 	flag "github.com/spf13/pflag"
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -104,6 +105,22 @@ Actions:
 	}
 }
 
+func aliasFlagNames(f *pflag.FlagSet, name string) pflag.NormalizedName {
+
+	var aliasFlag = map[string]string{
+		"enable-optional-test": "enable",
+		"ignore-test":          "disable",
+	}
+
+	normalized, exists := aliasFlag[name]
+
+	if exists {
+		name = normalized
+	}
+
+	return pflag.NormalizedName(name)
+}
+
 func scoreFiles(binName string, args []string) error {
 	fs := flag.NewFlagSet(binName, flag.ExitOnError)
 	exitOneOnWarning := fs.Bool("exit-one-on-warning", false, "Exit with code 1 in case of warnings")
@@ -119,6 +136,7 @@ func scoreFiles(binName string, args []string) error {
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
 	configFile := fs.String("config", "", "Optional kube-score configuration file")
 	setDefault(fs, binName, "score", false)
+	fs.SetNormalizeFunc(aliasFlagNames)
 
 	err := fs.Parse(args)
 	if err != nil {
@@ -178,10 +196,6 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 
 		*ignoreTests = append(*ignoreTests, excludeChks...)
 		*optionalTests = append(*optionalTests, includeChks...)
-
-		if cfg.DisableIgnoreChecksAnnotations {
-			disableIgnoreChecksAnnotation = &cfg.DisableIgnoreChecksAnnotations
-		}
 	}
 
 	ignoredTests := listToStructMap(ignoreTests)
