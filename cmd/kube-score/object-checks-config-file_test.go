@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,7 +41,7 @@ func TestKubeScoreConfigExcludeSelectDefaultChecks(t *testing.T) {
 		assert.Equal(t, cfg.EnableAll, true)
 		assert.True(t, len(cfg.DisableChecks) > 0)
 		excludeChecks := excludeChecks(&cfg)
-		idx := rand.Intn(len(excludeChecks))
+		idx := len(excludeChecks) - 1
 		assert.Contains(t, cfg.DisableChecks, excludeChecks[idx])
 	}
 }
@@ -55,7 +54,7 @@ func TestKubeScoreConfigNoDefaultChecksIncludeSelectChecks(t *testing.T) {
 		excludeChecks := excludeChecks(&cfg)
 		assert.Equal(t, cfg.DisableAll, true)
 		assert.Equal(t, len(excludeChecks), len(allChecks))
-		idx := rand.Intn(len(includeChecks))
+		idx := len(includeChecks) - 1
 		assert.Contains(t, cfg.EnableChecks, includeChecks[idx])
 	}
 }
