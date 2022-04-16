@@ -6,8 +6,9 @@ import (
 	"io"
 
 	"github.com/zegl/kube-score/domain"
-	"github.com/zegl/kube-score/sarif"
 	"github.com/zegl/kube-score/scorecard"
+
+	"github.com/owenrumney/go-sarif/sarif"
 )
 
 func Output(input *scorecard.Scorecard) io.Reader {
