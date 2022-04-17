@@ -12,20 +12,20 @@ import (
 )
 
 func Output(input *scorecard.Scorecard) io.Reader {
-	var results []sarif.Results
-	var rules []sarif.Rules
+	var results []sarif.Result
+	var rules []sarif.Message
 
 	addRule := func(check domain.Check) {
 		for _, r := range rules {
-			if r.ID == check.ID {
+			if r.Id == check.ID {
 				return
 			}
 		}
 
-		rules = append(rules, sarif.Rules{
-			ID:   check.ID,
-			Name: check.Name,
-		})
+		// rules = append(rules, sarif.Region{
+		// 	Id:   check.ID,
+		// 	Message: ,
+		// })
 	}
 
 	for _, v := range *input {
@@ -49,11 +49,11 @@ func Output(input *scorecard.Scorecard) io.Reader {
 			for _, comment := range check.Comments {
 				results = append(results, sarif.Results{
 					Message: sarif.Message{
-						Text: comment.Summary,
+						Text: &comment.Summary,
 					},
 					RuleID: check.Check.ID,
 					Level:  level,
-					Properties: sarif.ResultsProperties{
+					Properties: sarif.Properties{
 						IssueConfidence: "HIGH",
 						IssueSeverity:   "HIGH",
 					},
