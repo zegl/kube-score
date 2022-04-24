@@ -1,0 +1,270 @@
+{
+    "version": "2.1.0",
+    "$schema": "https://json.schemastore.org/sarif-2.1.0-rtm.5.json",
+    "runs": [
+        {
+            "tool": {
+                "driver": {
+                    "name": "kube-score",
+                    "informationUri": "https://kube-score.com/",
+                    "rules": [
+                        {
+                            "id": "container-ephemeral-storage-request-and-limit",
+                            "shortDescription": {
+                                "text": "Container Ephemeral Storage Request and Limit"
+                            }
+                        },
+                        {
+                            "id": "container-security-context-user-group-id",
+                            "shortDescription": {
+                                "text": "Container Security Context User Group ID"
+                            }
+                        },
+                        {
+                            "id": "container-security-context-readonlyrootfilesystem",
+                            "shortDescription": {
+                                "text": "Container Security Context ReadOnlyRootFilesystem"
+                            }
+                        },
+                        {
+                            "id": "container-image-tag",
+                            "shortDescription": {
+                                "text": "Container Image Tag"
+                            }
+                        },
+                        {
+                            "id": "pod-networkpolicy",
+                            "shortDescription": {
+                                "text": "Pod NetworkPolicy"
+                            }
+                        },
+                        {
+                            "id": "container-resources",
+                            "shortDescription": {
+                                "text": "Container Resources"
+                            }
+                        }
+                    ]
+                }
+            },
+            "results": [
+                {
+                    "ruleId": "container-ephemeral-storage-request-and-limit",
+                    "level": "error",
+                    "message": {
+                        "text": "Ephemeral Storage limit is not set"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-security-context-user-group-id",
+                    "level": "error",
+                    "message": {
+                        "text": "Container has no configured security context"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-security-context-readonlyrootfilesystem",
+                    "level": "error",
+                    "message": {
+                        "text": "Container has no configured security context"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-image-tag",
+                    "level": "error",
+                    "message": {
+                        "text": "Image with latest tag"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "pod-networkpolicy",
+                    "level": "error",
+                    "message": {
+                        "text": "The pod does not have a matching NetworkPolicy"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-resources",
+                    "level": "error",
+                    "message": {
+                        "text": "CPU limit is not set"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-resources",
+                    "level": "error",
+                    "message": {
+                        "text": "Memory limit is not set"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-resources",
+                    "level": "error",
+                    "message": {
+                        "text": "CPU request is not set"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                },
+                {
+                    "ruleId": "container-resources",
+                    "level": "error",
+                    "message": {
+                        "text": "Memory request is not set"
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "file:///home/mads/git/kube-score/score/testdata/pod-probes-both.yaml"
+                                },
+                                "region": {
+                                    "startLine": 1,
+                                    "endLine": 1
+                                }
+                            }
+                        }
+                    ],
+                    "properties": {
+                        "confidence": "High",
+                        "severity": "High"
+                    }
+                }
+            ]
+        }
+    ]
+}

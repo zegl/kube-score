@@ -225,7 +225,10 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	case *outputFormat == "ci" && version == "v1":
 		r = ci.CI(scoreCard)
 	case *outputFormat == "sarif":
-		r = sarif.Output(scoreCard)
+		err, r = sarif.Output(scoreCard)
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("error: Unknown --output-format or --output-version")
 	}
