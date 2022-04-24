@@ -11,12 +11,10 @@ import (
 	"github.com/owenrumney/go-sarif/sarif"
 )
 
-func Output(input *scorecard.Scorecard) io.Reader {
-	// create a new report object
+func Output(input *scorecard.Scorecard) (error, io.Reader) {
 	report, err := sarif.New(sarif.Version210)
 	if err != nil {
-		// TODO do something nicer here
-		panic(err)
+		return err, nil
 	}
 
 	run := sarif.NewRun("kube-score", "https://kube-score.com/")
@@ -56,7 +54,7 @@ func Output(input *scorecard.Scorecard) io.Reader {
 						sarif.NewLocationWithPhysicalLocation(
 							sarif.NewPhysicalLocation().
 								WithArtifactLocation(
-									sarif.NewSimpleArtifactLocation(v.FileLocation.Name),
+									sarif.NewSimpleArtifactLocation("file://" + v.FileLocation.Name),
 								).WithRegion(
 								sarif.NewSimpleRegion(
 									v.FileLocation.Line,
@@ -71,10 +69,9 @@ func Output(input *scorecard.Scorecard) io.Reader {
 
 	report.AddRun(run)
 
-	// add the run to the report
 	j, err := json.MarshalIndent(report, "", "    ")
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
-	return bytes.NewBuffer(j)
+	return nil, bytes.NewBuffer(j)
 }
