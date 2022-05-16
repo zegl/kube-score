@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser"
@@ -390,6 +389,18 @@ func TestPodContainerPortsDuplicateNames(t *testing.T) {
 
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-duplicate-names.yaml")},
+		EnabledOptionalTests: structMap,
+	}, "Container Ports Check", scorecard.GradeCritical)
+}
+
+func TestPodContainerPortsNameLength(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-ports-check"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-name-too-long.yaml")},
 		EnabledOptionalTests: structMap,
 	}, "Container Ports Check", scorecard.GradeCritical)
 }

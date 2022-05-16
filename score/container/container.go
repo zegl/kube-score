@@ -256,6 +256,7 @@ func containerStorageEphemeralRequestEqualsLimit(podTemplate corev1.PodTemplateS
 // does not prevent it from being exposed. Specifying it does not expose the port outside the cluster; that
 // requires a Service object. However misspecifying elements of this optional Container
 func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+	const maxPortNameLength = 15
 
 	allContainers := podTemplate.Spec.InitContainers
 	allContainers = append(allContainers, podTemplate.Spec.Containers...)
@@ -272,6 +273,10 @@ func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.Typ
 					score.AddComment(container.Name, "Container Port Check", "Container ports.containerPort named ports must be unique")
 					score.Grade = scorecard.GradeCritical
 				}
+			}
+			if len(port.Name) > maxPortNameLength {
+				score.AddComment(container.Name, "Container Port Check", "Container port.Name length exceeds maximum permitted characters")
+				score.Grade = scorecard.GradeCritical
 			}
 			if port.ContainerPort == 0 {
 				score.AddComment(container.Name, "Container Port Check", "Container ports.containerPort cannot be empty")
