@@ -155,3 +155,31 @@ func TestContainerSecurityContextReadOnlyRootFilesystemNoSecurityContext(t *test
 		Description: "Set securityContext to run the container in a more secure context.",
 	})
 }
+
+func TestServiceIgnoreNamespace(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["site"] = struct{}{}
+
+	s, err := testScore(config.Configuration{
+		VerboseOutput:     0,
+		AllFiles:          []ks.NamedReader{testFile("service-externalname.yaml")},
+		IgnoredNamespaces: structMap,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			if c.Check.ID == "service-targets-pod" {
+				assert.True(t, c.Skipped)
+				assert.Equal(t, scorecard.GradeAllOK, c.Grade)
+				tested = true
+			}
+		}
+	}
+	assert.True(t, tested)
+}

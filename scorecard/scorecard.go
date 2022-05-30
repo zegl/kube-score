@@ -24,11 +24,12 @@ func New() Scorecard {
 	return make(Scorecard)
 }
 
-func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, useIgnoreChecksAnnotation bool) *ScoredObject {
+func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, useIgnoreChecksAnnotation bool, ignoredNamespaces map[string]struct{}) *ScoredObject {
 	o := &ScoredObject{
-		TypeMeta:   typeMeta,
-		ObjectMeta: objectMeta,
-		Checks:     make([]TestScore, 0),
+		TypeMeta:          typeMeta,
+		ObjectMeta:        objectMeta,
+		Checks:            make([]TestScore, 0),
+		ignoredNamespaces: ignoredNamespaces,
 	}
 
 	// If this object already exists, return the previous version
@@ -59,7 +60,8 @@ type ScoredObject struct {
 	FileLocation ks.FileLocation
 	Checks       []TestScore
 
-	ignoredChecks map[string]struct{}
+	ignoredChecks     map[string]struct{}
+	ignoredNamespaces map[string]struct{}
 }
 
 func (s ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
@@ -107,6 +109,11 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	if _, ok := so.ignoredChecks[check.ID]; ok {
 		ts.Skipped = true
 		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because %s is ignored", check.ID)}}
+	}
+
+	if _, ok := so.ignoredNamespaces[so.ObjectMeta.Namespace]; ok {
+		ts.Skipped = true
+		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because the %s namespace is ignored", so.ObjectMeta.Namespace)}}
 	}
 
 	so.Checks = append(so.Checks, ts)
