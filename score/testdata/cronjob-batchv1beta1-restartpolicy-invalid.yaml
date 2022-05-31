@@ -1,0 +1,28 @@
+kind: CronJob
+apiVersion: batch/v1beta1
+metadata:
+  namespace: cronjobs
+  name: pwsh-test
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: pwsh
+            imagePullPolicy: Always
+            image: mcr.microsoft.com/powershell:7
+            command:
+            - pwsh
+            - -Command
+            - Start-Sleep -Seconds 5
+            securityContext:
+              readOnlyRootFilesystem: true
+            resources:
+              limits:
+                ephemeral-storage: 50Mi
+              requests:
+                ephemeral-storage: 50Mi
+          RestartPolicy: OnFailure 
+schedule: '0/1 * * * *'
+startingDeadlineSeconds: 5

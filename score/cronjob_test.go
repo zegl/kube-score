@@ -35,3 +35,33 @@ func TestProbesPodCronMissingReady(t *testing.T) {
 		})
 	}
 }
+
+func TestCronJobHasRestartPolicyMissing(t *testing.T) {
+	t.Parallel()
+
+	for _, v := range []string{"batchv1beta1", "batchv1"} {
+		t.Run(v, func(t *testing.T) {
+			testExpectedScore(t, "cronjob-"+v+"-restartpolicy-not-set.yaml", "CronJob RestartPolicy", scorecard.GradeCritical)
+		})
+	}
+}
+
+func TestCronJobHasRestartPolicyInvalid(t *testing.T) {
+	t.Parallel()
+
+	for _, v := range []string{"batchv1beta1", "batchv1"} {
+		t.Run(v, func(t *testing.T) {
+			testExpectedScore(t, "cronjob-"+v+"-restartpolicy-invalid.yaml", "CronJob RestartPolicy", scorecard.GradeCritical)
+		})
+	}
+}
+
+func TestCronJobHasRestartPolicyValid(t *testing.T) {
+	t.Parallel()
+
+	for _, v := range []string{"batchv1beta1", "batchv1"} {
+		t.Run(v, func(t *testing.T) {
+			testExpectedScore(t, "cronjob-"+v+"-restartpolicy-valid.yaml", "CronJob RestartPolicy", scorecard.GradeAllOK)
+		})
+	}
+}
