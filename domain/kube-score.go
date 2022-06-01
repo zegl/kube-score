@@ -121,6 +121,7 @@ type CronJob interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetObjectMeta() metav1.ObjectMeta
 	StartingDeadlineSeconds() *int64
+	GetPodTemplateSpec() corev1.PodTemplateSpec
 	FileLocationer
 }
 
