@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  annotations:
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  'runtime/default'
+    kube-score/optional: container-seccomp-profile
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:latest
+    

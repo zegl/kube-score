@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: app
+  annotations:
+    kube-score/optional: container-ports-check
+spec:
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+      - name: app
+        image: app:dev
+        imagePullPolicy: "Always"
+        ports:
+        - name: app
+          containerPort: 80
+          protocol: TCP
+        - name: smtp
+          containerPort: 
+          protocol: TCP

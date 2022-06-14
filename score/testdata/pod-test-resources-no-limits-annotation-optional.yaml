@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  annotations:
+    kube-score/optional: container-memory-requests-equal-limits,container-cpu-requests-equal-limits,container-resource-requests-equal-limits
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:123
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi

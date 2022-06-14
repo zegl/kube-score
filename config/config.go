@@ -17,6 +17,7 @@ type Configuration struct {
 	IgnoredTests                          map[string]struct{}
 	EnabledOptionalTests                  map[string]struct{}
 	UseIgnoreChecksAnnotation             bool
+	UseOptionalChecksAnnotation           bool
 	KubernetesVersion                     Semver
 }
 

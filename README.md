@@ -102,6 +102,7 @@ Actions:
 
 Flags for score:
       --disable-ignore-checks-annotations   Set to true to disable the effect of the 'kube-score/ignore' annotations
+      --disable-optional-checks-annotations Set to true to disable the effect of the 'kube-score/optional' annotations
       --enable-optional-test strings        Enable an optional test, can be set multiple times
       --exit-one-on-warning                 Exit with code 1 in case of warnings
       --help                                Print help
@@ -141,6 +142,47 @@ spec:
     port: 80
     targetPort: 8080
   type: NodePort
+```
+
+### Enabling a optional test
+
+Optional tests can be enabled in the whole run of the program, with the `--enable-optional-test` flag.
+
+A test can also be enabled on a per-object basis, by adding the annotation `kube-score/optional` to the object.
+The value should be a comma separated string of the [test IDs](README_CHECKS.md).
+
+Example:
+
+Testing this object will enable the `container-seccomp-profile` test.
+Also multiple tests defined by `kube-score/ignore` are also ignored at the same.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: optional-test-manifest-deployment
+  labels:
+    app: optional-test-manifest
+  annotations:
+    kube-score/ignore: pod-networkpolicy,container-resources,container-image-pull-policy,container-security-context-privileged,container-security-context-user-group-id,container-security-context-readonlyrootfilesystem,container-ephemeral-storage-request-and-limit
+    kube-score/optional: container-seccomp-profile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: optional-test-manifest
+  template:
+    metadata:
+      labels:
+        app: optional-test-manifest
+    spec:
+      containers:
+      - name: optional-test-manifest
+        image: busybox:1.34
+        command:
+        - /bin/sh
+        - -c
+        - date; env; tail -f /dev/null
 ```
 
 ## Building from source

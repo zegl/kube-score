@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  annotations:
+    kube-score/optional: container-ephemeral-storage-request-equals-limit
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:123
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1Gi
+        ephemeral-storage: 2Gi
+      requests:
+        cpu: 200m
+        memory: 1Gi
+        ephemeral-storage: 1Gi

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	ignoredChecksAnnotation = "kube-score/ignore"
+	ignoredChecksAnnotation  = "kube-score/ignore"
+	optionalChecksAnnotation = "kube-score/optional"
 )
 
 // if this, then that
@@ -24,11 +26,13 @@ func New() Scorecard {
 	return make(Scorecard)
 }
 
-func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, useIgnoreChecksAnnotation bool) *ScoredObject {
+func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, cnf config.Configuration) *ScoredObject {
 	o := &ScoredObject{
-		TypeMeta:   typeMeta,
-		ObjectMeta: objectMeta,
-		Checks:     make([]TestScore, 0),
+		TypeMeta:       typeMeta,
+		ObjectMeta:     objectMeta,
+		Checks:         make([]TestScore, 0),
+		ignoredChecks:  make(map[string]struct{}),
+		optionalChecks: make(map[string]struct{}),
 	}
 
 	// If this object already exists, return the previous version
@@ -36,8 +40,15 @@ func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 		return object
 	}
 
-	if useIgnoreChecksAnnotation {
+	if cnf.UseIgnoreChecksAnnotation {
 		o.setIgnoredTests()
+	}
+
+	if cnf.UseOptionalChecksAnnotation {
+		o.setOptionalTests()
+	}
+	for id, ot := range cnf.EnabledOptionalTests {
+		o.optionalChecks[id] = ot
 	}
 
 	s[o.resourceRefKey()] = o
@@ -59,7 +70,8 @@ type ScoredObject struct {
 	FileLocation ks.FileLocation
 	Checks       []TestScore
 
-	ignoredChecks map[string]struct{}
+	ignoredChecks  map[string]struct{}
+	optionalChecks map[string]struct{}
 }
 
 func (s ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
@@ -86,6 +98,16 @@ func (so *ScoredObject) setIgnoredTests() {
 	so.ignoredChecks = ignoredMap
 }
 
+func (so *ScoredObject) setOptionalTests() {
+	optionalMap := make(map[string]struct{})
+	if optionalCSV, ok := so.ObjectMeta.Annotations[optionalChecksAnnotation]; ok {
+		for _, optional := range strings.Split(optionalCSV, ",") {
+			optionalMap[strings.TrimSpace(optional)] = struct{}{}
+		}
+	}
+	so.optionalChecks = optionalMap
+}
+
 func (so ScoredObject) resourceRefKey() string {
 	return so.TypeMeta.Kind + "/" + so.TypeMeta.APIVersion + "/" + so.ObjectMeta.Namespace + "/" + so.ObjectMeta.Name
 }
@@ -102,6 +124,10 @@ func (so ScoredObject) HumanFriendlyRef() string {
 func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLocationer) {
 	ts.Check = check
 	so.FileLocation = locationer.FileLocation()
+
+	if _, ok := so.optionalChecks[check.ID]; ts.Check.Optional && !ok {
+		return
+	}
 
 	// This test is ignored (via annotations), don't save the score
 	if _, ok := so.ignoredChecks[check.ID]; ok {
