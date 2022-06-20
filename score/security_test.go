@@ -16,8 +16,8 @@ func TestContainerSeccompMissing(t *testing.T) {
 	structMap["container-seccomp-profile"] = struct{}{}
 
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-seccomp-no-annotation.yaml")},
-		EnabledOptionalTests: structMap,
+		AllFiles:     []ks.NamedReader{testFile("pod-seccomp-no-annotation.yaml")},
+		EnabledTests: structMap,
 	}, "Container Seccomp Profile", scorecard.GradeWarning)
 }
 
@@ -28,8 +28,8 @@ func TestContainerSeccompAllGood(t *testing.T) {
 	structMap["container-seccomp-profile"] = struct{}{}
 
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-seccomp-annotated.yaml")},
-		EnabledOptionalTests: structMap,
+		AllFiles:     []ks.NamedReader{testFile("pod-seccomp-annotated.yaml")},
+		EnabledTests: structMap,
 	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }
 
@@ -37,8 +37,8 @@ func TestContainerSeccompAllGoodAnnotation(t *testing.T) {
 	t.Parallel()
 
 	testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:                    []ks.NamedReader{testFile("pod-seccomp-annotated-annotation-optional.yaml")},
-		UseOptionalChecksAnnotation: true,
+		AllFiles:                  []ks.NamedReader{testFile("pod-seccomp-annotated-annotation-optional.yaml")},
+		UseEnableChecksAnnotation: true,
 	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }
 
@@ -47,8 +47,8 @@ func TestContainerSecurityContextUserGroupIDAllGood(t *testing.T) {
 	structMap := make(map[string]struct{})
 	structMap["container-security-context-user-group-id"] = struct{}{}
 	c := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
-		EnabledOptionalTests: structMap,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
+		EnabledTests: structMap,
 	}, "Container Security Context User Group ID", scorecard.GradeAllOK)
 	assert.Empty(t, c)
 }
@@ -58,8 +58,8 @@ func TestContainerSecurityContextUserGroupIDLowGroup(t *testing.T) {
 	optionalChecks := make(map[string]struct{})
 	optionalChecks["container-security-context-user-group-id"] = struct{}{}
 	comments := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-low-group-id.yaml")},
-		EnabledOptionalTests: optionalChecks,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-low-group-id.yaml")},
+		EnabledTests: optionalChecks,
 	}, "Container Security Context User Group ID", scorecard.GradeCritical)
 	assert.Contains(t, comments, scorecard.TestScoreComment{
 		Path:        "foobar",
@@ -73,8 +73,8 @@ func TestContainerSecurityContextUserGroupIDLowUser(t *testing.T) {
 	optionalChecks := make(map[string]struct{})
 	optionalChecks["container-security-context-user-group-id"] = struct{}{}
 	comments := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-low-user-id.yaml")},
-		EnabledOptionalTests: optionalChecks,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-low-user-id.yaml")},
+		EnabledTests: optionalChecks,
 	}, "Container Security Context User Group ID", scorecard.GradeCritical)
 	assert.Contains(t, comments, scorecard.TestScoreComment{
 		Path:        "foobar",
@@ -88,8 +88,8 @@ func TestContainerSecurityContextUserGroupIDNoSecurityContext(t *testing.T) {
 	optionalChecks := make(map[string]struct{})
 	optionalChecks["container-security-context-user-group-id"] = struct{}{}
 	comments := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-nosecuritycontext.yaml")},
-		EnabledOptionalTests: optionalChecks,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-nosecuritycontext.yaml")},
+		EnabledTests: optionalChecks,
 	}, "Container Security Context User Group ID", scorecard.GradeCritical)
 	assert.Contains(t, comments, scorecard.TestScoreComment{
 		Path:        "foobar",
@@ -103,8 +103,8 @@ func TestContainerSecurityContextPrivilegedAllGood(t *testing.T) {
 	structMap := make(map[string]struct{})
 	structMap["container-security-context-privileged"] = struct{}{}
 	c := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
-		EnabledOptionalTests: structMap,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
+		EnabledTests: structMap,
 	}, "Container Security Context Privileged", scorecard.GradeAllOK)
 	assert.Empty(t, c)
 }
@@ -114,8 +114,8 @@ func TestContainerSecurityContextPrivilegedPrivileged(t *testing.T) {
 	optionalChecks := make(map[string]struct{})
 	optionalChecks["container-security-context-privileged"] = struct{}{}
 	comments := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-privileged.yaml")},
-		EnabledOptionalTests: optionalChecks,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-privileged.yaml")},
+		EnabledTests: optionalChecks,
 	}, "Container Security Context Privileged", scorecard.GradeCritical)
 	assert.Contains(t, comments, scorecard.TestScoreComment{
 		Path:        "foobar",
@@ -129,8 +129,8 @@ func TestContainerSecurityContextReadOnlyRootFilesystemAllGood(t *testing.T) {
 	structMap := make(map[string]struct{})
 	structMap["container-security-context-readonlyrootfilesystem"] = struct{}{}
 	c := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
-		EnabledOptionalTests: structMap,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-all-good.yaml")},
+		EnabledTests: structMap,
 	}, "Container Security Context ReadOnlyRootFilesystem", scorecard.GradeAllOK)
 	assert.Empty(t, c)
 }
@@ -140,8 +140,8 @@ func TestContainerSecurityContextReadOnlyRootFilesystemWriteable(t *testing.T) {
 	optionalChecks := make(map[string]struct{})
 	optionalChecks["container-security-context-readonlyrootfilesystem"] = struct{}{}
 	comments := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-writeablerootfilesystem.yaml")},
-		EnabledOptionalTests: optionalChecks,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-writeablerootfilesystem.yaml")},
+		EnabledTests: optionalChecks,
 	}, "Container Security Context ReadOnlyRootFilesystem", scorecard.GradeCritical)
 	assert.Contains(t, comments, scorecard.TestScoreComment{
 		Path:        "foobar",
@@ -155,8 +155,8 @@ func TestContainerSecurityContextReadOnlyRootFilesystemNoSecurityContext(t *test
 	optionalChecks := make(map[string]struct{})
 	optionalChecks["container-security-context-readonlyrootfilesystem"] = struct{}{}
 	comments := testExpectedScoreWithConfig(t, config.Configuration{
-		AllFiles:             []ks.NamedReader{testFile("pod-security-context-nosecuritycontext.yaml")},
-		EnabledOptionalTests: optionalChecks,
+		AllFiles:     []ks.NamedReader{testFile("pod-security-context-nosecuritycontext.yaml")},
+		EnabledTests: optionalChecks,
 	}, "Container Security Context ReadOnlyRootFilesystem", scorecard.GradeCritical)
 	assert.Contains(t, comments, scorecard.TestScoreComment{
 		Path:        "foobar",

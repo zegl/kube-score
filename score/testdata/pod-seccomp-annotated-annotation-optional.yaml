@@ -4,7 +4,7 @@ metadata:
   name: pod-test-1
   annotations:
     seccomp.security.alpha.kubernetes.io/defaultProfileName:  'runtime/default'
-    kube-score/optional: container-seccomp-profile
+    kube-score/enable: container-seccomp-profile
 spec:
   containers:
   - name: foobar

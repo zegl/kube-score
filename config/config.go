@@ -15,9 +15,9 @@ type Configuration struct {
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool
 	IgnoredTests                          map[string]struct{}
-	EnabledOptionalTests                  map[string]struct{}
+	EnabledTests                          map[string]struct{}
 	UseIgnoreChecksAnnotation             bool
-	UseOptionalChecksAnnotation           bool
+	UseEnableChecksAnnotation             bool
 	KubernetesVersion                     Semver
 }
 

@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ignoredChecksAnnotation  = "kube-score/ignore"
-	optionalChecksAnnotation = "kube-score/optional"
+	ignoredChecksAnnotation = "kube-score/ignore"
+	enabledChecksAnnotation = "kube-score/enable"
 )
 
 // if this, then that
@@ -28,11 +28,11 @@ func New() Scorecard {
 
 func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, cnf config.Configuration) *ScoredObject {
 	o := &ScoredObject{
-		TypeMeta:       typeMeta,
-		ObjectMeta:     objectMeta,
-		Checks:         make([]TestScore, 0),
-		ignoredChecks:  make(map[string]struct{}),
-		optionalChecks: make(map[string]struct{}),
+		TypeMeta:      typeMeta,
+		ObjectMeta:    objectMeta,
+		Checks:        make([]TestScore, 0),
+		ignoredChecks: make(map[string]struct{}),
+		enabledChecks: make(map[string]struct{}),
 	}
 
 	// If this object already exists, return the previous version
@@ -44,11 +44,11 @@ func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectM
 		o.setIgnoredTests()
 	}
 
-	if cnf.UseOptionalChecksAnnotation {
-		o.setOptionalTests()
+	if cnf.UseEnableChecksAnnotation {
+		o.setEnabledTests()
 	}
-	for id, ot := range cnf.EnabledOptionalTests {
-		o.optionalChecks[id] = ot
+	for id, ot := range cnf.EnabledTests {
+		o.enabledChecks[id] = ot
 	}
 
 	s[o.resourceRefKey()] = o
@@ -70,8 +70,8 @@ type ScoredObject struct {
 	FileLocation ks.FileLocation
 	Checks       []TestScore
 
-	ignoredChecks  map[string]struct{}
-	optionalChecks map[string]struct{}
+	ignoredChecks map[string]struct{}
+	enabledChecks map[string]struct{}
 }
 
 func (s ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
@@ -98,14 +98,14 @@ func (so *ScoredObject) setIgnoredTests() {
 	so.ignoredChecks = ignoredMap
 }
 
-func (so *ScoredObject) setOptionalTests() {
-	optionalMap := make(map[string]struct{})
-	if optionalCSV, ok := so.ObjectMeta.Annotations[optionalChecksAnnotation]; ok {
+func (so *ScoredObject) setEnabledTests() {
+	enabledMap := make(map[string]struct{})
+	if optionalCSV, ok := so.ObjectMeta.Annotations[enabledChecksAnnotation]; ok {
 		for _, optional := range strings.Split(optionalCSV, ",") {
-			optionalMap[strings.TrimSpace(optional)] = struct{}{}
+			enabledMap[strings.TrimSpace(optional)] = struct{}{}
 		}
 	}
-	so.optionalChecks = optionalMap
+	so.enabledChecks = enabledMap
 }
 
 func (so ScoredObject) resourceRefKey() string {
@@ -125,7 +125,7 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	ts.Check = check
 	so.FileLocation = locationer.FileLocation()
 
-	if _, ok := so.optionalChecks[check.ID]; ts.Check.Optional && !ok {
+	if _, ok := so.enabledChecks[check.ID]; ts.Check.Optional && !ok {
 		return
 	}
 
