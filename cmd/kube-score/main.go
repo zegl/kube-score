@@ -109,7 +109,7 @@ func scoreFiles(binName string, args []string) error {
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
-	disableOptionalChecksAnnotation := fs.Bool("disable-optional-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/optional' annotations")
+	disableOptionalChecksAnnotation := fs.Bool("disable-optional-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/enable' annotations")
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
 	setDefault(fs, binName, "score", false)
 

@@ -102,7 +102,7 @@ Actions:
 
 Flags for score:
       --disable-ignore-checks-annotations   Set to true to disable the effect of the 'kube-score/ignore' annotations
-      --disable-optional-checks-annotations Set to true to disable the effect of the 'kube-score/optional' annotations
+      --disable-optional-checks-annotations Set to true to disable the effect of the 'kube-score/enable' annotations
       --enable-optional-test strings        Enable an optional test, can be set multiple times
       --exit-one-on-warning                 Exit with code 1 in case of warnings
       --help                                Print help
@@ -148,7 +148,7 @@ spec:
 
 Optional tests can be enabled in the whole run of the program, with the `--enable-optional-test` flag.
 
-A test can also be enabled on a per-object basis, by adding the annotation `kube-score/optional` to the object.
+A test can also be enabled on a per-object basis, by adding the annotation `kube-score/enable` to the object.
 The value should be a comma separated string of the [test IDs](README_CHECKS.md).
 
 Example:
@@ -165,7 +165,7 @@ metadata:
     app: optional-test-manifest
   annotations:
     kube-score/ignore: pod-networkpolicy,container-resources,container-image-pull-policy,container-security-context-privileged,container-security-context-user-group-id,container-security-context-readonlyrootfilesystem,container-ephemeral-storage-request-and-limit
-    kube-score/optional: container-seccomp-profile
+    kube-score/enable: container-seccomp-profile
 spec:
   replicas: 1
   selector:

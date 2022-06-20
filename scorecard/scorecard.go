@@ -11,7 +11,7 @@ import (
 
 const (
 	ignoredChecksAnnotation  = "kube-score/ignore"
-	optionalChecksAnnotation = "kube-score/optional"
+	optionalChecksAnnotation = "kube-score/enable"
 )
 
 // if this, then that
