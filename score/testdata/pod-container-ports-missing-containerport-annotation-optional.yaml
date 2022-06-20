@@ -5,7 +5,7 @@ metadata:
   labels:
     app: app
   annotations:
-    kube-score/enable: container-ports-check
+    kube-score/optional: container-ports-check
 spec:
   selector:
     matchLabels:

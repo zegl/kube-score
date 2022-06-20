@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: pod-test-1
   annotations:
-    kube-score/enable: container-ephemeral-storage-request-equals-limit
+    kube-score/optional: container-ephemeral-storage-request-equals-limit
 spec:
   containers:
   - name: foobar

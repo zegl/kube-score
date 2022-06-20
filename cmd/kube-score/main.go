@@ -106,10 +106,10 @@ func scoreFiles(binName string, args []string) error {
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.StringP("output-format", "o", "human", "Set to 'human', 'json', 'ci' or 'sarif'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. Sarif output allows for easier integration with CI platforms.")
 	outputVersion := fs.String("output-version", "", "Changes the version of the --output-format. The 'json' format has version 'v2' (default) and 'v1' (deprecated, will be removed in v1.7.0). The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.")
-	enableTests := fs.StringSlice("enable-test", []string{}, "Enable a test, can be set multiple times")
+	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
-	disableEnableChecksAnnotation := fs.Bool("disable-enable-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/enable' annotations")
+	disableOptionalChecksAnnotation := fs.Bool("disable-optional-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/optional' annotations")
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
 	setDefault(fs, binName, "score", false)
 
@@ -158,7 +158,7 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	}
 
 	ignoredTests := listToStructMap(ignoreTests)
-	enabledTests := listToStructMap(enableTests)
+	enabledOptionalTests := listToStructMap(optionalTests)
 
 	kubeVer, err := config.ParseSemver(*kubernetesVersion)
 	if err != nil {
@@ -171,9 +171,9 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		IgnoreContainerCpuLimitRequirement:    *ignoreContainerCpuLimit,
 		IgnoreContainerMemoryLimitRequirement: *ignoreContainerMemoryLimit,
 		IgnoredTests:                          ignoredTests,
-		EnabledTests:                          enabledTests,
+		EnabledOptionalTests:                  enabledOptionalTests,
 		UseIgnoreChecksAnnotation:             !*disableIgnoreChecksAnnotation,
-		UseEnableChecksAnnotation:             !*disableEnableChecksAnnotation,
+		UseOptionalChecksAnnotation:           !*disableOptionalChecksAnnotation,
 		KubernetesVersion:                     kubeVer,
 	}
 
