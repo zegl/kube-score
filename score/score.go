@@ -48,7 +48,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	scoreCard := scorecard.New()
 
 	newObject := func(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *scorecard.ScoredObject {
-		return scoreCard.NewObject(typeMeta, objectMeta, cnf.UseIgnoreChecksAnnotation)
+		return scoreCard.NewObject(typeMeta, objectMeta, cnf)
 	}
 
 	for _, ingress := range allObjects.Ingresses() {

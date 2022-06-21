@@ -4,11 +4,12 @@ on: [pull_request]
 jobs:
   codeball_job:
     runs-on: ubuntu-latest
-    name: Run Codeball
+    name: Codeball
     steps:
-      - name: Codeball AI Actions
-        uses: sturdy-dev/codeball-action@v1
+      - name: Codeball
+        uses: sturdy-dev/codeball-action@v2
         with:
-          #   do-label: "true"                    # Configure if the action should label approved contributions
-          #   label-name: "codeball:approved"     # Configure the label name to set if Codeball approves the contribution
-          do-approve: "false"                  # Configure if the action should approve PRs that have been approved by Codeball
+          approvePullRequests: "true"
+          labelPullRequestsWhenApproved: "true"
+          labelPullRequestsWhenReviewNeeded: "false"
+          failJobsWhenReviewNeeded: "false"
