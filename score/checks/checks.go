@@ -123,22 +123,9 @@ type Checks struct {
 	cnf config.Configuration
 }
 
-func (c Checks) isIgnored(id string) bool {
-	_, ok := c.cnf.IgnoredTests[id]
-	return ok
-}
-
 func (c Checks) isEnabled(check ks.Check) bool {
-	if c.isIgnored(check.ID) {
-		return false
-	}
-
-	if !check.Optional {
-		return true
-	}
-
-	_, ok := c.cnf.EnabledOptionalTests[check.ID]
-	return ok
+	_, ok := c.cnf.IgnoredTests[check.ID]
+	return !ok
 }
 
 func (c *Checks) RegisterMetaCheck(name, comment string, fn MetaCheckFn) {

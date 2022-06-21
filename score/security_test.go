@@ -33,6 +33,15 @@ func TestContainerSeccompAllGood(t *testing.T) {
 	}, "Container Seccomp Profile", scorecard.GradeAllOK)
 }
 
+func TestContainerSeccompAllGoodAnnotation(t *testing.T) {
+	t.Parallel()
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:                    []ks.NamedReader{testFile("pod-seccomp-annotated-annotation-optional.yaml")},
+		UseOptionalChecksAnnotation: true,
+	}, "Container Seccomp Profile", scorecard.GradeAllOK)
+}
+
 func TestContainerSecurityContextUserGroupIDAllGood(t *testing.T) {
 	t.Parallel()
 	structMap := make(map[string]struct{})

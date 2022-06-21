@@ -153,6 +153,15 @@ func TestPodContainerResourceRequestsEqualLimitsNoLimits(t *testing.T) {
 	}, "Container Resource Requests Equal Limits", scorecard.GradeCritical)
 }
 
+func TestPodContainerResourceRequestsEqualLimitsNoLimitsAnnotation(t *testing.T) {
+	t.Parallel()
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:                    []ks.NamedReader{testFile("pod-test-resources-no-limits-annotation-optional.yaml")},
+		UseOptionalChecksAnnotation: true,
+	}, "Container Resource Requests Equal Limits", scorecard.GradeCritical)
+}
+
 func TestPodContainerMemoryRequestsEqualLimitsNoLimits(t *testing.T) {
 	t.Parallel()
 
@@ -165,6 +174,15 @@ func TestPodContainerMemoryRequestsEqualLimitsNoLimits(t *testing.T) {
 	}, "Container Memory Requests Equal Limits", scorecard.GradeCritical)
 }
 
+func TestPodContainerMemoryRequestsEqualLimitsNoLimitsAnnotation(t *testing.T) {
+	t.Parallel()
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:                    []ks.NamedReader{testFile("pod-test-resources-no-limits-annotation-optional.yaml")},
+		UseOptionalChecksAnnotation: true,
+	}, "Container Memory Requests Equal Limits", scorecard.GradeCritical)
+}
+
 func TestPodContainerCPURequestsEqualLimitsNoLimits(t *testing.T) {
 	t.Parallel()
 
@@ -174,6 +192,15 @@ func TestPodContainerCPURequestsEqualLimitsNoLimits(t *testing.T) {
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:             []ks.NamedReader{testFile("pod-test-resources-no-limits.yaml")},
 		EnabledOptionalTests: structMap,
+	}, "Container CPU Requests Equal Limits", scorecard.GradeCritical)
+}
+
+func TestPodContainerCPURequestsEqualLimitsNoLimitsAnnotation(t *testing.T) {
+	t.Parallel()
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:                    []ks.NamedReader{testFile("pod-test-resources-no-limits-annotation-optional.yaml")},
+		UseOptionalChecksAnnotation: true,
 	}, "Container CPU Requests Equal Limits", scorecard.GradeCritical)
 }
 
@@ -345,6 +372,15 @@ func TestPodContainerStorageEphemeralRequestNoMatchLimit(t *testing.T) {
 	}, "Container Ephemeral Storage Request Equals Limit", scorecard.GradeCritical)
 }
 
+func TestPodContainerStorageEphemeralRequestNoMatchLimitAnnotation(t *testing.T) {
+	t.Parallel()
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:                    []ks.NamedReader{testFile("pod-ephemeral-storage-request-nomatch-limit-annotation-optional.yaml")},
+		UseOptionalChecksAnnotation: true,
+	}, "Container Ephemeral Storage Request Equals Limit", scorecard.GradeCritical)
+}
+
 func TestPodContainerStorageEphemeralIgnoreAnnotation(t *testing.T) {
 
 	t.Parallel()
@@ -378,6 +414,15 @@ func TestPodContainerPortsContainerPortMissing(t *testing.T) {
 	testExpectedScoreWithConfig(t, config.Configuration{
 		AllFiles:             []ks.NamedReader{testFile("pod-container-ports-missing-containerport.yaml")},
 		EnabledOptionalTests: structMap,
+	}, "Container Ports Check", scorecard.GradeCritical)
+}
+
+func TestPodContainerPortsContainerPortMissingAnnotation(t *testing.T) {
+	t.Parallel()
+
+	testExpectedScoreWithConfig(t, config.Configuration{
+		AllFiles:                    []ks.NamedReader{testFile("pod-container-ports-missing-containerport-annotation-optional.yaml")},
+		UseOptionalChecksAnnotation: true,
 	}, "Container Ports Check", scorecard.GradeCritical)
 }
 
