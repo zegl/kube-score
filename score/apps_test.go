@@ -3,6 +3,9 @@ package score
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -101,4 +104,24 @@ func TestStatefulsetHasServiceNameDifferentLabel(t *testing.T) {
 func TestStatefulsetSelectorLabels(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "statefulset-different-labels.yaml", "StatefulSet Pod Selector labels match template metadata labels", scorecard.GradeCritical)
+}
+
+func TestStatefulsetTemplateIgnores(t *testing.T) {
+	t.Parallel()
+	skipped := wasSkipped(t, config.Configuration{
+		UseIgnoreChecksAnnotation:   true,
+		UseOptionalChecksAnnotation: true,
+		AllFiles:                    []ks.NamedReader{testFile("statefulset-nested-ignores.yaml")},
+	}, "Container Image Tag")
+	assert.True(t, skipped)
+}
+
+func TestStatefulsetTemplateIgnoresNotIgnoredWhenFlagDisabled(t *testing.T) {
+	t.Parallel()
+	skipped := wasSkipped(t, config.Configuration{
+		UseIgnoreChecksAnnotation:   false,
+		UseOptionalChecksAnnotation: true,
+		AllFiles:                    []ks.NamedReader{testFile("statefulset-nested-ignores.yaml")},
+	}, "Container Image Tag")
+	assert.False(t, skipped)
 }

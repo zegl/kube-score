@@ -39,6 +39,21 @@ func testExpectedScoreWithConfig(t *testing.T, config config.Configuration, test
 	return nil
 }
 
+func wasSkipped(t *testing.T, config config.Configuration, testcase string) bool {
+	sc, err := testScore(config)
+	assert.NoError(t, err)
+	for _, objectScore := range sc {
+		for _, s := range objectScore.Checks {
+			if s.Check.Name == testcase {
+				return s.Skipped
+			}
+		}
+	}
+
+	assert.Fail(t, "test was not run")
+	return false
+}
+
 func testScore(config config.Configuration) (scorecard.Scorecard, error) {
 	p, err := parser.New()
 	if err != nil {
