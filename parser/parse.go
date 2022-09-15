@@ -243,7 +243,11 @@ func detectFileLocation(fileName string, fileOffset int, fileContents []byte) ks
 func (p *Parser) decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileName string, fileOffset int, fileContents []byte) error {
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		s.podspecers = append(s.podspecers, ps)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ps.GetTypeMeta(), ObjectMeta: ps.GetObjectMeta(), FileLocationer: ps})
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{
+			TypeMeta:       ps.GetTypeMeta(),
+			ObjectMeta:     ps.GetObjectMeta(),
+			FileLocationer: ps,
+		})
 	}
 
 	fileLocation := detectFileLocation(fileName, fileOffset, fileContents)

@@ -2,7 +2,6 @@ package scorecard
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -28,27 +27,18 @@ func New() Scorecard {
 
 func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, cnf config.Configuration) *ScoredObject {
 	o := &ScoredObject{
-		TypeMeta:       typeMeta,
-		ObjectMeta:     objectMeta,
-		Checks:         make([]TestScore, 0),
-		ignoredChecks:  make(map[string]struct{}),
-		optionalChecks: make(map[string]struct{}),
+		TypeMeta:   typeMeta,
+		ObjectMeta: objectMeta,
+		Checks:     make([]TestScore, 0),
+
+		useIgnoreChecksAnnotation:   cnf.UseIgnoreChecksAnnotation,
+		useOptionalChecksAnnotation: cnf.UseOptionalChecksAnnotation,
+		enabledOptionalTests:        cnf.EnabledOptionalTests,
 	}
 
 	// If this object already exists, return the previous version
 	if object, ok := s[o.resourceRefKey()]; ok {
 		return object
-	}
-
-	if cnf.UseIgnoreChecksAnnotation {
-		o.setIgnoredTests()
-	}
-
-	if cnf.UseOptionalChecksAnnotation {
-		o.setOptionalTests()
-	}
-	for id, ot := range cnf.EnabledOptionalTests {
-		o.optionalChecks[id] = ot
 	}
 
 	s[o.resourceRefKey()] = o
@@ -70,12 +60,13 @@ type ScoredObject struct {
 	FileLocation ks.FileLocation
 	Checks       []TestScore
 
-	ignoredChecks  map[string]struct{}
-	optionalChecks map[string]struct{}
+	useIgnoreChecksAnnotation   bool
+	useOptionalChecksAnnotation bool
+	enabledOptionalTests        map[string]struct{}
 }
 
-func (s ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
-	for _, o := range s.Checks {
+func (so *ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
+	for _, o := range so.Checks {
 		if !o.Skipped && o.Grade <= threshold {
 			return true
 		}
@@ -83,36 +74,11 @@ func (s ScoredObject) AnyBelowOrEqualToGrade(threshold Grade) bool {
 	return false
 }
 
-func (so *ScoredObject) setIgnoredTests() {
-	ignoredMap := make(map[string]struct{})
-	if ignoredCSV, ok := so.ObjectMeta.Annotations[ignoredChecksAnnotation]; ok {
-		for _, ignored := range strings.Split(ignoredCSV, ",") {
-			ignoredMap[strings.TrimSpace(ignored)] = struct{}{}
-			if _, ok := impliedIgnoreAnnotations[ignored]; ok {
-				for _, impliedIgnore := range impliedIgnoreAnnotations[ignored] {
-					ignoredMap[impliedIgnore] = struct{}{}
-				}
-			}
-		}
-	}
-	so.ignoredChecks = ignoredMap
-}
-
-func (so *ScoredObject) setOptionalTests() {
-	optionalMap := make(map[string]struct{})
-	if optionalCSV, ok := so.ObjectMeta.Annotations[optionalChecksAnnotation]; ok {
-		for _, optional := range strings.Split(optionalCSV, ",") {
-			optionalMap[strings.TrimSpace(optional)] = struct{}{}
-		}
-	}
-	so.optionalChecks = optionalMap
-}
-
-func (so ScoredObject) resourceRefKey() string {
+func (so *ScoredObject) resourceRefKey() string {
 	return so.TypeMeta.Kind + "/" + so.TypeMeta.APIVersion + "/" + so.ObjectMeta.Namespace + "/" + so.ObjectMeta.Name
 }
 
-func (so ScoredObject) HumanFriendlyRef() string {
+func (so *ScoredObject) HumanFriendlyRef() string {
 	s := so.ObjectMeta.Name
 	if so.ObjectMeta.Namespace != "" {
 		s += "/" + so.ObjectMeta.Namespace
@@ -121,16 +87,22 @@ func (so ScoredObject) HumanFriendlyRef() string {
 	return s
 }
 
-func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLocationer) {
+func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLocationer, annotations ...map[string]string) {
 	ts.Check = check
 	so.FileLocation = locationer.FileLocation()
 
-	if _, ok := so.optionalChecks[check.ID]; ts.Check.Optional && !ok {
-		return
+	var skip bool
+	if annotations != nil {
+		if len(annotations) == 1 && !so.isEnabled(check, annotations[0], nil) {
+			skip = true
+		}
+		if len(annotations) == 2 && !so.isEnabled(check, annotations[0], annotations[1]) {
+			skip = true
+		}
 	}
 
 	// This test is ignored (via annotations), don't save the score
-	if _, ok := so.ignoredChecks[check.ID]; ok {
+	if skip {
 		ts.Skipped = true
 		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because %s is ignored", check.ID)}}
 	}
