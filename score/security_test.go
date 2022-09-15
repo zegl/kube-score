@@ -19,6 +19,15 @@ func TestContainerSeccompMissing(t *testing.T) {
 		AllFiles:             []ks.NamedReader{testFile("pod-seccomp-no-annotation.yaml")},
 		EnabledOptionalTests: structMap,
 	}, "Container Seccomp Profile", scorecard.GradeWarning)
+
+}
+
+func TestContainerSeccompMissingNotRunByDefault(t *testing.T) {
+	t.Parallel()
+	skipped := wasSkipped(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("pod-seccomp-no-annotation.yaml")},
+	}, "Container Seccomp Profile")
+	assert.True(t, skipped)
 }
 
 func TestContainerSeccompAllGood(t *testing.T) {
