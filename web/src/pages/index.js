@@ -34,7 +34,9 @@ export default function Home() {
       description="Kubernetes object analysis with recommendations for improved reliability and security.">
       <HomepageHeader />
       <main>
-        <img src="/img/screenshot.png" />
+        <center>
+          <img src="/img/screenshot.png" style={{maxHeight: 800}} />
+        </center>
       </main>
     </Layout>
   );
