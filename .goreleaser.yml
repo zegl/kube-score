@@ -72,6 +72,8 @@ changelog:
 
 brews:
   - name: kube-score
+    ids:
+    - default
     tap:
       owner: kube-score
       name: homebrew-tap
