@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#VERSION="$(git describe --tags --abbrev=0)"
-VERSION="v1.16.0-dev"
+VERSION="$(git describe --tags --abbrev=0)"
+
+# TODO(gustav): also push latest!
 
 docker buildx build \
     --build-arg KUBE_SCORE_VERSION=${VERSION} \
