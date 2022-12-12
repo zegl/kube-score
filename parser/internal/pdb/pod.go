@@ -34,7 +34,18 @@ func (p PodDisruptionBudgetV1beta1) FileLocation() ks.FileLocation {
 }
 
 func (p PodDisruptionBudgetV1beta1) Spec() policyv1.PodDisruptionBudgetSpec {
-	return policyv1.PodDisruptionBudgetSpec(p.Obj.Spec)
+	var polType *policyv1.UnhealthyPodEvictionPolicyType
+	if p.Obj.Spec.UnhealthyPodEvictionPolicy != nil {
+		t := policyv1.UnhealthyPodEvictionPolicyType(*p.Obj.Spec.UnhealthyPodEvictionPolicy)
+		polType = &t
+	}
+
+	return policyv1.PodDisruptionBudgetSpec{
+		MinAvailable:               p.Obj.Spec.MinAvailable,
+		Selector:                   p.Obj.Spec.Selector,
+		MaxUnavailable:             p.Obj.Spec.MaxUnavailable,
+		UnhealthyPodEvictionPolicy: polType,
+	}
 }
 
 type PodDisruptionBudgetV1 struct {
