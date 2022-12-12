@@ -194,7 +194,7 @@ spec:
 go build ./cmd/kube-score
 
 # Run all tests
-go test -v -/...
+go test -v ./...
 ```
 
 ## Contributing?
