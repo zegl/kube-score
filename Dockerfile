@@ -59,7 +59,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM ${ALPINE_IMAGE} as runner
 RUN apk update && \
     apk upgrade && \
-    apk add bash ca-certificates
+    apk add bash ca-certificates git
+
 COPY --from=downloader /usr/bin/helm /usr/bin/helm
 COPY --from=downloader /usr/bin/kustomize /usr/bin/kustomize
 COPY --from=builder /usr/bin/kube-score /kube-score
