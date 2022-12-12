@@ -120,7 +120,7 @@ Flags for score:
 Tests can be ignored in the whole run of the program, with the `--ignore-test` flag.
 
 A test can also be ignored on a per-object basis, by adding the annotation `kube-score/ignore` to the object.
-The value should be a comma separated string of the [test IDs](README_CHECKS.md).
+The value should be a comma-separated string of the [test IDs](README_CHECKS.md).
 
 Example:
 
@@ -144,17 +144,17 @@ spec:
   type: NodePort
 ```
 
-### Enabling a optional test
+### Enabling an optional test
 
 Optional tests can be enabled in the whole run of the program, with the `--enable-optional-test` flag.
 
 A test can also be enabled on a per-object basis, by adding the annotation `kube-score/enable` to the object.
-The value should be a comma separated string of the [test IDs](README_CHECKS.md).
+The value should be a comma-separated string of the [test IDs](README_CHECKS.md).
 
 Example:
 
 Testing this object will enable the `container-seccomp-profile` test.
-Also multiple tests defined by `kube-score/ignore` are also ignored at the same.
+Also, multiple tests defined by `kube-score/ignore` are also ignored at the same.
 
 ```yaml
 apiVersion: apps/v1
