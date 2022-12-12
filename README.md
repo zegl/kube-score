@@ -187,14 +187,14 @@ spec:
 
 ## Building from source
 
-`kube-score` requires [Go](https://golang.org/) `1.11` or later to build. Clone this repository, and then:
+`kube-score` requires [Go](https://golang.org/) `1.19` or later to build. Clone this repository, and then:
 
 ```bash
 # Build the project
-go build github.com/zegl/kube-score/cmd/kube-score
+go build ./cmd/kube-score
 
 # Run all tests
-go test -v github.com/zegl/kube-score/...
+go test -v -/...
 ```
 
 ## Contributing?
@@ -205,7 +205,7 @@ Do you want to help out? Take a look at the [Contributing Guidelines](./.github/
 
 | Project             | Version |
 |---------------------|---------|
-| go.dev              | ^1.18   | 
+| go.dev              | ^1.19   | 
 
 ## Made by
 
