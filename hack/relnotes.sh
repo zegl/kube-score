@@ -24,8 +24,11 @@ fi
 # Generate list of changes based on RELNOTES in commits
 #
 echo "# Changes";
-RELNOTE_MERGES=$(git log ${PREV_RELEASE}...HEAD --grep RELNOTE --oneline --merges)
+RELNOTE_MERGES=$(git log ${PREV_RELEASE}...${CURRENT_TAG} --grep RELNOTE --oneline --merges)
 while read -r line; do
+    if [ -z "$line" ]; then
+        continue;
+    fi
     COMMIT=$(echo "$line" | awk '{print $1}')
     git show "$COMMIT" | rg -o '^\s+([0-9]+):(.*?)\s+RELNOTE:(.*?)\s+```' --multiline-dotall --multiline --replace "* #\$1 \$3" || true;
 done <<< "$RELNOTE_MERGES"
@@ -43,7 +46,6 @@ git log ${PREV_RELEASE}...HEAD | rg -o "Co-authored-by: (.*?) <" --replace "\$1"
 echo
 echo "# Download"
 echo "* Download the binaries from the GitHub release page"
-echo "* Download the image from Docker Hub: \`zegl/kube-score:${CURRENT_TAG}\`"
-echo "* Download the image from Docker Hub with Helm or Kustomize pre-installed: \`zegl/kube-score:${CURRENT_TAG}-helm3\`, \`zegl/kube-score:${CURRENT_TAG}-helm\`, \`zegl/kube-score:${CURRENT_TAG}-kustomize\` "
+echo "* Download the image from Docker Hub: \`zegl/kube-score:${CURRENT_TAG}\` (Built for arm64 and amd64. Includes both Helm3 and Kustomize.)"
 echo "* Download from homebrew: \`brew install kube-score/tap/kube-score\`"
 echo "* Download with krew: \`kubectl krew install score\`"
