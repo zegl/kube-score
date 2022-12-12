@@ -63,11 +63,16 @@ RUN apk update && \
 
 COPY --from=downloader /usr/bin/helm /usr/bin/helm
 COPY --from=downloader /usr/bin/kustomize /usr/bin/kustomize
-COPY --from=builder /usr/bin/kube-score /kube-score
 COPY --from=builder /usr/bin/kube-score /usr/bin/kube-score
+
+# Symlink to /kube-score for backwards compatibility (with kube-score v1.15.0 and earlier)
+RUN ln -s /usr/bin/kube-score /kube-score
  
 # Dry runs
-RUN /kube-score version && helm version && kustomize version
+RUN /kube-score version && \
+    /usr/bin/kube-score version && \
+    kube-score version && \
+    helm version && kustomize version
 
 WORKDIR /project
 ENTRYPOINT ["/kube-score"]
