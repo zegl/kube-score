@@ -21,7 +21,6 @@ else
     TAG_ARGS="${TAG_ARGS} -t zegl/kube-score:latest"
     PLATFORM_ARGS="--platform linux/arm64 --platform linux/amd64"
     PUSH_OR_LOAD_ARG="--push"
-    PUSH_OR_LOAD_ARG=""
 fi
 
 docker buildx build \
