@@ -9,6 +9,7 @@ import (
 func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations map[string]string) bool {
 	isIn := func(csv string, key string) bool {
 		for _, v := range strings.Split(csv, ",") {
+			v = strings.TrimSpace(v)
 			if v == key {
 				return true
 			}
