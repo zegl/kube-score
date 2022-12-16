@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: pod-test-1
   annotations:
-    kube-score/enable: container-memory-requests-equal-limits,container-cpu-requests-equal-limits,container-resource-requests-equal-limits
+    kube-score/enable: container-memory-requests-equal-limits,  container-cpu-requests-equal-limits    ,   container-resource-requests-equal-limits
 spec:
   containers:
   - name: foobar
