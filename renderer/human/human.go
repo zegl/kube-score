@@ -15,13 +15,16 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
-func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int) (io.Reader, error) {
+func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int, useColors bool) (io.Reader, error) {
 	// Print the items sorted by scorecard key
 	var keys []string
 	for k := range *scoreCard {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
+
+	// Override usage of colors to our own preference
+	color.NoColor = !useColors
 
 	w := bytes.NewBufferString("")
 
