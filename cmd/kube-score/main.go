@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mattn/go-isatty"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/term"
 
@@ -106,6 +107,7 @@ func scoreFiles(binName string, args []string) error {
 	printHelp := fs.Bool("help", false, "Print help")
 	outputFormat := fs.StringP("output-format", "o", "human", "Set to 'human', 'json', 'ci' or 'sarif'. If set to ci, kube-score will output the program in a format that is easier to parse by other programs. Sarif output allows for easier integration with CI platforms.")
 	outputVersion := fs.String("output-version", "", "Changes the version of the --output-format. The 'json' format has version 'v2' (default) and 'v1' (deprecated, will be removed in v1.7.0). The 'human' and 'ci' formats has only version 'v1' (default). If not explicitly set, the default version for that particular output format will be used.")
+	color := fs.String("color", "auto", "If the output should be colored. Set to 'always', 'never' or 'auto'. If set to 'auto', kube-score will try to detect if the current terminal / platform supports colors. If set to 'never', kube-score will not output any colors. If set to 'always', kube-score will output colors even if the current terminal / platform does not support colors.")
 	optionalTests := fs.StringSlice("enable-optional-test", []string{}, "Enable an optional test, can be set multiple times")
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
@@ -126,6 +128,16 @@ func scoreFiles(binName string, args []string) error {
 	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" && *outputFormat != "sarif" {
 		fs.Usage()
 		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json', 'sarif' or 'ci'")
+	}
+
+	acceptedColors := map[string]bool{
+		"auto":   true,
+		"always": true,
+		"never":  true,
+	}
+	if !acceptedColors[*color] {
+		fs.Usage()
+		return fmt.Errorf("Error: --color must be set to: 'auto', 'always' or 'never'")
 	}
 
 	filesToRead := fs.Args()
@@ -220,7 +232,7 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		if err != nil {
 			termWidth = 80
 		}
-		r, err = human.Human(scoreCard, *verboseOutput, termWidth)
+		r, err = human.Human(scoreCard, *verboseOutput, termWidth, useColor(*color))
 		if err != nil {
 			return err
 		}
@@ -298,4 +310,35 @@ type namedReader struct {
 
 func (n namedReader) Name() string {
 	return n.name
+}
+
+func useColor(colorArg string) bool {
+	// Respect user preference
+	switch colorArg {
+	case "always":
+		return true
+	case "never":
+		return false
+	}
+
+	// If running on Github Actions, use colors
+	if _, ok := os.LookupEnv("GITHUB_ACTIONS"); ok {
+		return true
+	}
+
+	// If NO_COLOR is set, don't use color
+	if _, ok := os.LookupEnv("NO_COLOR"); ok {
+		return false
+	}
+
+	// Dont use color if not a terminal
+	if os.Getenv("TERM") == "dumb" {
+		return false
+	}
+	if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		return false
+	}
+
+	// Use colors
+	return true
 }
