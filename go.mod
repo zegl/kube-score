@@ -9,8 +9,8 @@ require (
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/term v0.4.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
+	k8s.io/api v0.26.1
+	k8s.io/apimachinery v0.26.1
 )
 
 require (
