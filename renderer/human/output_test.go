@@ -95,7 +95,7 @@ func getTestCard() *scorecard.Scorecard {
 
 func TestHumanOutputDefault(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCard(), 0, 100)
+	r, err := Human(getTestCard(), 0, 100, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -118,7 +118,7 @@ v1/Testing bar-no-namespace                                                   ðŸ
 
 func TestHumanOutputVerbose1(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCard(), 1, 100)
+	r, err := Human(getTestCard(), 1, 100, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -147,7 +147,7 @@ v1/Testing bar-no-namespace                                                   ðŸ
 
 func TestHumanOutputVerbose2(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCard(), 2, 100)
+	r, err := Human(getTestCard(), 2, 100, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -265,7 +265,7 @@ func getTestCardAllOK() *scorecard.Scorecard {
 
 func TestHumanOutputAllOKDefault(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCardAllOK(), 0, 100)
+	r, err := Human(getTestCardAllOK(), 0, 100, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -308,7 +308,7 @@ func getTestCardLongDescription() *scorecard.Scorecard {
 
 func TestHumanOutputLogDescription120Width(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCardLongDescription(), 0, 120)
+	r, err := Human(getTestCardLongDescription(), 0, 120, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -324,7 +324,7 @@ func TestHumanOutputLogDescription120Width(t *testing.T) {
 
 func TestHumanOutputLogDescription100Width(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCardLongDescription(), 0, 100)
+	r, err := Human(getTestCardLongDescription(), 0, 100, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -341,7 +341,7 @@ func TestHumanOutputLogDescription100Width(t *testing.T) {
 
 func TestHumanOutputLogDescription80Width(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCardLongDescription(), 0, 80)
+	r, err := Human(getTestCardLongDescription(), 0, 80, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -359,7 +359,7 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
 
 func TestHumanOutputLogDescription0Width(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCardLongDescription(), 0, 0)
+	r, err := Human(getTestCardLongDescription(), 0, 0, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
@@ -413,7 +413,7 @@ func getTestCardLongTitle() *scorecard.Scorecard {
 
 func TestHumanOutputWithLongObjectNames(t *testing.T) {
 	t.Parallel()
-	r, err := Human(getTestCardLongTitle(), 0, 80)
+	r, err := Human(getTestCardLongTitle(), 0, 80, false)
 	assert.Nil(t, err)
 	all, err := ioutil.ReadAll(r)
 	assert.Nil(t, err)
