@@ -80,22 +80,11 @@ func (c Checks) isEnabled(check ks.Check) bool {
 }
 
 func (c *Checks) RegisterMetaCheck(name, comment string, fn CheckFunc[ks.BothMeta]) {
-	ch := NewCheck(name, "all", comment, false)
-	c.registerMetaCheck(GenCheck[ks.BothMeta]{ch, fn})
+	reg(c, "all", name, comment, false, fn, c.metas)
 }
 
 func (c *Checks) RegisterOptionalMetaCheck(name, comment string, fn CheckFunc[ks.BothMeta]) {
-	ch := NewCheck(name, "all", comment, true)
-	c.registerMetaCheck(GenCheck[ks.BothMeta]{ch, fn})
-}
-
-func (c *Checks) registerMetaCheck(ch GenCheck[ks.BothMeta]) {
-	c.all = append(c.all, ch.Check)
-
-	if !c.isEnabled(ch.Check) {
-		return
-	}
-	c.metas[machineFriendlyName(ch.Name)] = ch
+	reg(c, "all", name, comment, true, fn, c.metas)
 }
 
 func (c *Checks) Metas() map[string]GenCheck[ks.BothMeta] {
