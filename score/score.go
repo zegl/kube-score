@@ -41,6 +41,28 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 	return allChecks
 }
 
+type podSpeccer struct {
+	typeMeta   metav1.TypeMeta
+	objectMeta metav1.ObjectMeta
+	spec       corev1.PodTemplateSpec
+}
+
+func (p *podSpeccer) GetTypeMeta() metav1.TypeMeta {
+	return p.typeMeta
+}
+
+func (p *podSpeccer) GetObjectMeta() metav1.ObjectMeta {
+	return p.objectMeta
+}
+
+func (p *podSpeccer) GetPodTemplateSpec() corev1.PodTemplateSpec {
+	return p.spec
+}
+
+func (p *podSpeccer) FileLocation() ks.FileLocation {
+	return ks.FileLocation{}
+}
+
 // Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
 // Additional configuration and tuning parameters can be provided via the config.
 func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
@@ -76,10 +98,17 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, pod := range allObjects.Pods() {
 		o := newObject(pod.Pod().TypeMeta, pod.Pod().ObjectMeta)
 		for _, test := range allChecks.Pods() {
-			score := test.Fn(corev1.PodTemplateSpec{
+
+			podTemplateSpec := corev1.PodTemplateSpec{
 				ObjectMeta: pod.Pod().ObjectMeta,
 				Spec:       pod.Pod().Spec,
-			}, pod.Pod().TypeMeta)
+			}
+
+			score, _ := test.Fn(&podSpeccer{
+				typeMeta:   pod.Pod().TypeMeta,
+				objectMeta: pod.Pod().ObjectMeta,
+				spec:       podTemplateSpec,
+			})
 			o.Add(score, test.Check, pod, pod.Pod().ObjectMeta.Annotations)
 		}
 	}
@@ -87,7 +116,7 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 	for _, podspecer := range allObjects.PodSpeccers() {
 		o := newObject(podspecer.GetTypeMeta(), podspecer.GetObjectMeta())
 		for _, test := range allChecks.Pods() {
-			score := test.Fn(podspecer.GetPodTemplateSpec(), podspecer.GetTypeMeta())
+			score, _ := test.Fn(podspecer)
 			o.Add(score, test.Check, podspecer,
 				podspecer.GetObjectMeta().Annotations,
 				podspecer.GetPodTemplateSpec().Annotations,

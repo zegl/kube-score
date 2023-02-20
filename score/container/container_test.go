@@ -3,6 +3,7 @@ package container
 import (
 	"testing"
 
+	ks "github.com/zegl/kube-score/domain"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/stretchr/testify/assert"
@@ -12,29 +13,53 @@ import (
 	"github.com/zegl/kube-score/scorecard"
 )
 
+type podSpeccer struct {
+	typeMeta   metav1.TypeMeta
+	objectMeta metav1.ObjectMeta
+	spec       corev1.PodTemplateSpec
+}
+
+func (p *podSpeccer) GetTypeMeta() metav1.TypeMeta {
+	return p.typeMeta
+}
+
+func (p *podSpeccer) GetObjectMeta() metav1.ObjectMeta {
+	return p.objectMeta
+}
+
+func (p *podSpeccer) GetPodTemplateSpec() corev1.PodTemplateSpec {
+	return p.spec
+}
+
+func (p *podSpeccer) FileLocation() ks.FileLocation {
+	return ks.FileLocation{}
+}
+
 func TestOkAllTheSameContainerResourceRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerResourceRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+	s, _ := containerResourceRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -42,55 +67,57 @@ func TestOkAllTheSameContainerResourceRequestsEqualLimits(t *testing.T) {
 
 func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerResourceRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-						},
-					},
-				},
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+	s, _ := containerResourceRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
-					{
-						Name: "foo2",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+						},
+						{
+							Name: "foo2",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -98,27 +125,29 @@ func TestOkMultipleContainersContainerResourceRequestsEqualLimits(t *testing.T) 
 
 func TestOkSameQuantityContainerResourceRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerResourceRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1000m"),
-								"memory": resource.MustParse("0.25Gi"),
+	s, _ := containerResourceRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1000m"),
+									"memory": resource.MustParse("0.25Gi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -126,27 +155,28 @@ func TestOkSameQuantityContainerResourceRequestsEqualLimits(t *testing.T) {
 
 func TestFailBothContainerResourceRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerResourceRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("2"),
-								"memory": resource.MustParse("512Mi"),
+	s, _ := containerResourceRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("2"),
+									"memory": resource.MustParse("512Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
-		},
-		metav1.TypeMeta{})
+		})
 
 	assert.Equal(t, scorecard.GradeCritical, s.Grade)
 	assert.Len(t, s.Comments, 2)
@@ -160,42 +190,44 @@ func TestFailBothContainerResourceRequestsEqualLimits(t *testing.T) {
 
 func TestFailCpuInitContainerResourceRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerResourceRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{
-					{
-						Name: "init",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("2"),
-								"memory": resource.MustParse("256Mi"),
+	s, _ := containerResourceRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name: "init",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("2"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
-				},
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeCritical, s.Grade)
 	assert.Len(t, s.Comments, 1)
@@ -206,25 +238,27 @@ func TestFailCpuInitContainerResourceRequestsEqualLimits(t *testing.T) {
 
 func TestOkAllCPURequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerCPURequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+	s, _ := containerCPURequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -232,49 +266,51 @@ func TestOkAllCPURequestsEqualLimits(t *testing.T) {
 
 func TestOkMultipleContainersContainerCPURequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerCPURequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
-							},
-						},
-					},
-				},
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+	s, _ := containerCPURequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
 							},
 						},
 					},
-					{
-						Name: "foo2",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
 							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
+						},
+						{
+							Name: "foo2",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -282,25 +318,27 @@ func TestOkMultipleContainersContainerCPURequestsEqualLimits(t *testing.T) {
 
 func TestOkSameQuantityContainerCPURequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerCPURequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1000m"),
+	s, _ := containerCPURequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1000m"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -308,27 +346,29 @@ func TestOkSameQuantityContainerCPURequestsEqualLimits(t *testing.T) {
 
 func TestFailContainerCPURequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerCPURequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("2"),
-								"memory": resource.MustParse("512Mi"),
+	s, _ := containerCPURequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("2"),
+									"memory": resource.MustParse("512Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeCritical, s.Grade)
 	assert.Len(t, s.Comments, 1)
@@ -340,40 +380,42 @@ func TestFailContainerCPURequestsEqualLimits(t *testing.T) {
 
 func TestFailInitContainerCPURequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerCPURequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{
-					{
-						Name: "init",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("1"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu": resource.MustParse("2"),
+	s, _ := containerCPURequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name: "init",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("1"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu": resource.MustParse("2"),
+								},
 							},
 						},
 					},
-				},
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeCritical, s.Grade)
 	assert.Len(t, s.Comments, 1)
@@ -384,25 +426,27 @@ func TestFailInitContainerCPURequestsEqualLimits(t *testing.T) {
 
 func TestOkContainerMemoryResourceRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerMemoryRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
+	s, _ := containerMemoryRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -410,49 +454,51 @@ func TestOkContainerMemoryResourceRequestsEqualLimits(t *testing.T) {
 
 func TestOkMultipleContainersContainerMemoryRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerMemoryRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
-							},
-						},
-					},
-				},
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
+	s, _ := containerMemoryRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
-					{
-						Name: "foo2",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
+						},
+						{
+							Name: "foo2",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -460,25 +506,27 @@ func TestOkMultipleContainersContainerMemoryRequestsEqualLimits(t *testing.T) {
 
 func TestOkSameQuantityContainerMemoryRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerMemoryRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("0.25Gi"),
+	s, _ := containerMemoryRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("0.25Gi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeAllOK, s.Grade)
 	assert.Len(t, s.Comments, 0)
@@ -486,27 +534,29 @@ func TestOkSameQuantityContainerMemoryRequestsEqualLimits(t *testing.T) {
 
 func TestFailContainerMemoryRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerMemoryRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("2"),
-								"memory": resource.MustParse("512Mi"),
+	s, _ := containerMemoryRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("2"),
+									"memory": resource.MustParse("512Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeCritical, s.Grade)
 	assert.Len(t, s.Comments, 1)
@@ -517,40 +567,42 @@ func TestFailContainerMemoryRequestsEqualLimits(t *testing.T) {
 
 func TestFailInitContainerMemoryRequestsEqualLimits(t *testing.T) {
 	t.Parallel()
-	s := containerMemoryRequestsEqualLimits(
-		corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				InitContainers: []corev1.Container{
-					{
-						Name: "init",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"memory": resource.MustParse("512Mi"),
+	s, _ := containerMemoryRequestsEqualLimits(
+		&podSpeccer{
+			spec: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{
+							Name: "init",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"memory": resource.MustParse("512Mi"),
+								},
 							},
 						},
 					},
-				},
-				Containers: []corev1.Container{
-					{
-						Name: "foo",
-						Resources: corev1.ResourceRequirements{
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
-							},
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("256Mi"),
+					Containers: []corev1.Container{
+						{
+							Name: "foo",
+							Resources: corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse("1"),
+									"memory": resource.MustParse("256Mi"),
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		metav1.TypeMeta{})
+	)
 
 	assert.Equal(t, scorecard.GradeCritical, s.Grade)
 	assert.Len(t, s.Comments, 1)

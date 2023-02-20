@@ -1,11 +1,10 @@
 package security
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func Register(allChecks *checks.Checks) {
@@ -17,9 +16,9 @@ func Register(allChecks *checks.Checks) {
 }
 
 // containerSecurityContextReadOnlyRootFilesystem checks for pods using writeable root filesystems
-func containerSecurityContextReadOnlyRootFilesystem(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	allContainers := podTemplate.Spec.InitContainers
-	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+func containerSecurityContextReadOnlyRootFilesystem(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	allContainers := ps.GetPodTemplateSpec().Spec.InitContainers
+	allContainers = append(allContainers, ps.GetPodTemplateSpec().Spec.Containers...)
 
 	noContextSet := false
 	hasWritableRootFS := false
@@ -47,9 +46,9 @@ func containerSecurityContextReadOnlyRootFilesystem(podTemplate corev1.PodTempla
 }
 
 // containerSecurityContextPrivileged checks for privileged containers
-func containerSecurityContextPrivileged(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	allContainers := podTemplate.Spec.InitContainers
-	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+func containerSecurityContextPrivileged(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	allContainers := ps.GetPodTemplateSpec().Spec.InitContainers
+	allContainers = append(allContainers, ps.GetPodTemplateSpec().Spec.Containers...)
 	hasPrivileged := false
 	for _, container := range allContainers {
 		if container.SecurityContext != nil && container.SecurityContext.Privileged != nil && *container.SecurityContext.Privileged {
@@ -66,10 +65,10 @@ func containerSecurityContextPrivileged(podTemplate corev1.PodTemplateSpec, type
 }
 
 // containerSecurityContextUserGroupID checks that the user and group are valid ( > 10000) in the security context
-func containerSecurityContextUserGroupID(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	allContainers := podTemplate.Spec.InitContainers
-	allContainers = append(allContainers, podTemplate.Spec.Containers...)
-	podSecurityContext := podTemplate.Spec.SecurityContext
+func containerSecurityContextUserGroupID(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	allContainers := ps.GetPodTemplateSpec().Spec.InitContainers
+	allContainers = append(allContainers, ps.GetPodTemplateSpec().Spec.Containers...)
+	podSecurityContext := ps.GetPodTemplateSpec().Spec.SecurityContext
 	noContextSet := false
 	hasLowUserID := false
 	hasLowGroupID := false
@@ -110,9 +109,9 @@ func containerSecurityContextUserGroupID(podTemplate corev1.PodTemplateSpec, typ
 	return
 }
 
-// podSeccompProfile checks if the any Seccommp profile is configured for the pod
-func podSeccompProfile(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	metadata := podTemplate.ObjectMeta
+// podSeccompProfile checks that a Seccommp profile is configured for the pod
+func podSeccompProfile(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	metadata := ps.GetPodTemplateSpec().ObjectMeta
 
 	seccompAnnotated := false
 	if metadata.Annotations != nil {
