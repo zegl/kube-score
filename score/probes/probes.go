@@ -1,13 +1,11 @@
 package probes
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/internal"
 	"github.com/zegl/kube-score/scorecard"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func Register(allChecks *checks.Checks, services ks.Services) {
@@ -19,13 +17,15 @@ func Register(allChecks *checks.Checks, services ks.Services) {
 // ReadinessProbes are not required if the pod is not targeted by a Service.
 //
 // containerProbes takes a slice of all defined Services as input.
-func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore {
-	return func(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+func containerProbes(allServices []ks.Service) func(ks.PodSpecer) (scorecard.TestScore, error) {
+	return func(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+		typeMeta := ps.GetTypeMeta()
 		if typeMeta.Kind == "CronJob" && typeMeta.GroupVersionKind().Group == "batch" || typeMeta.Kind == "Job" && typeMeta.GroupVersionKind().Group == "batch" {
 			score.Grade = scorecard.GradeAllOK
-			return score
+			return score, nil
 		}
 
+		podTemplate := ps.GetPodTemplateSpec()
 		allContainers := podTemplate.Spec.InitContainers
 		allContainers = append(allContainers, podTemplate.Spec.Containers...)
 
@@ -94,13 +94,13 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 				"Using the same probe for liveness and readiness is very likely dangerous. Generally it's better to avoid the livenessProbe than re-using the readinessProbe.",
 				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
 			)
-			return score
+			return score, nil
 		}
 
 		if !isTargetedByService {
 			score.Grade = scorecard.GradeAllOK
 			score.AddComment("", "The pod is not targeted by a service, skipping probe checks.", "")
-			return score
+			return score, nil
 		}
 
 		if !hasReadinessProbe {
@@ -111,7 +111,7 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 					"It's also used during rollouts, and can prevent downtime if a new version of the application is failing.",
 				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
 			)
-			return score
+			return score, nil
 		}
 
 		if !hasLivenessProbe {
@@ -121,12 +121,12 @@ func containerProbes(allServices []ks.Service) func(corev1.PodTemplateSpec, meta
 					"It's only recommended to setup a livenessProbe if you really need one.",
 				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
 			)
-			return score
+			return score, nil
 		}
 
 		score.Grade = scorecard.GradeAllOK
 
-		return score
+		return score, nil
 	}
 }
 

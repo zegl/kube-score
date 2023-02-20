@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Register(allChecks *checks.Checks, cnf config.Configuration) {
@@ -26,9 +26,9 @@ func Register(allChecks *checks.Checks, cnf config.Configuration) {
 
 // containerResources makes sure that the container has resource requests and limits set
 // The check for a CPU limit requirement can be enabled via the requireCPULimit flag parameter
-func containerResources(requireCPULimit bool, requireMemoryLimit bool) func(corev1.PodTemplateSpec, metav1.TypeMeta) scorecard.TestScore {
-	return func(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-		pod := podTemplate.Spec
+func containerResources(requireCPULimit bool, requireMemoryLimit bool) func(ks.PodSpecer) (scorecard.TestScore, error) {
+	return func(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+		pod := ps.GetPodTemplateSpec().Spec
 
 		allContainers := pod.InitContainers
 		allContainers = append(allContainers, pod.Containers...)
@@ -72,9 +72,9 @@ func containerResources(requireCPULimit bool, requireMemoryLimit bool) func(core
 }
 
 // containerResourceRequestsEqualLimits checks that all containers have equal requests and limits for CPU and memory resources
-func containerResourceRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	cpuScore := containerCPURequestsEqualLimits(podTemplate, typeMeta)
-	memoryScore := containerMemoryRequestsEqualLimits(podTemplate, typeMeta)
+func containerResourceRequestsEqualLimits(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	cpuScore, _ := containerCPURequestsEqualLimits(ps)
+	memoryScore, _ := containerMemoryRequestsEqualLimits(ps)
 
 	score.Grade = scorecard.GradeAllOK
 	if cpuScore.Grade == scorecard.GradeCritical {
@@ -86,12 +86,12 @@ func containerResourceRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, ty
 		score.Comments = append(score.Comments, memoryScore.Comments...)
 	}
 
-	return score
+	return
 }
 
 // containerCPURequestsEqualLimits checks that all containers have equal requests and limits for CPU resources
-func containerCPURequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	pod := podTemplate.Spec
+func containerCPURequestsEqualLimits(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	pod := ps.GetPodTemplateSpec().Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
@@ -117,8 +117,8 @@ func containerCPURequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMet
 }
 
 // containerMemoryRequestsEqualLimits checks that all containers have equal requests and limits for memory resources
-func containerMemoryRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	pod := podTemplate.Spec
+func containerMemoryRequestsEqualLimits(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	pod := ps.GetPodTemplateSpec().Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
@@ -144,8 +144,8 @@ func containerMemoryRequestsEqualLimits(podTemplate corev1.PodTemplateSpec, type
 }
 
 // containerImageTag checks that no container is using the ":latest" tag
-func containerImageTag(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	pod := podTemplate.Spec
+func containerImageTag(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	pod := ps.GetPodTemplateSpec().Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
@@ -170,8 +170,8 @@ func containerImageTag(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeM
 }
 
 // containerImagePullPolicy checks if the containers ImagePullPolicy is set to PullAlways
-func containerImagePullPolicy(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-	pod := podTemplate.Spec
+func containerImagePullPolicy(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	pod := ps.GetPodTemplateSpec().Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)
@@ -209,10 +209,9 @@ func containerTag(image string) string {
 	return ""
 }
 
-func containerStorageEphemeralRequestAndLimit(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-
-	allContainers := podTemplate.Spec.InitContainers
-	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+func containerStorageEphemeralRequestAndLimit(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	allContainers := ps.GetPodTemplateSpec().Spec.InitContainers
+	allContainers = append(allContainers, ps.GetPodTemplateSpec().Spec.Containers...)
 
 	score.Grade = scorecard.GradeAllOK
 
@@ -231,10 +230,9 @@ func containerStorageEphemeralRequestAndLimit(podTemplate corev1.PodTemplateSpec
 	return
 }
 
-func containerStorageEphemeralRequestEqualsLimit(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
-
-	allContainers := podTemplate.Spec.InitContainers
-	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+func containerStorageEphemeralRequestEqualsLimit(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	allContainers := ps.GetPodTemplateSpec().Spec.InitContainers
+	allContainers = append(allContainers, ps.GetPodTemplateSpec().Spec.Containers...)
 
 	score.Grade = scorecard.GradeAllOK
 
@@ -254,12 +252,12 @@ func containerStorageEphemeralRequestEqualsLimit(podTemplate corev1.PodTemplateS
 
 // List of ports to expose from the container. This is primarily informational. Not specifying a port here
 // does not prevent it from being exposed. Specifying it does not expose the port outside the cluster; that
-// requires a Service object. However misspecifying elements of this optional Container
-func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+// requires a Service object.
+func containerPortsCheck(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
 	const maxPortNameLength = 15
 
-	allContainers := podTemplate.Spec.InitContainers
-	allContainers = append(allContainers, podTemplate.Spec.Containers...)
+	allContainers := ps.GetPodTemplateSpec().Spec.InitContainers
+	allContainers = append(allContainers, ps.GetPodTemplateSpec().Spec.Containers...)
 
 	score.Grade = scorecard.GradeAllOK
 
@@ -289,8 +287,8 @@ func containerPortsCheck(podTemplate corev1.PodTemplateSpec, typeMeta metav1.Typ
 }
 
 // environmentVariableKeyDuplication checks that no duplicated environment variable keys.
-func environmentVariableKeyDuplication(podTemplate corev1.PodTemplateSpec, _ metav1.TypeMeta) (score scorecard.TestScore) {
-	pod := podTemplate.Spec
+func environmentVariableKeyDuplication(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+	pod := ps.GetPodTemplateSpec().Spec
 
 	allContainers := pod.InitContainers
 	allContainers = append(allContainers, pod.Containers...)

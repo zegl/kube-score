@@ -102,7 +102,8 @@ func TestPodHasNetworkPolicy(t *testing.T) {
 		}
 
 		fn := podHasNetworkPolicy([]domain.NetworkPolicy{np{Obj: pol}})
-		score := fn(corev1.PodTemplateSpec{ObjectMeta: pod.ObjectMeta, Spec: pod.Spec}, pod.TypeMeta)
+		spec := corev1.PodTemplateSpec{ObjectMeta: pod.ObjectMeta, Spec: pod.Spec}
+		score, _ := fn(&podSpeccer{spec: spec})
 		assert.Equal(t, tc.expected, score.Grade, "caseID = %d", caseID)
 	}
 }
@@ -116,5 +117,27 @@ func (n np) NetworkPolicy() v1.NetworkPolicy {
 }
 
 func (np) FileLocation() domain.FileLocation {
+	return domain.FileLocation{}
+}
+
+type podSpeccer struct {
+	typeMeta   metav1.TypeMeta
+	objectMeta metav1.ObjectMeta
+	spec       corev1.PodTemplateSpec
+}
+
+func (p *podSpeccer) GetTypeMeta() metav1.TypeMeta {
+	return p.typeMeta
+}
+
+func (p *podSpeccer) GetObjectMeta() metav1.ObjectMeta {
+	return p.objectMeta
+}
+
+func (p *podSpeccer) GetPodTemplateSpec() corev1.PodTemplateSpec {
+	return p.spec
+}
+
+func (p *podSpeccer) FileLocation() domain.FileLocation {
 	return domain.FileLocation{}
 }

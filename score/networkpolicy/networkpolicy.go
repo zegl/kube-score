@@ -1,7 +1,6 @@
 package networkpolicy
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -18,8 +17,8 @@ func Register(allChecks *checks.Checks, netpols ks.NetworkPolicies, pods ks.Pods
 
 // podHasNetworkPolicy returns a function that tests that all pods have matching NetworkPolicies
 // podHasNetworkPolicy takes a list of all defined NetworkPolicies as input
-func podHasNetworkPolicy(allNetpols []ks.NetworkPolicy) func(spec corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) scorecard.TestScore {
-	return func(podSpec corev1.PodTemplateSpec, typeMeta metav1.TypeMeta) (score scorecard.TestScore) {
+func podHasNetworkPolicy(allNetpols []ks.NetworkPolicy) func(ks.PodSpecer) (scorecard.TestScore, error) {
+	return func(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
 		hasMatchingEgressNetpol := false
 		hasMatchingIngressNetpol := false
 
@@ -27,12 +26,12 @@ func podHasNetworkPolicy(allNetpols []ks.NetworkPolicy) func(spec corev1.PodTemp
 			netPol := n.NetworkPolicy()
 
 			// Make sure that the pod and networkpolicy is in the same namespace
-			if podSpec.Namespace != netPol.Namespace {
+			if ps.GetPodTemplateSpec().Namespace != netPol.Namespace {
 				continue
 			}
 
 			if selector, err := metav1.LabelSelectorAsSelector(&netPol.Spec.PodSelector); err == nil {
-				if selector.Matches(internal.MapLabels(podSpec.Labels)) {
+				if selector.Matches(internal.MapLabels(ps.GetPodTemplateSpec().Labels)) {
 
 					// Documentation of PolicyTypes
 					//
