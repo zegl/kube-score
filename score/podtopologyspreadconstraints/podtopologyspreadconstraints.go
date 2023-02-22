@@ -1,4 +1,4 @@
-package podtopologyconstraints
+package podtopologyspreadconstraints
 
 import (
 	ks "github.com/zegl/kube-score/domain"
