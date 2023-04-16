@@ -13,8 +13,6 @@ import (
 
 	"github.com/mattn/go-isatty"
 	flag "github.com/spf13/pflag"
-	"golang.org/x/term"
-
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser"
@@ -24,6 +22,7 @@ import (
 	"github.com/zegl/kube-score/renderer/sarif"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/scorecard"
+	"golang.org/x/term"
 )
 
 func main() {
@@ -112,6 +111,7 @@ func scoreFiles(binName string, args []string) error {
 	ignoreTests := fs.StringSlice("ignore-test", []string{}, "Disable a test, can be set multiple times")
 	disableIgnoreChecksAnnotation := fs.Bool("disable-ignore-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/ignore' annotations")
 	disableOptionalChecksAnnotation := fs.Bool("disable-optional-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/enable' annotations")
+	allDefaultOptional := fs.Bool("all-default-optional", false, "Set to true to enable all tests")
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
 	setDefault(fs, binName, "score", false)
 
@@ -167,6 +167,20 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 			filename, _ = filepath.Abs(file)
 		}
 		allFilePointers = append(allFilePointers, namedReader{Reader: fp, name: filename})
+	}
+
+	if len(*ignoreTests) > 0 && *allDefaultOptional {
+		return errors.New("Invalid argument combination. --all-default-optional and --ignore-tests cannot be used together")
+	}
+
+	if *allDefaultOptional {
+		var addOptionalChecks []string
+		for _, c := range score.RegisterAllChecks(parser.Empty(), config.Configuration{}).All() {
+			if c.Optional {
+				addOptionalChecks = append(addOptionalChecks, c.ID)
+			}
+		}
+		optionalTests = &addOptionalChecks
 	}
 
 	ignoredTests := listToStructMap(ignoreTests)
