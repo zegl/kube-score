@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-score-ignore-annotations
+  annotations:
+    "kube-score/ignore": container-security-context-readonlyrootfilesystem,pod-networkpolicy,container-security-context-user-group-id,pod-probes,container-resources
+spec:
+  containers:
+  - name: foobar
+    image: foo/bar:123
+    resources:
+      limits:
+        cpu: 200m
+        memory: 1Gi
+        ephemeral-storage: 2Gi
+      requests:
+        cpu: 200m

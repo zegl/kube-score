@@ -13,8 +13,12 @@ func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations 
 			if v == key {
 				return true
 			}
-			if _, ok := impliedIgnoreAnnotations[v]; ok {
-				return true
+			if vals, ok := impliedIgnoreAnnotations[v]; ok {
+				for i := range vals {
+					if vals[i] == key {
+						return true
+					}
+				}
 			}
 		}
 		return false
