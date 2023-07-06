@@ -515,3 +515,36 @@ func TestPodEnvDuplicated(t *testing.T) {
 	diff := cmp.Diff(expected, actual)
 	assert.Empty(t, diff)
 }
+
+func TestMultipleIgnoreAnnotations(t *testing.T) {
+	t.Parallel()
+	s, err := testScore(config.Configuration{
+		VerboseOutput:             0,
+		AllFiles:                  []ks.NamedReader{testFile("kube-score-ignore-annotations.yaml")},
+		UseIgnoreChecksAnnotation: true,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+	skipped := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			// implied by the ignore container-resources annotation
+			if c.Check.ID == "container-ephemeral-storage-request-and-limit" {
+				assert.True(t, c.Skipped)
+				skipped = true
+			}
+			// a default check
+			if c.Check.ID == "container-image-pull-policy" {
+				assert.False(t, c.Skipped)
+				assert.Equal(t, scorecard.GradeCritical, c.Grade)
+				tested = true
+			}
+			assert.Equal(t, "kube-score-ignore-annotations", o.ObjectMeta.Name)
+		}
+	}
+	assert.True(t, tested)
+	assert.True(t, skipped)
+}
