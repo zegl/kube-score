@@ -1,7 +1,7 @@
 package human
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -97,7 +97,7 @@ func TestHumanOutputDefault(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCard(), 0, 100, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
     [WARNING] test-warning-two-comments
@@ -120,7 +120,7 @@ func TestHumanOutputVerbose1(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCard(), 1, 100, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
     [WARNING] test-warning-two-comments
@@ -149,7 +149,7 @@ func TestHumanOutputVerbose2(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCard(), 2, 100, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
     [WARNING] test-warning-two-comments
@@ -267,7 +267,7 @@ func TestHumanOutputAllOKDefault(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCardAllOK(), 0, 100, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      ✅
 v1/Testing bar-no-namespace                                                   ✅
@@ -310,7 +310,7 @@ func TestHumanOutputLogDescription120Width(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCardLongDescription(), 0, 120, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
     [WARNING] test-warning-two-comments
@@ -326,7 +326,7 @@ func TestHumanOutputLogDescription100Width(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCardLongDescription(), 0, 100, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
     [WARNING] test-warning-two-comments
@@ -343,7 +343,7 @@ func TestHumanOutputLogDescription80Width(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCardLongDescription(), 0, 80, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo                                                      🤔
     [WARNING] test-warning-two-comments
@@ -361,7 +361,7 @@ func TestHumanOutputLogDescription0Width(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCardLongDescription(), 0, 0, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing foo in foofoo🤔
     [WARNING] test-warning-two-comments
@@ -415,7 +415,7 @@ func TestHumanOutputWithLongObjectNames(t *testing.T) {
 	t.Parallel()
 	r, err := Human(getTestCardLongTitle(), 0, 80, false)
 	assert.Nil(t, err)
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `v1/Testing this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title-this-is-a-very-long-title in foofoo🤔
     [WARNING] test-warning-two-comments
