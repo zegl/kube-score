@@ -1,7 +1,7 @@
 package ci
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -95,7 +95,7 @@ func TestCiOutput(t *testing.T) {
 	t.Parallel()
 	// Defaults
 	r := CI(getTestCard())
-	all, err := ioutil.ReadAll(r)
+	all, err := io.ReadAll(r)
 	assert.Nil(t, err)
 	assert.Equal(t, `[WARNING] foo/foofoo v1/Testing: (a) summary
 [WARNING] foo/foofoo v1/Testing: summary

@@ -3,7 +3,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"strings"
 
@@ -149,7 +149,7 @@ func (p *Parser) ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 	s := &parsedObjects{}
 
 	for _, namedReader := range cnf.AllFiles {
-		fullFile, err := ioutil.ReadAll(namedReader)
+		fullFile, err := io.ReadAll(namedReader)
 		if err != nil {
 			return nil, err
 		}

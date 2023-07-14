@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -258,7 +257,7 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		return fmt.Errorf("error: Unknown --output-format or --output-version")
 	}
 
-	output, _ := ioutil.ReadAll(r)
+	output, _ := io.ReadAll(r)
 	fmt.Print(string(output))
 	os.Exit(exitCode)
 	return nil
