@@ -19,9 +19,10 @@ func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
 }
 
 func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[string]string) (bool, error) {
+	var hasNamespaceMismatch bool
 	for _, budget := range budgets {
 		if budget.Namespace() != namespace {
-			score.AddComment("", "PodDisruptionBudget namespace didn't match Deployment namespace", "Cannot associate the PodDisruptionBudget to the Deployment because they are not explicitly in the same namespace")
+			hasNamespaceMismatch = true
 			continue
 		}
 
@@ -33,6 +34,10 @@ func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[
 		if selector.Matches(internal.MapLabels(labels)) {
 			return true, nil
 		}
+	}
+
+	if hasNamespaceMismatch {
+		return false, fmt.Errorf("No matching PodDisruptionBudgets and Deployments would be found in the same namespace")
 	}
 
 	return false, nil
