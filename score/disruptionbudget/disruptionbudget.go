@@ -18,29 +18,33 @@ func Register(allChecks *checks.Checks, budgets ks.PodDisruptionBudgets) {
 	allChecks.RegisterPodDisruptionBudgetCheck("PodDisruptionBudget has policy", `Makes sure that PodDisruptionBudgets specify minAvailable or maxUnavailable`, hasPolicy)
 }
 
-func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[string]string) (bool, error) {
-	var hasNamespaceMismatch bool
+func hasMatching(budgets []ks.PodDisruptionBudget, namespace string, labels map[string]string) (bool, string, error) {
+	var hasNamespaceMismatch []string
 	for _, budget := range budgets {
-		if budget.Namespace() != namespace {
-			hasNamespaceMismatch = true
-			continue
-		}
 
 		selector, err := metav1.LabelSelectorAsSelector(budget.PodDisruptionBudgetSelector())
 		if err != nil {
-			return false, fmt.Errorf("failed to create selector: %w", err)
+			return false, "", fmt.Errorf("failed to create selector: %w", err)
 		}
 
-		if selector.Matches(internal.MapLabels(labels)) {
-			return true, nil
+		if !selector.Matches(internal.MapLabels(labels)) {
+			continue
 		}
+
+		// matches, but in different namespace
+		if budget.Namespace() != namespace {
+			hasNamespaceMismatch = append(hasNamespaceMismatch, budget.Namespace())
+			continue
+		}
+
+		return true, "", nil
 	}
 
-	if hasNamespaceMismatch {
-		return false, fmt.Errorf("No matching PodDisruptionBudgets and Deployments would be found in the same namespace")
+	if len(hasNamespaceMismatch) > 0 {
+		return false, fmt.Sprintf("A matching budget was found, but in a different namespace. expected='%s' got='%+v'", namespace, hasNamespaceMismatch), nil
 	}
 
-	return false, nil
+	return false, "", nil
 }
 
 func statefulSetHas(budgets []ks.PodDisruptionBudget) func(appsv1.StatefulSet) (scorecard.TestScore, error) {
@@ -51,7 +55,7 @@ func statefulSetHas(budgets []ks.PodDisruptionBudget) func(appsv1.StatefulSet) (
 			return
 		}
 
-		match, matchErr := hasMatching(budgets, statefulset.Namespace, statefulset.Spec.Template.Labels)
+		match, comment, matchErr := hasMatching(budgets, statefulset.Namespace, statefulset.Spec.Template.Labels)
 		if matchErr != nil {
 			err = matchErr
 			return
@@ -61,7 +65,7 @@ func statefulSetHas(budgets []ks.PodDisruptionBudget) func(appsv1.StatefulSet) (
 			score.Grade = scorecard.GradeAllOK
 		} else {
 			score.Grade = scorecard.GradeCritical
-			score.AddComment("", "No matching PodDisruptionBudget was found", "It's recommended to define a PodDisruptionBudget to avoid unexpected downtime during Kubernetes maintenance operations, such as when draining a node.")
+			score.AddComment("", "No matching PodDisruptionBudget was found", "It's recommended to define a PodDisruptionBudget to avoid unexpected downtime during Kubernetes maintenance operations, such as when draining a node. "+comment)
 		}
 
 		return
@@ -76,7 +80,7 @@ func deploymentHas(budgets []ks.PodDisruptionBudget) func(appsv1.Deployment) (sc
 			return
 		}
 
-		match, matchErr := hasMatching(budgets, deployment.Namespace, deployment.Spec.Template.Labels)
+		match, comment, matchErr := hasMatching(budgets, deployment.Namespace, deployment.Spec.Template.Labels)
 		if matchErr != nil {
 			err = matchErr
 			return
@@ -86,7 +90,7 @@ func deploymentHas(budgets []ks.PodDisruptionBudget) func(appsv1.Deployment) (sc
 			score.Grade = scorecard.GradeAllOK
 		} else {
 			score.Grade = scorecard.GradeCritical
-			score.AddComment("", "No matching PodDisruptionBudget was found", "It's recommended to define a PodDisruptionBudget to avoid unexpected downtime during Kubernetes maintenance operations, such as when draining a node.")
+			score.AddComment("", "No matching PodDisruptionBudget was found", "It's recommended to define a PodDisruptionBudget to avoid unexpected downtime during Kubernetes maintenance operations, such as when draining a node. "+comment)
 		}
 
 		return
