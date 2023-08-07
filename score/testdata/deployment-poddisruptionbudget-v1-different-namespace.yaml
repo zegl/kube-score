@@ -1,0 +1,47 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-budget
+  namespace: not-foo
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: foo
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-budget
+  namespace: bar
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: foo
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-budget-not-matching
+  namespace: baz
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: not-foo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statefulset-test-1
+  namespace: foo
+spec:
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foobar
+        image: foo:bar
