@@ -57,6 +57,13 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int, use
 			return nil, fmt.Errorf("failed to write: %w", err)
 		}
 
+		// Display file name if the object has any warnings or criticals
+		if scoredObject.AnyBelowOrEqualToGrade(scorecard.GradeWarning) {
+			if scoredObject.FileLocation.Name != "" {
+				_, _ = color.New(color.FgHiBlack).Fprintf(w, "    path=%s\n", scoredObject.FileLocation.Name)
+			}
+		}
+
 		for _, card := range scoredObject.Checks {
 			r := outputHumanStep(card, verboseOutput, termWidth)
 			if _, err := io.Copy(w, r); err != nil {
