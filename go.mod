@@ -7,7 +7,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/term v0.13.0
+	golang.org/x/term v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.28.3
 	k8s.io/apimachinery v0.28.3
