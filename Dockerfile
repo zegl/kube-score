@@ -37,7 +37,7 @@ RUN curl --location "https://github.com/kubernetes-sigs/kustomize/releases/downl
     chmod +x kustomize && \
     mv kustomize /usr/bin/kustomize
 
-FROM golang:1.19-alpine as builder
+FROM golang:1.21-alpine as builder
 ARG TARGETARCH
 ARG TARGETPLATFORM
 WORKDIR /kube-score
@@ -67,7 +67,7 @@ COPY --from=builder /usr/bin/kube-score /usr/bin/kube-score
 
 # Symlink to /kube-score for backwards compatibility (with kube-score v1.15.0 and earlier)
 RUN ln -s /usr/bin/kube-score /kube-score
- 
+
 # Dry runs
 RUN /kube-score version && \
     /usr/bin/kube-score version && \
