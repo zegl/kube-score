@@ -187,7 +187,7 @@ spec:
 
 ## Building from source
 
-`kube-score` requires [Go](https://golang.org/) `1.19` or later to build. Clone this repository, and then:
+`kube-score` requires [Go](https://golang.org/) `1.21` or later to build. Clone this repository, and then:
 
 ```bash
 # Build the project
@@ -205,7 +205,7 @@ Do you want to help out? Take a look at the [Contributing Guidelines](./.github/
 
 | Project             | Version |
 |---------------------|---------|
-| go.dev              | ^1.19   | 
+| go.dev              | ^1.21   | 
 
 ## Made by
 
