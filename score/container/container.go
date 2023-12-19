@@ -215,16 +215,33 @@ func containerStorageEphemeralRequestAndLimit(ps ks.PodSpecer) (score scorecard.
 
 	score.Grade = scorecard.GradeAllOK
 
+	hasMissingLimit := false
+	hasMissingRequest := false
+
 	for _, container := range allContainers {
 		if container.Resources.Limits.StorageEphemeral().IsZero() {
 			score.AddComment(container.Name, "Ephemeral Storage limit is not set",
 				"Resource limits are recommended to avoid resource DDOS. Set resources.limits.ephemeral-storage")
-			score.Grade = scorecard.GradeCritical
-		} else if container.Resources.Requests.StorageEphemeral().IsZero() {
+			hasMissingLimit = true
+		}
+		if container.Resources.Requests.StorageEphemeral().IsZero() {
 			score.AddComment(container.Name, "Ephemeral Storage request is not set",
 				"Resource requests are recommended to make sure the application can start and run without crashing. Set resource.requests.ephemeral-storage")
 			score.Grade = scorecard.GradeWarning
+			hasMissingRequest = true
 		}
+	}
+
+	switch {
+	case len(allContainers) == 0:
+		score.Grade = scorecard.GradeCritical
+		score.AddComment("", "No containers defined", "")
+	case hasMissingLimit:
+		score.Grade = scorecard.GradeCritical
+	case hasMissingRequest:
+		score.Grade = scorecard.GradeWarning
+	default:
+		score.Grade = scorecard.GradeAllOK
 	}
 
 	return
