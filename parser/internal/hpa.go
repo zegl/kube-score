@@ -2,6 +2,7 @@ package internal
 
 import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,5 +70,26 @@ func (d HPAv2beta2) GetObjectMeta() metav1.ObjectMeta {
 }
 
 func (d HPAv2beta2) HpaTarget() autoscalingv1.CrossVersionObjectReference {
+	return autoscalingv1.CrossVersionObjectReference(d.Spec.ScaleTargetRef)
+}
+
+type HPAv2 struct {
+	autoscalingv2.HorizontalPodAutoscaler
+	Location ks.FileLocation
+}
+
+func (d HPAv2) FileLocation() ks.FileLocation {
+	return d.Location
+}
+
+func (d HPAv2) GetTypeMeta() metav1.TypeMeta {
+	return d.TypeMeta
+}
+
+func (d HPAv2) GetObjectMeta() metav1.ObjectMeta {
+	return d.ObjectMeta
+}
+
+func (d HPAv2) HpaTarget() autoscalingv1.CrossVersionObjectReference {
 	return autoscalingv1.CrossVersionObjectReference(d.Spec.ScaleTargetRef)
 }
