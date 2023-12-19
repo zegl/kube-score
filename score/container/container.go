@@ -227,7 +227,6 @@ func containerStorageEphemeralRequestAndLimit(ps ks.PodSpecer) (score scorecard.
 		if container.Resources.Requests.StorageEphemeral().IsZero() {
 			score.AddComment(container.Name, "Ephemeral Storage request is not set",
 				"Resource requests are recommended to make sure the application can start and run without crashing. Set resource.requests.ephemeral-storage")
-			score.Grade = scorecard.GradeWarning
 			hasMissingRequest = true
 		}
 	}
