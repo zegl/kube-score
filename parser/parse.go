@@ -12,6 +12,7 @@ import (
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	batchv1 "k8s.io/api/batch/v1"
@@ -408,6 +409,13 @@ func (p *Parser) decodeItem(cnf config.Configuration, s *parsedObjects, detected
 			ObjectMeta:     hpa.ObjectMeta,
 			FileLocationer: h,
 		})
+
+	case autoscalingv2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
+		var hpa autoscalingv2.HorizontalPodAutoscaler
+		errs.AddIfErr(p.decode(fileContents, &hpa))
+		h := internal.HPAv2{HorizontalPodAutoscaler: hpa, Location: fileLocation}
+		s.hpaTargeters = append(s.hpaTargeters, h)
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
 
 	default:
 		if cnf.VerboseOutput > 1 {
