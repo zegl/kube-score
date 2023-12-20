@@ -80,7 +80,16 @@ func Output(input *scorecard.Scorecard) io.Reader {
 				Rules: rules,
 			},
 		},
-		Results: results,
+		Conversion: sarif.Conversion{
+			Tool: sarif.Tool{
+				Driver: sarif.Driver{
+					Name:  "kube-score",				},
+			},
+			Invocation: sarif.Invocation{
+				
+			},
+		},
+		Results: results,	
 	}
 	res := sarif.Sarif{
 		Runs:    []sarif.Run{run},
