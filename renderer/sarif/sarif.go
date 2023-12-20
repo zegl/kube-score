@@ -85,9 +85,6 @@ func Output(input *scorecard.Scorecard) io.Reader {
 				Driver: sarif.Driver{
 					Name:  "kube-score",				},
 			},
-			Invocation: sarif.Invocation{
-				
-			},
 		},
 		Results: results,	
 	}
