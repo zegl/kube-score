@@ -31,7 +31,7 @@ type WorkingDirectory struct {
 
 type Invocation struct {
 	Arguments           []string         `json:"arguments,omitempty"`
-	ExecutionSuccessful bool             `json:"executionSuccessful,omitempty"`
+	ExecutionSuccessful bool             `json:"executionSuccessful"`
 	CommandLine         string           `json:"commandLine,omitempty"`
 	EndTimeUtc          time.Time        `json:"endTimeUtc,omitempty"`
 	WorkingDirectory    WorkingDirectory `json:"workingDirectory,omitempty"`
