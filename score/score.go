@@ -7,6 +7,7 @@ import (
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/container"
 	"github.com/zegl/kube-score/score/cronjob"
+	"github.com/zegl/kube-score/score/deployment"
 	"github.com/zegl/kube-score/score/disruptionbudget"
 	"github.com/zegl/kube-score/score/hpa"
 	"github.com/zegl/kube-score/score/ingress"
@@ -25,6 +26,7 @@ import (
 func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks.Checks {
 	allChecks := checks.New(cnf)
 
+	deployment.Register(allChecks, allObjects)
 	ingress.Register(allChecks, allObjects)
 	cronjob.Register(allChecks)
 	container.Register(allChecks, cnf)

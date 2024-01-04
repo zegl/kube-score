@@ -12,7 +12,7 @@ spec:
       - name: foobar
         image: foo/bar:123
   strategy:
-    type: RollingUpdate
+    type: Recreate
 ---
 kind: Service
 apiVersion: v1
