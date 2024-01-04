@@ -11,8 +11,6 @@ spec:
       containers:
       - name: foobar
         image: foo/bar:123
-  strategy:
-    type: RollingUpdate
 ---
 kind: Service
 apiVersion: v1
