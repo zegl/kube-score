@@ -11,7 +11,7 @@ spec:
       containers:
       - name: foobar
         image: foo/bar:123
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
 ---
