@@ -3,6 +3,7 @@ package domain
 import (
 	"io"
 
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -58,6 +59,15 @@ type Ingress interface {
 	GetObjectMeta() metav1.ObjectMeta
 	Rules() []networkingv1.IngressRule
 	FileLocationer
+}
+
+type Route interface {
+	Route() routev1.Route
+	FileLocationer
+}
+
+type Routes interface {
+	Routes() []Route
 }
 
 type Metas interface {
@@ -158,4 +168,5 @@ type AllTypes interface {
 	CronJobs
 	PodDisruptionBudgets
 	HorizontalPodAutoscalers
+	Routes
 }

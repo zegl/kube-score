@@ -3,6 +3,7 @@ package checks
 import (
 	"strings"
 
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
@@ -26,6 +27,7 @@ func New(cnf config.Configuration) *Checks {
 		cronjobs:                 make(map[string]GenCheck[ks.CronJob]),
 		horizontalPodAutoscalers: make(map[string]GenCheck[ks.HpaTargeter]),
 		poddisruptionbudgets:     make(map[string]GenCheck[ks.PodDisruptionBudget]),
+		routes:                   make(map[string]GenCheck[routev1.Route]),
 	}
 }
 
@@ -70,6 +72,7 @@ type Checks struct {
 	cronjobs                 map[string]GenCheck[ks.CronJob]
 	horizontalPodAutoscalers map[string]GenCheck[ks.HpaTargeter]
 	poddisruptionbudgets     map[string]GenCheck[ks.PodDisruptionBudget]
+	routes                   map[string]GenCheck[routev1.Route]
 
 	cnf config.Configuration
 }
@@ -203,6 +206,18 @@ func (c *Checks) RegisterOptionalServiceCheck(name, comment string, fn CheckFunc
 
 func (c *Checks) Services() map[string]GenCheck[corev1.Service] {
 	return c.services
+}
+
+func (c *Checks) RegisterRouteCheck(name, comment string, fn CheckFunc[routev1.Route]) {
+	reg(c, "Route", name, comment, false, fn, c.routes)
+}
+
+func (c *Checks) RegisterOptionalRouteCheck(name, comment string, fn CheckFunc[routev1.Route]) {
+	reg(c, "Route", name, comment, true, fn, c.routes)
+}
+
+func (c *Checks) Routes() map[string]GenCheck[routev1.Route] {
+	return c.routes
 }
 
 func (c *Checks) All() []ks.Check {

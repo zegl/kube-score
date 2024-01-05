@@ -5,6 +5,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/google/go-cmp v0.6.0
 	github.com/mattn/go-isatty v0.0.20
+	github.com/openshift/api v0.0.0-20240104110125-c7a2d3b41e1f
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/term v0.15.0

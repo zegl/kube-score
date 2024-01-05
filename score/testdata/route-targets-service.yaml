@@ -1,0 +1,24 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: console
+spec:
+  host: console-openshift-console.apps.xyz01.example.com
+  to:
+    kind: Service
+    name: console
+    weight: 100
+  port:
+    targetPort: https
+  wildcardPolicy: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: console
+spec:
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 8443
