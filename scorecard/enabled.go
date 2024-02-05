@@ -37,6 +37,11 @@ func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations 
 		return true
 	}
 
+	// Enabled optional test from command line arguments
+	if _, ok := so.enabledOptionalTests[check.ID]; ok {
+		return true
+	}
+
 	// Optional checks are disabled unless explicitly allowed above
 	if check.Optional {
 		return false
