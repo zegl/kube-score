@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+  namespace: testspace
+  labels:
+    app: foo-all-ok
+spec:
+  containers:
+    - name: foobar
+      image: foo/bar:123
+      imagePullPolicy: Always
+      resources:
+        requests:
+          cpu: 1
+          memory: 1Gi
+          ephemeral-storage: 500Mi
+        limits:
+          cpu: 1
+          memory: 2Gi
+          ephemeral-storage: 500Mi
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: 8080
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: 8080
+      securityContext:
+        privileged: False
+        runAsUser: 30000
+        runAsGroup: 30000
+        readOnlyRootFilesystem: True
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: foo-all-ok-netpol
+  namespace: testspace
+spec:
+  podSelector:
+    matchLabels:
+      app: foo-all-ok
+  policyTypes:
+    - Egress
+    - Ingress
