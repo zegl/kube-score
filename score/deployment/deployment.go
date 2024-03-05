@@ -91,9 +91,12 @@ func deploymentReplicas(svcs []ks.Service, hpas []ks.HpaTargeter) func(deploymen
 			}
 		}
 
-		if !referencedByService || hasHPA {
+		if !referencedByService {
 			score.Skipped = true
-			score.AddComment("", "Skipped as the Deployment is not targeted by service or is controlled by a HorizontalPodAutoscaler", "")
+			score.AddComment("", "Skipped as the Deployment is not targeted by service", "")
+		} else if hasHPA {
+			score.Skipped = true
+			score.AddComment("", "Skipped as the Deployment is controlled by a HorizontalPodAutoscaler", "")
 		} else {
 			if ptr.Deref(deployment.Spec.Replicas, 1) >= 2 {
 				score.Grade = scorecard.GradeAllOK

@@ -39,10 +39,14 @@ func TestServiceTargetsDeploymentReplicasOk(t *testing.T) {
 
 func TestServiceNotTargetsDeploymentReplicasNotRelevant(t *testing.T) {
 	t.Parallel()
-	skipped := wasSkipped(t, config.Configuration{
+	assert.True(t, wasSkipped(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("service-not-target-deployment.yaml")},
+	}, "Deployment Replicas"))
+
+	summaries := getSummaries(t, config.Configuration{
 		AllFiles: []ks.NamedReader{testFile("service-not-target-deployment.yaml")},
 	}, "Deployment Replicas")
-	assert.True(t, skipped)
+	assert.Contains(t, summaries, "Skipped as the Deployment is not targeted by service")
 }
 
 func TestServiceTargetsDeploymentReplicasNok(t *testing.T) {
@@ -52,8 +56,12 @@ func TestServiceTargetsDeploymentReplicasNok(t *testing.T) {
 
 func TestHPATargetsDeployment(t *testing.T) {
 	t.Parallel()
-	skipped := wasSkipped(t, config.Configuration{
+	assert.True(t, wasSkipped(t, config.Configuration{
+		AllFiles: []ks.NamedReader{testFile("hpa-target-deployment.yaml")},
+	}, "Deployment Replicas"))
+
+	summaries := getSummaries(t, config.Configuration{
 		AllFiles: []ks.NamedReader{testFile("hpa-target-deployment.yaml")},
 	}, "Deployment Replicas")
-	assert.True(t, skipped)
+	assert.Contains(t, summaries, "Skipped as the Deployment is controlled by a HorizontalPodAutoscaler")
 }

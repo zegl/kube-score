@@ -54,6 +54,25 @@ func wasSkipped(t *testing.T, config config.Configuration, testcase string) bool
 	return false
 }
 
+func getSummaries(t *testing.T, config config.Configuration, testcase string) []string {
+	sc, err := testScore(config)
+	assert.NoError(t, err)
+	var summaries []string
+	for _, objectScore := range sc {
+		for _, s := range objectScore.Checks {
+			if s.Check.Name == testcase {
+				for _, c := range s.Comments {
+					summaries = append(summaries, c.Summary)
+				}
+				return summaries
+			}
+		}
+	}
+
+	assert.Fail(t, "test was not run")
+	return summaries
+}
+
 func testScore(config config.Configuration) (scorecard.Scorecard, error) {
 	p, err := parser.New()
 	if err != nil {

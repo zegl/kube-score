@@ -26,6 +26,9 @@ func (d HPAv1) GetTypeMeta() metav1.TypeMeta {
 func (d HPAv1) GetObjectMeta() metav1.ObjectMeta {
 	return d.ObjectMeta
 }
+func (d HPAv1) MinReplicas() *int32 {
+	return d.Spec.MinReplicas
+}
 
 func (d HPAv1) HpaTarget() autoscalingv1.CrossVersionObjectReference {
 	return d.Spec.ScaleTargetRef
@@ -46,6 +49,10 @@ func (d HPAv2beta1) GetTypeMeta() metav1.TypeMeta {
 
 func (d HPAv2beta1) GetObjectMeta() metav1.ObjectMeta {
 	return d.ObjectMeta
+}
+
+func (d HPAv2beta1) MinReplicas() *int32 {
+	return d.Spec.MinReplicas
 }
 
 func (d HPAv2beta1) HpaTarget() autoscalingv1.CrossVersionObjectReference {
@@ -69,6 +76,10 @@ func (d HPAv2beta2) GetObjectMeta() metav1.ObjectMeta {
 	return d.ObjectMeta
 }
 
+func (d HPAv2beta2) MinReplicas() *int32 {
+	return d.Spec.MinReplicas
+}
+
 func (d HPAv2beta2) HpaTarget() autoscalingv1.CrossVersionObjectReference {
 	return autoscalingv1.CrossVersionObjectReference(d.Spec.ScaleTargetRef)
 }
@@ -88,6 +99,10 @@ func (d HPAv2) GetTypeMeta() metav1.TypeMeta {
 
 func (d HPAv2) GetObjectMeta() metav1.ObjectMeta {
 	return d.ObjectMeta
+}
+
+func (d HPAv2) MinReplicas() *int32 {
+	return d.Spec.MinReplicas
 }
 
 func (d HPAv2) HpaTarget() autoscalingv1.CrossVersionObjectReference {
