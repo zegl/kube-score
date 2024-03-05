@@ -1,4 +1,4 @@
-apiVersion: autoscaling/v1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: php-apache
@@ -24,25 +24,8 @@ metadata:
   name: php-apache
   namespace: default
 spec:
-  replicas: 1
   template:
-    metadata:
-      labels:
-        app: my-app
     spec:
       containers:
         - name: foo
           image: foo:latest
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: my-service
-  namespace: default
-spec:
-  selector:
-    app: my-app
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080

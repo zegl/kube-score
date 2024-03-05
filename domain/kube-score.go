@@ -2,9 +2,9 @@ package domain
 
 import (
 	"io"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -49,6 +49,7 @@ type FileLocationer interface {
 type HpaTargeter interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetObjectMeta() metav1.ObjectMeta
+	MinReplicas() *int32
 	HpaTarget() autoscalingv1.CrossVersionObjectReference
 	FileLocationer
 }

@@ -177,6 +177,10 @@ func (d hpav1) GetObjectMeta() metav1.ObjectMeta {
 	return d.ObjectMeta
 }
 
+func (d hpav1) MinReplicas() *int32 {
+	return d.Spec.MinReplicas
+}
+
 func (d hpav1) HpaTarget() v1.CrossVersionObjectReference {
 	return d.Spec.ScaleTargetRef
 }
