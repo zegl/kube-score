@@ -3,7 +3,6 @@ package checks
 import (
 	"strings"
 
-	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 	appsv1 "k8s.io/api/apps/v1"
@@ -11,7 +10,14 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
-func New(cnf config.Configuration) *Checks {
+type Config struct {
+	IgnoredTests map[string]struct{}
+}
+
+func New(cnf *Config) *Checks {
+	if cnf == nil {
+		cnf = &Config{}
+	}
 	return &Checks{
 		cnf: cnf,
 
@@ -71,7 +77,7 @@ type Checks struct {
 	horizontalPodAutoscalers map[string]GenCheck[ks.HpaTargeter]
 	poddisruptionbudgets     map[string]GenCheck[ks.PodDisruptionBudget]
 
-	cnf config.Configuration
+	cnf *Config
 }
 
 func (c Checks) isEnabled(check ks.Check) bool {

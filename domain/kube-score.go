@@ -2,6 +2,7 @@ package domain
 
 import (
 	"io"
+
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 
 	appsv1 "k8s.io/api/apps/v1"

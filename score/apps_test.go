@@ -108,20 +108,18 @@ func TestStatefulsetSelectorLabels(t *testing.T) {
 
 func TestStatefulsetTemplateIgnores(t *testing.T) {
 	t.Parallel()
-	skipped := wasSkipped(t, config.Configuration{
+	skipped := wasSkipped(t, []ks.NamedReader{testFile("statefulset-nested-ignores.yaml")}, nil, &config.RunConfiguration{
 		UseIgnoreChecksAnnotation:   true,
 		UseOptionalChecksAnnotation: true,
-		AllFiles:                    []ks.NamedReader{testFile("statefulset-nested-ignores.yaml")},
 	}, "Container Image Tag")
 	assert.True(t, skipped)
 }
 
 func TestStatefulsetTemplateIgnoresNotIgnoredWhenFlagDisabled(t *testing.T) {
 	t.Parallel()
-	skipped := wasSkipped(t, config.Configuration{
+	skipped := wasSkipped(t, []ks.NamedReader{testFile("statefulset-nested-ignores.yaml")}, nil, &config.RunConfiguration{
 		UseIgnoreChecksAnnotation:   false,
 		UseOptionalChecksAnnotation: true,
-		AllFiles:                    []ks.NamedReader{testFile("statefulset-nested-ignores.yaml")},
 	}, "Container Image Tag")
 	assert.False(t, skipped)
 }

@@ -83,10 +83,10 @@ func Output(input *scorecard.Scorecard) io.Reader {
 		Conversion: sarif.Conversion{
 			Tool: sarif.Tool{
 				Driver: sarif.Driver{
-					Name:  "kube-score",				},
+					Name: "kube-score"},
 			},
 		},
-		Results: results,	
+		Results: results,
 	}
 	res := sarif.Sarif{
 		Runs:    []sarif.Run{run},

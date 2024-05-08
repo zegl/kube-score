@@ -20,6 +20,7 @@ import (
 	"github.com/zegl/kube-score/renderer/json_v2"
 	"github.com/zegl/kube-score/renderer/sarif"
 	"github.com/zegl/kube-score/score"
+	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	"golang.org/x/term"
 )
@@ -174,7 +175,7 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 
 	if *allDefaultOptional {
 		var addOptionalChecks []string
-		for _, c := range score.RegisterAllChecks(parser.Empty(), config.Configuration{}).All() {
+		for _, c := range score.RegisterAllChecks(parser.Empty(), nil, nil).All() {
 			if c.Optional {
 				addOptionalChecks = append(addOptionalChecks, c.ID)
 			}
@@ -190,29 +191,30 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		return errors.New("Invalid --kubernetes-version. Use on format \"vN.NN\"")
 	}
 
-	cnf := config.Configuration{
-		AllFiles:                              allFilePointers,
-		VerboseOutput:                         *verboseOutput,
+	runConfig := &config.RunConfiguration{
 		IgnoreContainerCpuLimitRequirement:    *ignoreContainerCpuLimit,
 		IgnoreContainerMemoryLimitRequirement: *ignoreContainerMemoryLimit,
-		IgnoredTests:                          ignoredTests,
 		EnabledOptionalTests:                  enabledOptionalTests,
 		UseIgnoreChecksAnnotation:             !*disableIgnoreChecksAnnotation,
 		UseOptionalChecksAnnotation:           !*disableOptionalChecksAnnotation,
 		KubernetesVersion:                     kubeVer,
 	}
 
-	p, err := parser.New()
+	p, err := parser.New(&parser.Config{
+		VerboseOutput: *verboseOutput,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to initializer parser: %w", err)
 	}
 
-	parsedFiles, err := p.ParseFiles(cnf)
+	parsedFiles, err := p.ParseFiles(allFilePointers)
 	if err != nil {
 		return fmt.Errorf("failed to parse files: %w", err)
 	}
 
-	scoreCard, err := score.Score(parsedFiles, cnf)
+	checks := score.RegisterAllChecks(parsedFiles, &checks.Config{IgnoredTests: ignoredTests}, runConfig)
+
+	scoreCard, err := score.Score(parsedFiles, checks, runConfig)
 	if err != nil {
 		return err
 	}
@@ -290,7 +292,7 @@ func listChecks(binName string, args []string) error {
 		return nil
 	}
 
-	allChecks := score.RegisterAllChecks(parser.Empty(), config.Configuration{})
+	allChecks := score.RegisterAllChecks(parser.Empty(), nil, nil)
 
 	output := csv.NewWriter(os.Stdout)
 	for _, c := range allChecks.All() {
