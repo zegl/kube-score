@@ -25,7 +25,11 @@ func New() Scorecard {
 	return make(Scorecard)
 }
 
-func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, cnf config.Configuration) *ScoredObject {
+func (s Scorecard) NewObject(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta, cnf *config.RunConfiguration) *ScoredObject {
+	if cnf == nil {
+		cnf = &config.RunConfiguration{}
+	}
+
 	o := &ScoredObject{
 		TypeMeta:   typeMeta,
 		ObjectMeta: objectMeta,

@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	ks "github.com/zegl/kube-score/domain"
 )
 
-type Configuration struct {
-	AllFiles                              []ks.NamedReader
-	VerboseOutput                         int
+type RunConfiguration struct {
 	IgnoreContainerCpuLimitRequirement    bool
 	IgnoreContainerMemoryLimitRequirement bool
-	IgnoredTests                          map[string]struct{}
 	EnabledOptionalTests                  map[string]struct{}
 	UseIgnoreChecksAnnotation             bool
 	UseOptionalChecksAnnotation           bool

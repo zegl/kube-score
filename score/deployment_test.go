@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/scorecard"
 )
@@ -16,9 +15,9 @@ func TestServiceTargetsDeploymentStrategyRolling(t *testing.T) {
 
 func TestServiceNotTargetsDeploymentStrategyNotRelevant(t *testing.T) {
 	t.Parallel()
-	skipped := wasSkipped(t, config.Configuration{
-		AllFiles: []ks.NamedReader{testFile("service-not-target-deployment.yaml")},
-	}, "Deployment Strategy")
+	skipped := wasSkipped(t,
+		[]ks.NamedReader{testFile("service-not-target-deployment.yaml")}, nil, nil,
+		"Deployment Strategy")
 	assert.True(t, skipped)
 }
 
@@ -39,13 +38,12 @@ func TestServiceTargetsDeploymentReplicasOk(t *testing.T) {
 
 func TestServiceNotTargetsDeploymentReplicasNotRelevant(t *testing.T) {
 	t.Parallel()
-	assert.True(t, wasSkipped(t, config.Configuration{
-		AllFiles: []ks.NamedReader{testFile("service-not-target-deployment.yaml")},
-	}, "Deployment Replicas"))
+	assert.True(t, wasSkipped(t,
+		[]ks.NamedReader{testFile("service-not-target-deployment.yaml")}, nil, nil,
+		"Deployment Replicas"))
 
-	summaries := getSummaries(t, config.Configuration{
-		AllFiles: []ks.NamedReader{testFile("service-not-target-deployment.yaml")},
-	}, "Deployment Replicas")
+	summaries := getSummaries(t, []ks.NamedReader{testFile("service-not-target-deployment.yaml")}, nil, nil,
+		"Deployment Replicas")
 	assert.Contains(t, summaries, "Skipped as the Deployment is not targeted by service")
 }
 
@@ -56,12 +54,11 @@ func TestServiceTargetsDeploymentReplicasNok(t *testing.T) {
 
 func TestHPATargetsDeployment(t *testing.T) {
 	t.Parallel()
-	assert.True(t, wasSkipped(t, config.Configuration{
-		AllFiles: []ks.NamedReader{testFile("hpa-target-deployment.yaml")},
-	}, "Deployment Replicas"))
+	assert.True(t, wasSkipped(t,
+		[]ks.NamedReader{testFile("hpa-target-deployment.yaml")}, nil, nil,
+		"Deployment Replicas"))
 
-	summaries := getSummaries(t, config.Configuration{
-		AllFiles: []ks.NamedReader{testFile("hpa-target-deployment.yaml")},
-	}, "Deployment Replicas")
+	summaries := getSummaries(t, []ks.NamedReader{testFile("hpa-target-deployment.yaml")}, nil, nil,
+		"Deployment Replicas")
 	assert.Contains(t, summaries, "Skipped as the Deployment is controlled by a HorizontalPodAutoscaler")
 }

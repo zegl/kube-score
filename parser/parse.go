@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
-	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser/internal"
 	internalcronjob "github.com/zegl/kube-score/parser/internal/cronjob"
@@ -40,15 +39,25 @@ import (
 type Parser struct {
 	scheme *runtime.Scheme
 	codecs serializer.CodecFactory
+	config *Config
+}
+
+type Config struct {
+	VerboseOutput int
 }
 
 type schemaAdderFunc func(scheme *runtime.Scheme) error
 
-func New() (*Parser, error) {
+func New(config *Config) (*Parser, error) {
+	if config == nil {
+		config = &Config{}
+	}
+
 	scheme := runtime.NewScheme()
 	p := &Parser{
 		scheme: scheme,
 		codecs: serializer.NewCodecFactory(scheme),
+		config: config,
 	}
 	if err := p.addToScheme(); err != nil {
 		return nil, fmt.Errorf("failed to init: %w", err)
@@ -146,10 +155,10 @@ func Empty() ks.AllTypes {
 	return &parsedObjects{}
 }
 
-func (p *Parser) ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
+func (p *Parser) ParseFiles(files []ks.NamedReader) (ks.AllTypes, error) {
 	s := &parsedObjects{}
 
-	for _, namedReader := range cnf.AllFiles {
+	for _, namedReader := range files {
 		fullFile, err := io.ReadAll(namedReader)
 		if err != nil {
 			return nil, err
@@ -169,7 +178,7 @@ func (p *Parser) ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 		for _, fileContents := range bytes.Split(fullFile, []byte("\n---\n")) {
 
 			if len(bytes.TrimSpace(fileContents)) > 0 {
-				if err := p.detectAndDecode(cnf, s, namedReader.Name(), offset, fileContents); err != nil {
+				if err := p.detectAndDecode(s, namedReader.Name(), offset, fileContents); err != nil {
 					return nil, err
 				}
 			}
@@ -181,7 +190,7 @@ func (p *Parser) ParseFiles(cnf config.Configuration) (ks.AllTypes, error) {
 	return s, nil
 }
 
-func (p *Parser) detectAndDecode(cnf config.Configuration, s *parsedObjects, fileName string, fileOffset int, raw []byte) error {
+func (p *Parser) detectAndDecode(s *parsedObjects, fileName string, fileOffset int, raw []byte) error {
 	var detect detectKind
 	err := yaml.Unmarshal(raw, &detect)
 	if err != nil {
@@ -198,7 +207,7 @@ func (p *Parser) detectAndDecode(cnf config.Configuration, s *parsedObjects, fil
 			return err
 		}
 		for _, listItem := range list.Items {
-			err := p.detectAndDecode(cnf, s, fileName, fileOffset, listItem.Raw)
+			err := p.detectAndDecode(s, fileName, fileOffset, listItem.Raw)
 			if err != nil {
 				return err
 			}
@@ -206,7 +215,7 @@ func (p *Parser) detectAndDecode(cnf config.Configuration, s *parsedObjects, fil
 		return nil
 	}
 
-	err = p.decodeItem(cnf, s, detectedVersion, fileName, fileOffset, raw)
+	err = p.decodeItem(s, detectedVersion, fileName, fileOffset, raw)
 	if err != nil {
 		return err
 	}
@@ -241,7 +250,7 @@ func detectFileLocation(fileName string, fileOffset int, fileContents []byte) ks
 	}
 }
 
-func (p *Parser) decodeItem(cnf config.Configuration, s *parsedObjects, detectedVersion schema.GroupVersionKind, fileName string, fileOffset int, fileContents []byte) error {
+func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersionKind, fileName string, fileOffset int, fileContents []byte) error {
 	addPodSpeccer := func(ps ks.PodSpecer) {
 		s.podspecers = append(s.podspecers, ps)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{
@@ -418,7 +427,7 @@ func (p *Parser) decodeItem(cnf config.Configuration, s *parsedObjects, detected
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
 
 	default:
-		if cnf.VerboseOutput > 1 {
+		if p.config.VerboseOutput > 1 {
 			log.Printf("Unknown datatype: %s", detectedVersion.String())
 		}
 	}

@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/scorecard"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func Register(allChecks *checks.Checks, cnf config.Configuration) {
-	allChecks.RegisterPodCheck("Container Resources", `Makes sure that all pods have resource limits and requests set. The --ignore-container-cpu-limit flag can be used to disable the requirement of having a CPU limit`, containerResources(!cnf.IgnoreContainerCpuLimitRequirement, !cnf.IgnoreContainerMemoryLimitRequirement))
+func Register(allChecks *checks.Checks, ignoreContainerCpuLimitRequirement, ignoreContainerMemoryLimitRequirement bool) {
+	allChecks.RegisterPodCheck("Container Resources", `Makes sure that all pods have resource limits and requests set. The --ignore-container-cpu-limit flag can be used to disable the requirement of having a CPU limit`, containerResources(!ignoreContainerCpuLimitRequirement, !ignoreContainerMemoryLimitRequirement))
 	allChecks.RegisterOptionalPodCheck("Container Resource Requests Equal Limits", `Makes sure that all pods have the same requests as limits on resources set.`, containerResourceRequestsEqualLimits)
 	allChecks.RegisterOptionalPodCheck("Container CPU Requests Equal Limits", `Makes sure that all pods have the same CPU requests as limits set.`, containerCPURequestsEqualLimits)
 	allChecks.RegisterOptionalPodCheck("Container Memory Requests Equal Limits", `Makes sure that all pods have the same memory requests as limits set.`, containerMemoryRequestsEqualLimits)

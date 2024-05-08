@@ -1,6 +1,8 @@
 package score
 
 import (
+	"errors"
+
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/apps"
@@ -23,19 +25,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks.Checks {
-	allChecks := checks.New(cnf)
+func RegisterAllChecks(allObjects ks.AllTypes, checksConfig *checks.Config, runConfig *config.RunConfiguration) *checks.Checks {
+	allChecks := checks.New(checksConfig)
 
 	deployment.Register(allChecks, allObjects)
 	ingress.Register(allChecks, allObjects)
 	cronjob.Register(allChecks)
-	container.Register(allChecks, cnf)
+	container.Register(allChecks, runConfig.IgnoreContainerCpuLimitRequirement, runConfig.IgnoreContainerMemoryLimitRequirement)
 	disruptionbudget.Register(allChecks, allObjects)
 	networkpolicy.Register(allChecks, allObjects, allObjects, allObjects)
 	probes.Register(allChecks, allObjects)
 	security.Register(allChecks)
 	service.Register(allChecks, allObjects, allObjects)
-	stable.Register(cnf.KubernetesVersion, allChecks)
+	stable.Register(runConfig.KubernetesVersion, allChecks)
 	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers(), allObjects.Services())
 	meta.Register(allChecks)
 	hpa.Register(allChecks, allObjects.Metas())
@@ -68,8 +70,15 @@ func (p *podSpeccer) FileLocation() ks.FileLocation {
 
 // Score runs a pre-configured list of tests against the files defined in the configuration, and returns a scorecard.
 // Additional configuration and tuning parameters can be provided via the config.
-func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scorecard, error) {
-	allChecks := RegisterAllChecks(allObjects, cnf)
+func Score(allObjects ks.AllTypes, allChecks *checks.Checks, cnf *config.RunConfiguration) (*scorecard.Scorecard, error) {
+	if cnf == nil {
+		cnf = &config.RunConfiguration{}
+	}
+
+	if allChecks == nil {
+		return nil, errors.New("no checks registered")
+	}
+
 	scoreCard := scorecard.New()
 
 	newObject := func(typeMeta metav1.TypeMeta, objectMeta metav1.ObjectMeta) *scorecard.ScoredObject {
