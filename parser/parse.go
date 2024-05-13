@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/parser/internal"
@@ -68,6 +69,7 @@ func (p *Parser) addToScheme() error {
 		batchv1beta1.AddToScheme,
 		policyv1beta1.AddToScheme,
 		policyv1.AddToScheme,
+		routev1.AddToScheme,
 	}
 
 	for _, adder := range adders {
@@ -96,6 +98,7 @@ type parsedObjects struct {
 	ingresses            []ks.Ingress // supports multiple versions of ingress
 	cronjobs             []ks.CronJob
 	hpaTargeters         []ks.HpaTargeter // all versions of HPAs
+	routes               []ks.Route
 }
 
 func (p *parsedObjects) Services() []ks.Service {
@@ -140,6 +143,10 @@ func (p *parsedObjects) NetworkPolicies() []ks.NetworkPolicy {
 
 func (p *parsedObjects) HorizontalPodAutoscalers() []ks.HpaTargeter {
 	return p.hpaTargeters
+}
+
+func (p *parsedObjects) Routes() []ks.Route {
+	return p.routes
 }
 
 func Empty() ks.AllTypes {
@@ -384,6 +391,13 @@ func (p *Parser) decodeItem(cnf config.Configuration, s *parsedObjects, detected
 		ing := internal.IngressV1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
+
+	case routev1.SchemeGroupVersion.WithKind("Route"):
+		var route routev1.Route
+		errs.AddIfErr(p.decode(fileContents, &route))
+		rt := internal.RouteV1{Obj: route, Location: fileLocation}
+		s.routes = append(s.routes, rt)
+		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: route.TypeMeta, ObjectMeta: route.ObjectMeta, FileLocationer: rt})
 
 	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv1.HorizontalPodAutoscaler

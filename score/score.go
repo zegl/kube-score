@@ -15,6 +15,7 @@ import (
 	"github.com/zegl/kube-score/score/networkpolicy"
 	"github.com/zegl/kube-score/score/podtopologyspreadconstraints"
 	"github.com/zegl/kube-score/score/probes"
+	"github.com/zegl/kube-score/score/route"
 	"github.com/zegl/kube-score/score/security"
 	"github.com/zegl/kube-score/score/service"
 	"github.com/zegl/kube-score/score/stable"
@@ -28,6 +29,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, cnf config.Configuration) *checks
 
 	deployment.Register(allChecks, allObjects)
 	ingress.Register(allChecks, allObjects)
+	route.Register(allChecks, allObjects)
 	cronjob.Register(allChecks)
 	container.Register(allChecks, cnf)
 	disruptionbudget.Register(allChecks, allObjects)
@@ -201,6 +203,17 @@ func Score(allObjects ks.AllTypes, cnf config.Configuration) (*scorecard.Scoreca
 				return nil, err
 			}
 			o.Add(fn, test.Check, pdb, pdb.GetObjectMeta().Annotations)
+		}
+	}
+
+	for _, route := range allObjects.Routes() {
+		o := newObject(route.Route().TypeMeta, route.Route().ObjectMeta)
+		for _, test := range allChecks.Routes() {
+			fn, err := test.Fn(route.Route())
+			if err != nil {
+				return nil, err
+			}
+			o.Add(fn, test.Check, route, route.Route().Annotations)
 		}
 	}
 
