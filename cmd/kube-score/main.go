@@ -18,6 +18,7 @@ import (
 	"github.com/zegl/kube-score/renderer/ci"
 	"github.com/zegl/kube-score/renderer/human"
 	"github.com/zegl/kube-score/renderer/json_v2"
+	"github.com/zegl/kube-score/renderer/junit"
 	"github.com/zegl/kube-score/renderer/sarif"
 	"github.com/zegl/kube-score/score"
 	"github.com/zegl/kube-score/score/checks"
@@ -255,6 +256,8 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		r = ci.CI(scoreCard)
 	case *outputFormat == "sarif":
 		r = sarif.Output(scoreCard)
+	case *outputFormat == "junit":
+		r = junit.JUnit(scoreCard)
 	default:
 		return fmt.Errorf("error: Unknown --output-format or --output-version")
 	}
