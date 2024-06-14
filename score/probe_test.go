@@ -15,6 +15,13 @@ func TestProbesPodAllMissing(t *testing.T) {
 	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
 }
 
+func TestProbesServiceAccountName(t *testing.T) {
+	t.Parallel()
+	comments := testExpectedScore(t, "pod-probes-service-account-name.yaml", "Pod Probes", scorecard.GradeCritical)
+	assert.Len(t, comments, 1)
+	assert.Equal(t, "Container is missing a readinessProbe", comments[0].Summary)
+}
+
 func TestProbesPodMissingReady(t *testing.T) {
 	t.Parallel()
 	comments := testExpectedScore(t, "pod-probes-missing-ready.yaml", "Pod Probes", scorecard.GradeCritical)
