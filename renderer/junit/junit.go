@@ -2,9 +2,10 @@ package junit
 
 import (
 	"bytes"
+	"io"
+
 	"github.com/jstemmer/go-junit-report/v2/junit"
 	"github.com/zegl/kube-score/scorecard"
-	"io"
 )
 
 // JUnit XML output
