@@ -1,13 +1,23 @@
+import styled from 'styled-components'
 import kubeScoreLogo from './assets/logo.svg'
-import './App.css'
 import Run from './Run'
 
 function App() {
   return (
-    <>
-      <div style={{ display: 'flex', gap: 8, alignItems: "center" }}>
-        <img src={kubeScoreLogo} style={{ height: 60 }} alt="kube-score logo" />
-        <h1 style={{ fontSize: 32 }}>kube-score</h1>
+    <RootContainer>
+      <div style={{ display: 'flex', gap: 16, alignItems: "center", justifyItems: "center", justifyContent: "space-between", flex: 1, flexShrink: 0, flexWrap: "wrap", width: "100%" }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: "center", flex: 1, flexShrink: 0, }}>
+          <img src={kubeScoreLogo} style={{ height: 60 }} alt="kube-score logo" />
+          <h1 style={{ fontSize: 32, textWrap: "nowrap" }}>kube-score</h1>
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, alignItems: "center", fontSize: 16, flex: 1, flexShrink: 0 }}>
+          <div style={{ flex: 1 }}></div>
+          <a href="https://github.com/zegl/kube-score">GitHub</a>
+          <a href="https://github.com/zegl/kube-score">README</a>
+          <a href="https://github.com/zegl/kube-score/blob/master/README_CHECKS.md">Docs</a>
+        </div>
+
       </div>
 
       <div style={{ fontSize: 14 }}>
@@ -28,8 +38,19 @@ function App() {
       </div>
 
       <Run />
-    </>
+    </RootContainer>
   )
 }
+
+
+const RootContainer = styled.div`
+  margin: 0 auto;
+  padding: 0.5;
+  text-align: left;
+
+  @media (min-width: 1024px) {
+    padding: 2rem;
+  }
+`
 
 export default App
