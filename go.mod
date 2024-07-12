@@ -1,6 +1,7 @@
 module github.com/zegl/kube-score
 
 require (
+	github.com/buildkite/terminal-to-html v3.2.0+incompatible
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
 	github.com/fatih/color v1.17.0
 	github.com/google/go-cmp v0.6.0
@@ -16,7 +17,6 @@ require (
 )
 
 require (
-	github.com/buildkite/terminal-to-html v3.2.0+incompatible // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -39,4 +39,4 @@ require (
 
 go 1.22.0
 
-toolchain go1.22.2
+toolchain go1.22.4
