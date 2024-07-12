@@ -12,8 +12,9 @@ GOOS=js GOARCH=wasm go build -o ./web/main.wasm ./cmd/wasm/main.go
 ```
 
 ```bash
-# Start a webserver serving files
-python3 -m http.server
+# Build and run web app (from this directory)
+pnpm install
+pnpm dev
 ```
 
 ## Hosting
