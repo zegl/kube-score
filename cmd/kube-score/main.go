@@ -126,9 +126,9 @@ func scoreFiles(binName string, args []string) error {
 		return nil
 	}
 
-	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" && *outputFormat != "sarif" {
+	if *outputFormat != "human" && *outputFormat != "ci" && *outputFormat != "json" && *outputFormat != "sarif" && *outputFormat != "junit" {
 		fs.Usage()
-		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json', 'sarif' or 'ci'")
+		return fmt.Errorf("Error: --output-format must be set to: 'human', 'json', 'sarif', 'junit' or 'ci'")
 	}
 
 	acceptedColors := map[string]bool{
