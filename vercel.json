@@ -1,0 +1,4 @@
+{
+    "buildCommand": "dnf install -y go && go env && go install golang.org/dl/go1.22.5@latest && /vercel/go/bin/go1.22.5 download && GOOS=js GOARCH=wasm /vercel/go/bin/go1.22.5 build -o ./web/main.wasm ./cmd/wasm/main.go",
+    "outputDirectory": "./web"
+}
