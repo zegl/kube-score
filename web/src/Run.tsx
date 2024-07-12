@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import './assets/term.css'
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 
 type Format = "human" | "ci" | "json" | "sarif" | "junit"
 
