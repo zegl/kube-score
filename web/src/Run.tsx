@@ -76,7 +76,7 @@ spec:
 
     return (
         <div>
-            <div style={{color: "#4e4e4e"}}>Output format</div>
+            <div style={{color: "#4e4e4e", fontSize: 12}}>Output format</div>
                 <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
                     {Object.entries(FormatNames).map(([f, name]) => <OutputFormatButton $selected={format == f} key={f} onClick={() => setFormat(f as Format)}>{name}</OutputFormatButton>)}
                 </div>
@@ -118,6 +118,11 @@ const OutputFormatButton = styled.button<{ $selected: boolean; }>`
     background: ${props => props.$selected ? "#c172a9" : "#474747"};
     color: ${props => props.$selected ? "white" : "white"};
     border-radius: 4px;
+    padding: 6px 10px;
+    border: 0;
+    outline-offset: 2px;
+    cursor: pointer;
+    font-size: 14px;
 `
 
 const TermContainer = styled.div`
