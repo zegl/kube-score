@@ -2,7 +2,7 @@
 
 Kubernetes supports three types of probes, that all serve different purposes, and have different pros and cons.
 
-This article is here to describe what recommendations kube-score will make in what cituations.
+This article is here to describe what recommendations kube-score will make in what situations.
 
 ## Different probe types
 
