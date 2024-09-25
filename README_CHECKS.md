@@ -37,4 +37,5 @@
 | statefulset-pod-selector-labels-match-template-metadata-labels | StatefulSet | Ensure the StatefulSet selector labels match the template metadata labels. | default |
 | label-values | all | Validates label values | default |
 | horizontalpodautoscaler-has-target | HorizontalPodAutoscaler | Makes sure that the HPA targets a valid object | default |
+| horizontalpodautoscaler-replicas | HorizontalPodAutoscaler | Makes sure that the HPA at least 2 replicas | default |
 | pod-topology-spread-constraints | Pod | Pod Topology Spread Constraints | default |
