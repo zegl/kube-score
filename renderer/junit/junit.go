@@ -43,9 +43,9 @@ func JUnit(scoreCard *scorecard.Scorecard) io.Reader {
 				}
 			} else {
 				for _, comment := range testScore.Comments {
-					message := comment.Summary
+					message := comment.Summary + ": " + comment.Description
 					if comment.Path != "" {
-						message = "(" + comment.Path + ") " + comment.Summary
+						message = "(" + comment.Path + ") " + comment.Summary + ": " + comment.Description
 					}
 
 					if testScore.Skipped {
