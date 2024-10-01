@@ -37,7 +37,7 @@ RUN curl --location "https://github.com/kubernetes-sigs/kustomize/releases/downl
     chmod +x kustomize && \
     mv kustomize /usr/bin/kustomize
 
-FROM golang:1.21-alpine as builder
+FROM golang:1.23-alpine as builder
 ARG TARGETARCH
 ARG TARGETPLATFORM
 WORKDIR /kube-score
