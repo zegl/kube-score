@@ -1,4 +1,5 @@
 project_name: kube-score
+version: 2
 
 builds:
 - env:
@@ -28,7 +29,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
@@ -37,10 +38,10 @@ brews:
   - name: kube-score
     ids:
     - default
-    tap:
+    repository:
       owner: kube-score
       name: homebrew-tap
-    folder: Formula
+    directory: Formula
     url_template: "https://github.com/zegl/kube-score/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     homepage: "https://kube-score.com/"
     install: |
