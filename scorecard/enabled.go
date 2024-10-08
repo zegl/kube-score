@@ -12,16 +12,15 @@ func (so *ScoredObject) isSkipped(allAnnotations []map[string]string) (bool, err
 	skip := false
 	for _, annotations := range allAnnotations {
 		if skipAnnotation, ok := annotations["kube-score/skip"]; ok {
-			// fmt.Printf("skip: %s\n", skipAnnotation)
 			if err := yaml.Unmarshal([]byte(skipAnnotation), &skip); err != nil {
-				return false, fmt.Errorf("invalid skip annotation: %q", skipAnnotation)
+				return false, fmt.Errorf("invalid skip annotation %q, must be boolean", skipAnnotation)
 			}
 		}
-		if ignoreAnnotation, ok := annotations["kube-score/ignore"]; ok {
-			if strings.TrimSpace(ignoreAnnotation) == "*" {
-				skip = true
-			}
-		}
+		// if ignoreAnnotation, ok := annotations["kube-score/ignore"]; ok {
+		// 	if strings.TrimSpace(ignoreAnnotation) == "*" {
+		// 		skip = true
+		// 	}
+		// }
 	}
 	return skip, nil
 }
@@ -31,6 +30,9 @@ func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations 
 		for _, v := range strings.Split(csv, ",") {
 			v = strings.TrimSpace(v)
 			if v == key {
+				return true
+			}
+			if v == "*" {
 				return true
 			}
 			if vals, ok := impliedIgnoreAnnotations[v]; ok {

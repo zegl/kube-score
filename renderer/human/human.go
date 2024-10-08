@@ -76,7 +76,6 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int, use
 			}
 		} else {
 			for _, card := range scoredObject.Checks {
-				// fmt.Printf("path=%s check=%s skipped=%v grade=%d\n", scoredObject.FileLocation.Name, card.Check.Name, card.Skipped, card.Grade)
 				r := outputHumanStep(card, verboseOutput, termWidth)
 				if _, err := io.Copy(w, r); err != nil {
 					return nil, fmt.Errorf("failed to copy output: %w", err)
