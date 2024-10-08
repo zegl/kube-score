@@ -259,7 +259,6 @@ const (
 func IsSkipped(errs []error, annotations ...map[string]string) bool {
 	skip := false
 	for _, annotations := range annotations {
-		// fmt.Printf("annotation: %v => %v\n", annotations, annotations[skippedResourceAnnotation])
 		if skipAnnotation, ok := annotations[SkippedResourceAnnotation]; ok {
 			if err := yaml.Unmarshal([]byte(skipAnnotation), &skip); err != nil {
 				errs = append(errs, fmt.Errorf("invalid skip annotation %q, must be boolean", skipAnnotation))
@@ -348,7 +347,6 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 		var statefulSet appsv1.StatefulSet
 		errs.AddIfErr(p.decode(fileContents, &statefulSet))
 		fileLocation.Skip = p.isSkipped(&statefulSet, errs)
-		fmt.Printf("sfs skip=%v\n", fileLocation.Skip)
 
 		sset := internal.Appsv1StatefulSet{Obj: statefulSet, Location: fileLocation}
 		addPodSpeccer(sset)
@@ -359,14 +357,12 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 		var statefulSet appsv1beta1.StatefulSet
 		errs.AddIfErr(p.decode(fileContents, &statefulSet))
 		fileLocation.Skip = p.isSkipped(&statefulSet, errs)
-		fmt.Printf("sfs skip=%v\n", fileLocation.Skip)
 
 		addPodSpeccer(internal.Appsv1beta1StatefulSet{StatefulSet: statefulSet, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta2.StatefulSet
 		errs.AddIfErr(p.decode(fileContents, &statefulSet))
 		fileLocation.Skip = p.isSkipped(&statefulSet, errs)
-		fmt.Printf("sfs skip=%v\n", fileLocation.Skip)
 
 		addPodSpeccer(internal.Appsv1beta2StatefulSet{StatefulSet: statefulSet, Location: fileLocation})
 

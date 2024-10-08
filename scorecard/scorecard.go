@@ -109,11 +109,6 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 		}
 	}
 
-	fmt.Printf(
-		"checking: %s#%d [%s] => %v/%v\n",
-		so.FileLocation.Name, so.FileLocation.Line, check.ID, skipAll, skip,
-	)
-
 	// This test is ignored (via annotations), don't save the score
 	if skipAll {
 		ts.Skipped = true
