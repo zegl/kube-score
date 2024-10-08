@@ -1,29 +1,10 @@
 package scorecard
 
 import (
-	"fmt"
 	"strings"
 
 	ks "github.com/zegl/kube-score/domain"
-	"gopkg.in/yaml.v3"
 )
-
-func (so *ScoredObject) isSkipped(allAnnotations []map[string]string) (bool, error) {
-	skip := false
-	for _, annotations := range allAnnotations {
-		if skipAnnotation, ok := annotations["kube-score/skip"]; ok {
-			if err := yaml.Unmarshal([]byte(skipAnnotation), &skip); err != nil {
-				return false, fmt.Errorf("invalid skip annotation %q, must be boolean", skipAnnotation)
-			}
-		}
-		// if ignoreAnnotation, ok := annotations["kube-score/ignore"]; ok {
-		// 	if strings.TrimSpace(ignoreAnnotation) == "*" {
-		// 		skip = true
-		// 	}
-		// }
-	}
-	return skip, nil
-}
 
 func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations map[string]string) bool {
 	isIn := func(csv string, key string) bool {
@@ -33,6 +14,7 @@ func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations 
 				return true
 			}
 			if v == "*" {
+				// "*" wildcard matches all checks
 				return true
 			}
 			if vals, ok := impliedIgnoreAnnotations[v]; ok {
