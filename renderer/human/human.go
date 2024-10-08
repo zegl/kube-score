@@ -64,10 +64,23 @@ func Human(scoreCard *scorecard.Scorecard, verboseOutput int, termWidth int, use
 			}
 		}
 
-		for _, card := range scoredObject.Checks {
-			r := outputHumanStep(card, verboseOutput, termWidth)
-			if _, err := io.Copy(w, r); err != nil {
-				return nil, fmt.Errorf("failed to copy output: %w", err)
+		if scoredObject.FileLocation.Skip {
+			if verboseOutput >= 2 {
+				// Only print skipped files if verbosity is at least 2
+				color.New(color.FgGreen).Fprintf(
+					w,
+					"    [SKIPPED] %s#L%d\n",
+					scoredObject.FileLocation.Name,
+					scoredObject.FileLocation.Line,
+				)
+			}
+		} else {
+			for _, card := range scoredObject.Checks {
+				// fmt.Printf("path=%s check=%s skipped=%v grade=%d\n", scoredObject.FileLocation.Name, card.Check.Name, card.Skipped, card.Grade)
+				r := outputHumanStep(card, verboseOutput, termWidth)
+				if _, err := io.Copy(w, r); err != nil {
+					return nil, fmt.Errorf("failed to copy output: %w", err)
+				}
 			}
 		}
 	}

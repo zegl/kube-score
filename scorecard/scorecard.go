@@ -2,6 +2,7 @@ package scorecard
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
@@ -95,8 +96,26 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	ts.Check = check
 	so.FileLocation = locationer.FileLocation()
 
-	var skip bool
-	if annotations != nil {
+	skipAll := so.FileLocation.Skip
+	skip := skipAll
+	if !skip && annotations != nil {
+		var err error
+		skipAll, err = so.isSkipped(annotations)
+		if err != nil {
+			log.Printf(
+				"failed to parse %s#L%d",
+				so.FileLocation.Name,
+				so.FileLocation.Line,
+			)
+		}
+		// if skipAll {
+		// 	log.Printf("skip all for %s#L%d %v\n",
+		// 		so.FileLocation.Name,
+		// 		so.FileLocation.Line,
+		// 		annotations,
+		// 	)
+		// }
+		// skip = skipAll
 		if len(annotations) == 1 && !so.isEnabled(check, annotations[0], nil) {
 			skip = true
 		}
@@ -106,7 +125,14 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	}
 
 	// This test is ignored (via annotations), don't save the score
-	if skip {
+	// ts.Skipped = skip || skipAll
+	if skipAll {
+		ts.Skipped = true
+		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf(
+			"Skipped because %s (line %d) is ignored",
+			so.FileLocation.Name, so.FileLocation.Line,
+		)}}
+	} else if skip {
 		ts.Skipped = true
 		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf("Skipped because %s is ignored", check.ID)}}
 	}
