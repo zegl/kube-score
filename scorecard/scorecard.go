@@ -5,6 +5,7 @@ import (
 
 	"github.com/zegl/kube-score/config"
 	ks "github.com/zegl/kube-score/domain"
+	"github.com/zegl/kube-score/parser"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -99,6 +100,7 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	skipAll := so.FileLocation.Skip
 
 	if !skipAll && annotations != nil {
+		skipAll = skipAll || parser.IsSkipped([]error{}, annotations...)
 		if len(annotations) == 1 && !so.isEnabled(check, annotations[0], nil) {
 			skip = true
 		}
@@ -106,6 +108,11 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 			skip = true
 		}
 	}
+
+	fmt.Printf(
+		"checking: %s#%d [%s] => %v/%v\n",
+		so.FileLocation.Name, so.FileLocation.Line, check.ID, skipAll, skip,
+	)
 
 	// This test is ignored (via annotations), don't save the score
 	if skipAll {

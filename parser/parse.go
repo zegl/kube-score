@@ -252,15 +252,26 @@ func detectFileLocation(fileName string, fileOffset int, fileContents []byte) ks
 	}
 }
 
-func (p *Parser) shouldSkip(res metav1.ObjectMetaAccessor, errs parseErrors) bool {
+const (
+	SkippedResourceAnnotation = "kube-score/skip"
+)
+
+func IsSkipped(errs []error, annotations ...map[string]string) bool {
 	skip := false
-	meta := res.GetObjectMeta()
-	if skipAnnotation, ok := meta.GetAnnotations()["kube-score/skip"]; ok {
-		if err := yaml.Unmarshal([]byte(skipAnnotation), &skip); err != nil {
-			errs.AddIfErr(fmt.Errorf("invalid skip annotation %q, must be boolean", skipAnnotation))
+	for _, annotations := range annotations {
+		// fmt.Printf("annotation: %v => %v\n", annotations, annotations[skippedResourceAnnotation])
+		if skipAnnotation, ok := annotations[SkippedResourceAnnotation]; ok {
+			if err := yaml.Unmarshal([]byte(skipAnnotation), &skip); err != nil {
+				errs = append(errs, fmt.Errorf("invalid skip annotation %q, must be boolean", skipAnnotation))
+			}
 		}
 	}
 	return skip
+}
+
+func (p *Parser) isSkipped(res metav1.ObjectMetaAccessor, errs parseErrors) bool {
+	annotations := res.GetObjectMeta().GetAnnotations()
+	return IsSkipped(errs, annotations)
 }
 
 func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersionKind, fileName string, fileOffset int, fileContents []byte) error {
@@ -281,7 +292,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case corev1.SchemeGroupVersion.WithKind("Pod"):
 		var pod corev1.Pod
 		errs.AddIfErr(p.decode(fileContents, &pod))
-		fileLocation.Skip = p.shouldSkip(&pod, errs)
+		fileLocation.Skip = p.isSkipped(&pod, errs)
 		p := internalpod.Pod{Obj: pod, Location: fileLocation}
 		s.pods = append(s.pods, p)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: pod.TypeMeta, ObjectMeta: pod.ObjectMeta, FileLocationer: p})
@@ -289,13 +300,13 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case batchv1.SchemeGroupVersion.WithKind("Job"):
 		var job batchv1.Job
 		errs.AddIfErr(p.decode(fileContents, &job))
-		fileLocation.Skip = p.shouldSkip(&job, errs)
+		fileLocation.Skip = p.isSkipped(&job, errs)
 		addPodSpeccer(internal.Batchv1Job{Job: job, Location: fileLocation})
 
 	case batchv1beta1.SchemeGroupVersion.WithKind("CronJob"):
 		var cronjob batchv1beta1.CronJob
 		errs.AddIfErr(p.decode(fileContents, &cronjob))
-		fileLocation.Skip = p.shouldSkip(&cronjob, errs)
+		fileLocation.Skip = p.isSkipped(&cronjob, errs)
 		cjob := internalcronjob.CronJobV1beta1{Obj: cronjob, Location: fileLocation}
 		addPodSpeccer(cjob)
 		s.cronjobs = append(s.cronjobs, cjob)
@@ -303,7 +314,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case batchv1.SchemeGroupVersion.WithKind("CronJob"):
 		var cronjob batchv1.CronJob
 		errs.AddIfErr(p.decode(fileContents, &cronjob))
-		fileLocation.Skip = p.shouldSkip(&cronjob, errs)
+		fileLocation.Skip = p.isSkipped(&cronjob, errs)
 		cjob := internalcronjob.CronJobV1{Obj: cronjob, Location: fileLocation}
 		addPodSpeccer(cjob)
 		s.cronjobs = append(s.cronjobs, cjob)
@@ -311,7 +322,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case appsv1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1.Deployment
 		errs.AddIfErr(p.decode(fileContents, &deployment))
-		fileLocation.Skip = p.shouldSkip(&deployment, errs)
+		fileLocation.Skip = p.isSkipped(&deployment, errs)
 		deploy := internal.Appsv1Deployment{Obj: deployment, Location: fileLocation}
 		addPodSpeccer(deploy)
 
@@ -320,23 +331,25 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case appsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1beta1.Deployment
 		errs.AddIfErr(p.decode(fileContents, &deployment))
-		fileLocation.Skip = p.shouldSkip(&deployment, errs)
+		fileLocation.Skip = p.isSkipped(&deployment, errs)
 		addPodSpeccer(internal.Appsv1beta1Deployment{Deployment: deployment, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment appsv1beta2.Deployment
 		errs.AddIfErr(p.decode(fileContents, &deployment))
-		fileLocation.Skip = p.shouldSkip(&deployment, errs)
+		fileLocation.Skip = p.isSkipped(&deployment, errs)
 		addPodSpeccer(internal.Appsv1beta2Deployment{Deployment: deployment, Location: fileLocation})
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Deployment"):
 		var deployment extensionsv1beta1.Deployment
 		errs.AddIfErr(p.decode(fileContents, &deployment))
-		fileLocation.Skip = p.shouldSkip(&deployment, errs)
+		fileLocation.Skip = p.isSkipped(&deployment, errs)
 		addPodSpeccer(internal.Extensionsv1beta1Deployment{Deployment: deployment, Location: fileLocation})
 
 	case appsv1.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1.StatefulSet
 		errs.AddIfErr(p.decode(fileContents, &statefulSet))
-		fileLocation.Skip = p.shouldSkip(&statefulSet, errs)
+		fileLocation.Skip = p.isSkipped(&statefulSet, errs)
+		fmt.Printf("sfs skip=%v\n", fileLocation.Skip)
+
 		sset := internal.Appsv1StatefulSet{Obj: statefulSet, Location: fileLocation}
 		addPodSpeccer(sset)
 
@@ -345,34 +358,38 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case appsv1beta1.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta1.StatefulSet
 		errs.AddIfErr(p.decode(fileContents, &statefulSet))
-		fileLocation.Skip = p.shouldSkip(&statefulSet, errs)
+		fileLocation.Skip = p.isSkipped(&statefulSet, errs)
+		fmt.Printf("sfs skip=%v\n", fileLocation.Skip)
+
 		addPodSpeccer(internal.Appsv1beta1StatefulSet{StatefulSet: statefulSet, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("StatefulSet"):
 		var statefulSet appsv1beta2.StatefulSet
 		errs.AddIfErr(p.decode(fileContents, &statefulSet))
-		fileLocation.Skip = p.shouldSkip(&statefulSet, errs)
+		fileLocation.Skip = p.isSkipped(&statefulSet, errs)
+		fmt.Printf("sfs skip=%v\n", fileLocation.Skip)
+
 		addPodSpeccer(internal.Appsv1beta2StatefulSet{StatefulSet: statefulSet, Location: fileLocation})
 
 	case appsv1.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset appsv1.DaemonSet
 		errs.AddIfErr(p.decode(fileContents, &daemonset))
-		fileLocation.Skip = p.shouldSkip(&daemonset, errs)
+		fileLocation.Skip = p.isSkipped(&daemonset, errs)
 		addPodSpeccer(internal.Appsv1DaemonSet{DaemonSet: daemonset, Location: fileLocation})
 	case appsv1beta2.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset appsv1beta2.DaemonSet
 		errs.AddIfErr(p.decode(fileContents, &daemonset))
-		fileLocation.Skip = p.shouldSkip(&daemonset, errs)
+		fileLocation.Skip = p.isSkipped(&daemonset, errs)
 		addPodSpeccer(internal.Appsv1beta2DaemonSet{DaemonSet: daemonset, Location: fileLocation})
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("DaemonSet"):
 		var daemonset extensionsv1beta1.DaemonSet
 		errs.AddIfErr(p.decode(fileContents, &daemonset))
-		fileLocation.Skip = p.shouldSkip(&daemonset, errs)
+		fileLocation.Skip = p.isSkipped(&daemonset, errs)
 		addPodSpeccer(internal.Extensionsv1beta1DaemonSet{DaemonSet: daemonset, Location: fileLocation})
 
 	case networkingv1.SchemeGroupVersion.WithKind("NetworkPolicy"):
 		var netpol networkingv1.NetworkPolicy
 		errs.AddIfErr(p.decode(fileContents, &netpol))
-		fileLocation.Skip = p.shouldSkip(&netpol, errs)
+		fileLocation.Skip = p.isSkipped(&netpol, errs)
 		np := internalnetpol.NetworkPolicy{Obj: netpol, Location: fileLocation}
 		s.networkPolicies = append(s.networkPolicies, np)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: netpol.TypeMeta, ObjectMeta: netpol.ObjectMeta, FileLocationer: np})
@@ -380,7 +397,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case corev1.SchemeGroupVersion.WithKind("Service"):
 		var service corev1.Service
 		errs.AddIfErr(p.decode(fileContents, &service))
-		fileLocation.Skip = p.shouldSkip(&service, errs)
+		fileLocation.Skip = p.isSkipped(&service, errs)
 		serv := internalservice.Service{Obj: service, Location: fileLocation}
 		s.services = append(s.services, serv)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: service.TypeMeta, ObjectMeta: service.ObjectMeta, FileLocationer: serv})
@@ -388,14 +405,14 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case policyv1beta1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 		var disruptBudget policyv1beta1.PodDisruptionBudget
 		errs.AddIfErr(p.decode(fileContents, &disruptBudget))
-		fileLocation.Skip = p.shouldSkip(&disruptBudget, errs)
+		fileLocation.Skip = p.isSkipped(&disruptBudget, errs)
 		dbug := internalpdb.PodDisruptionBudgetV1beta1{Obj: disruptBudget, Location: fileLocation}
 		s.podDisruptionBudgets = append(s.podDisruptionBudgets, dbug)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: disruptBudget.TypeMeta, ObjectMeta: disruptBudget.ObjectMeta, FileLocationer: dbug})
 	case policyv1.SchemeGroupVersion.WithKind("PodDisruptionBudget"):
 		var disruptBudget policyv1.PodDisruptionBudget
 		errs.AddIfErr(p.decode(fileContents, &disruptBudget))
-		fileLocation.Skip = p.shouldSkip(&disruptBudget, errs)
+		fileLocation.Skip = p.isSkipped(&disruptBudget, errs)
 		dbug := internalpdb.PodDisruptionBudgetV1{Obj: disruptBudget, Location: fileLocation}
 		s.podDisruptionBudgets = append(s.podDisruptionBudgets, dbug)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{
@@ -407,7 +424,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case extensionsv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress extensionsv1beta1.Ingress
 		errs.AddIfErr(p.decode(fileContents, &ingress))
-		fileLocation.Skip = p.shouldSkip(&ingress, errs)
+		fileLocation.Skip = p.isSkipped(&ingress, errs)
 		ing := internal.ExtensionsIngressV1beta1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
@@ -415,7 +432,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case networkingv1beta1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress networkingv1beta1.Ingress
 		errs.AddIfErr(p.decode(fileContents, &ingress))
-		fileLocation.Skip = p.shouldSkip(&ingress, errs)
+		fileLocation.Skip = p.isSkipped(&ingress, errs)
 		ing := internal.IngressV1beta1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
@@ -423,7 +440,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case networkingv1.SchemeGroupVersion.WithKind("Ingress"):
 		var ingress networkingv1.Ingress
 		errs.AddIfErr(p.decode(fileContents, &ingress))
-		fileLocation.Skip = p.shouldSkip(&ingress, errs)
+		fileLocation.Skip = p.isSkipped(&ingress, errs)
 		ing := internal.IngressV1{Ingress: ingress, Location: fileLocation}
 		s.ingresses = append(s.ingresses, ing)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: ingress.TypeMeta, ObjectMeta: ingress.ObjectMeta, FileLocationer: ing})
@@ -431,7 +448,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv1.HorizontalPodAutoscaler
 		errs.AddIfErr(p.decode(fileContents, &hpa))
-		fileLocation.Skip = p.shouldSkip(&hpa, errs)
+		fileLocation.Skip = p.isSkipped(&hpa, errs)
 		h := internal.HPAv1{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
@@ -439,7 +456,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case autoscalingv2beta1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv2beta1.HorizontalPodAutoscaler
 		errs.AddIfErr(p.decode(fileContents, &hpa))
-		fileLocation.Skip = p.shouldSkip(&hpa, errs)
+		fileLocation.Skip = p.isSkipped(&hpa, errs)
 		h := internal.HPAv2beta1{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
@@ -447,7 +464,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case autoscalingv2beta2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv2beta2.HorizontalPodAutoscaler
 		errs.AddIfErr(p.decode(fileContents, &hpa))
-		fileLocation.Skip = p.shouldSkip(&hpa, errs)
+		fileLocation.Skip = p.isSkipped(&hpa, errs)
 		h := internal.HPAv2beta2{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{
@@ -459,7 +476,7 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 	case autoscalingv2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv2.HorizontalPodAutoscaler
 		errs.AddIfErr(p.decode(fileContents, &hpa))
-		fileLocation.Skip = p.shouldSkip(&hpa, errs)
+		fileLocation.Skip = p.isSkipped(&hpa, errs)
 		h := internal.HPAv2{HorizontalPodAutoscaler: hpa, Location: fileLocation}
 		s.hpaTargeters = append(s.hpaTargeters, h)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
