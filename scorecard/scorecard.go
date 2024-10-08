@@ -113,7 +113,7 @@ func (so *ScoredObject) Add(ts TestScore, check ks.Check, locationer ks.FileLoca
 	if skipAll {
 		ts.Skipped = true
 		ts.Comments = []TestScoreComment{{Summary: fmt.Sprintf(
-			"Skipped because %s#L%d is ignored",
+			"Skipped because %s#L%d is skipped",
 			so.FileLocation.Name, so.FileLocation.Line,
 		)}}
 	} else if skip {

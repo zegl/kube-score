@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	ks "github.com/zegl/kube-score/domain"
-	// "github.com/zegl/kube-score/parser"
 
 	"github.com/stretchr/testify/assert"
 )
