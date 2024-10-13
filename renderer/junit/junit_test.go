@@ -99,14 +99,14 @@ func TestJUnitOutput(t *testing.T) {
 	assert.Equal(t, `<testsuites name="kube-score" tests="10" failures="4" skipped="4">
 	<testsuite name="foo/foofoo v1/Testing" tests="5" failures="2" errors="0" id="0" skipped="2" time="">
 		<testcase name="test-warning-two-comments" classname="foo/foofoo v1/Testing">
-			<failure message="(a) summary"></failure>
+			<failure message="(a) summary: description"></failure>
 		</testcase>
 		<testcase name="test-warning-two-comments" classname="foo/foofoo v1/Testing">
-			<failure message="summary"></failure>
+			<failure message="summary: description"></failure>
 		</testcase>
 		<testcase name="test-ok-comment" classname="foo/foofoo v1/Testing"></testcase>
 		<testcase name="test-skipped-comment" classname="foo/foofoo v1/Testing">
-			<skipped message="(a) skipped sum"></skipped>
+			<skipped message="(a) skipped sum: skipped description"></skipped>
 		</testcase>
 		<testcase name="test-skipped-no-comment" classname="foo/foofoo v1/Testing">
 			<skipped message=""></skipped>
@@ -114,14 +114,14 @@ func TestJUnitOutput(t *testing.T) {
 	</testsuite>
 	<testsuite name="bar-no-namespace v1/Testing" tests="5" failures="2" errors="0" id="0" skipped="2" time="">
 		<testcase name="test-warning-two-comments" classname="bar-no-namespace v1/Testing">
-			<failure message="(a) summary"></failure>
+			<failure message="(a) summary: description"></failure>
 		</testcase>
 		<testcase name="test-warning-two-comments" classname="bar-no-namespace v1/Testing">
-			<failure message="summary"></failure>
+			<failure message="summary: description"></failure>
 		</testcase>
 		<testcase name="test-ok-comment" classname="bar-no-namespace v1/Testing"></testcase>
 		<testcase name="test-skipped-comment" classname="bar-no-namespace v1/Testing">
-			<skipped message="(a) skipped sum"></skipped>
+			<skipped message="(a) skipped sum: skipped description"></skipped>
 		</testcase>
 		<testcase name="test-skipped-no-comment" classname="bar-no-namespace v1/Testing">
 			<skipped message=""></skipped>
