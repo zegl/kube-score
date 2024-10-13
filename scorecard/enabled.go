@@ -13,6 +13,10 @@ func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations 
 			if v == key {
 				return true
 			}
+			if v == "*" {
+				// "*" wildcard matches all checks
+				return true
+			}
 			if vals, ok := impliedIgnoreAnnotations[v]; ok {
 				for i := range vals {
 					if vals[i] == key {
