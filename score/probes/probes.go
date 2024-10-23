@@ -41,6 +41,10 @@ func containerProbes(allServices []ks.Service) func(ks.PodSpecer) (scorecard.Tes
 			}
 		}
 
+		if podTemplate.Spec.ServiceAccountName != "" {
+			isTargetedByService = true
+		}
+
 		for _, container := range allContainers {
 			if container.ReadinessProbe != nil {
 				hasReadinessProbe = true
