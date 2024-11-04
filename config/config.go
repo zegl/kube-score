@@ -14,6 +14,8 @@ type RunConfiguration struct {
 	UseIgnoreChecksAnnotation             bool
 	UseOptionalChecksAnnotation           bool
 	KubernetesVersion                     Semver
+	MinReplicasDeployment                 int
+	MinReplicasHPA                        int
 }
 
 type Semver struct {

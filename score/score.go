@@ -28,7 +28,7 @@ import (
 func RegisterAllChecks(allObjects ks.AllTypes, checksConfig *checks.Config, runConfig *config.RunConfiguration) *checks.Checks {
 	allChecks := checks.New(checksConfig)
 
-	deployment.Register(allChecks, allObjects)
+	deployment.Register(allChecks, allObjects, runConfig.MinReplicasDeployment)
 	ingress.Register(allChecks, allObjects)
 	cronjob.Register(allChecks)
 	container.Register(allChecks, runConfig.IgnoreContainerCpuLimitRequirement, runConfig.IgnoreContainerMemoryLimitRequirement)
@@ -40,7 +40,7 @@ func RegisterAllChecks(allObjects ks.AllTypes, checksConfig *checks.Config, runC
 	stable.Register(runConfig.KubernetesVersion, allChecks)
 	apps.Register(allChecks, allObjects.HorizontalPodAutoscalers(), allObjects.Services())
 	meta.Register(allChecks)
-	hpa.Register(allChecks, allObjects.Metas())
+	hpa.Register(allChecks, allObjects.Metas(), runConfig.MinReplicasHPA)
 	podtopologyspreadconstraints.Register(allChecks)
 
 	return allChecks

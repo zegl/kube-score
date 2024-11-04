@@ -114,6 +114,8 @@ func scoreFiles(binName string, args []string) error {
 	disableOptionalChecksAnnotation := fs.Bool("disable-optional-checks-annotations", false, "Set to true to disable the effect of the 'kube-score/enable' annotations")
 	allDefaultOptional := fs.Bool("all-default-optional", false, "Set to true to enable all tests")
 	kubernetesVersion := fs.String("kubernetes-version", "v1.18", "Setting the kubernetes-version will affect the checks ran against the manifests. Set this to the version of Kubernetes that you're using in production for the best results.")
+	minReplicasDeployment := fs.Int("min-replicas-deployment", 2, "Minimum required number of replicas for a deployment")
+	minReplicasHPA := fs.Int("min-replicas-hpa", 2, "Minimum required number of replicas for a horizontal pod autoscaler")
 	setDefault(fs, binName, "score", false)
 
 	err := fs.Parse(args)
@@ -199,6 +201,8 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		UseIgnoreChecksAnnotation:             !*disableIgnoreChecksAnnotation,
 		UseOptionalChecksAnnotation:           !*disableOptionalChecksAnnotation,
 		KubernetesVersion:                     kubeVer,
+		MinReplicasDeployment:                 *minReplicasDeployment,
+		MinReplicasHPA:                        *minReplicasHPA,
 	}
 
 	p, err := parser.New(&parser.Config{

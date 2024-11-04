@@ -1,6 +1,8 @@
 package score
 
 import (
+	"github.com/zegl/kube-score/config"
+	ks "github.com/zegl/kube-score/domain"
 	"testing"
 
 	"github.com/zegl/kube-score/scorecard"
@@ -28,5 +30,7 @@ func TestHorizontalPodAutoscalerMinReplicasOk(t *testing.T) {
 
 func TestHorizontalPodAutoscalerMinReplicasNok(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "hpa-min-replicas-nok.yaml", "HorizontalPodAutoscaler Replicas", scorecard.GradeWarning)
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("hpa-min-replicas-nok.yaml")}, nil, &config.RunConfiguration{
+		MinReplicasHPA: 2,
+	}, "HorizontalPodAutoscaler Replicas", scorecard.GradeWarning)
 }

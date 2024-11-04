@@ -2,7 +2,7 @@
 | ID | Target | Description | Enabled |
 |----|--------|-------------|---------|
 | deployment-strategy | Deployment | Makes sure that all Deployments targeted by service use RollingUpdate strategy | default |
-| deployment-replicas | Deployment | Makes sure that Deployment has multiple replicas | default |
+| deployment-replicas | Deployment | Makes sure that Deployment has multiple replicas. The --min-replicas-deployment flag can be used to specify the required minimum. Default is 2. | default |
 | ingress-targets-service | Ingress | Makes sure that the Ingress targets a Service | default |
 | cronjob-has-deadline | CronJob | Makes sure that all CronJobs has a configured deadline | default |
 | cronjob-restartpolicy | CronJob | Makes sure CronJobs have a valid RestartPolicy | default |
@@ -37,5 +37,5 @@
 | statefulset-pod-selector-labels-match-template-metadata-labels | StatefulSet | Ensure the StatefulSet selector labels match the template metadata labels. | default |
 | label-values | all | Validates label values | default |
 | horizontalpodautoscaler-has-target | HorizontalPodAutoscaler | Makes sure that the HPA targets a valid object | default |
-| horizontalpodautoscaler-replicas | HorizontalPodAutoscaler | Makes sure that the HPA at least 2 replicas | default |
+| horizontalpodautoscaler-replicas | HorizontalPodAutoscaler | Makes sure that the HPA has multiple replicas. The --min-replicas-hpa flag can be used to specify the required minimum. Default is 2. | default |
 | pod-topology-spread-constraints | Pod | Pod Topology Spread Constraints | default |
