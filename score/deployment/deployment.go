@@ -1,6 +1,7 @@
 package deployment
 
 import (
+	"fmt"
 	ks "github.com/zegl/kube-score/domain"
 	"github.com/zegl/kube-score/score/checks"
 	"github.com/zegl/kube-score/score/internal"
@@ -10,9 +11,9 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func Register(allChecks *checks.Checks, all ks.AllTypes) {
+func Register(allChecks *checks.Checks, all ks.AllTypes, minReplicas int) {
 	allChecks.RegisterDeploymentCheck("Deployment Strategy", `Makes sure that all Deployments targeted by service use RollingUpdate strategy`, deploymentRolloutStrategy(all.Services()))
-	allChecks.RegisterDeploymentCheck("Deployment Replicas", `Makes sure that Deployment has multiple replicas`, deploymentReplicas(all.Services(), all.HorizontalPodAutoscalers()))
+	allChecks.RegisterDeploymentCheck("Deployment Replicas", `Makes sure that Deployment has multiple replicas`, deploymentReplicas(all.Services(), all.HorizontalPodAutoscalers(), minReplicas))
 }
 
 // deploymentRolloutStrategy checks if a Deployment has the update strategy on RollingUpdate if targeted by a service
@@ -52,7 +53,7 @@ func deploymentRolloutStrategy(svcs []ks.Service) func(deployment v1.Deployment)
 }
 
 // deploymentReplicas checks if a Deployment has >= 2 replicas if not (targeted by service || has HorizontalPodAutoscaler)
-func deploymentReplicas(svcs []ks.Service, hpas []ks.HpaTargeter) func(deployment v1.Deployment) (scorecard.TestScore, error) {
+func deploymentReplicas(svcs []ks.Service, hpas []ks.HpaTargeter, minReplicas int) func(deployment v1.Deployment) (scorecard.TestScore, error) {
 	svcsInNamespace := make(map[string][]map[string]string)
 	for _, s := range svcs {
 		svc := s.Service()
@@ -98,11 +99,11 @@ func deploymentReplicas(svcs []ks.Service, hpas []ks.HpaTargeter) func(deploymen
 			score.Skipped = true
 			score.AddComment("", "Skipped as the Deployment is controlled by a HorizontalPodAutoscaler", "")
 		} else {
-			if ptr.Deref(deployment.Spec.Replicas, 1) >= 2 {
+			if ptr.Deref(deployment.Spec.Replicas, 1) >= int32(minReplicas) {
 				score.Grade = scorecard.GradeAllOK
 			} else {
 				score.Grade = scorecard.GradeWarning
-				score.AddComment("", "Deployment few replicas", "Deployments targeted by Services are recommended to have at least 2 replicas to prevent unwanted downtime.")
+				score.AddComment("", "Deployment few replicas", fmt.Sprintf("Deployments targeted by Services are recommended to have at least %d replicas to prevent unwanted downtime.", minReplicas))
 			}
 		}
 
