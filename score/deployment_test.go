@@ -1,6 +1,7 @@
 package score
 
 import (
+	"github.com/zegl/kube-score/config"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,7 +50,9 @@ func TestServiceNotTargetsDeploymentReplicasNotRelevant(t *testing.T) {
 
 func TestServiceTargetsDeploymentReplicasNok(t *testing.T) {
 	t.Parallel()
-	testExpectedScore(t, "service-target-deployment-replica-1.yaml", "Deployment Replicas", scorecard.GradeWarning)
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("service-target-deployment-replica-1.yaml")}, nil, &config.RunConfiguration{
+		MinReplicasDeployment: 2,
+	}, "Deployment Replicas", scorecard.GradeWarning)
 }
 
 func TestHPATargetsDeployment(t *testing.T) {
