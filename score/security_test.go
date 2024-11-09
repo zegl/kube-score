@@ -21,6 +21,50 @@ func TestContainerSeccompMissing(t *testing.T) {
 
 }
 
+func TestPodSecurityContextPresent(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-seccomp-profile"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("pod-seccomp-securecontext-ok.yaml")}, nil, &config.RunConfiguration{
+		EnabledOptionalTests: structMap,
+	}, "Container Seccomp Profile", scorecard.GradeAllOK)
+}
+
+func TestContainerSecurityContextSeccompPresent(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-seccomp-profile"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("pod-seccomp-container-securecontext-ok.yaml")}, nil, &config.RunConfiguration{
+		EnabledOptionalTests: structMap,
+	}, "Container Seccomp Profile", scorecard.GradeAllOK)
+}
+
+func TestPodSecurityContextSeccompAbsent(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-seccomp-profile"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("pod-seccomp-securecontext-warning.yaml")}, nil, &config.RunConfiguration{
+		EnabledOptionalTests: structMap,
+	}, "Container Seccomp Profile", scorecard.GradeWarning)
+}
+
+func TestContainerSecurityContextSeccompAbsent(t *testing.T) {
+	t.Parallel()
+
+	structMap := make(map[string]struct{})
+	structMap["container-seccomp-profile"] = struct{}{}
+
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("pod-seccomp-container-securecontext-warning.yaml")}, nil, &config.RunConfiguration{
+		EnabledOptionalTests: structMap,
+	}, "Container Seccomp Profile", scorecard.GradeWarning)
+}
+
 func TestContainerSeccompMissingNotRunByDefault(t *testing.T) {
 	t.Parallel()
 	skipped := wasSkipped(t, []ks.NamedReader{testFile("pod-seccomp-no-annotation.yaml")}, nil, nil, "Container Seccomp Profile")

@@ -28,6 +28,10 @@ import (
 func RegisterAllChecks(allObjects ks.AllTypes, checksConfig *checks.Config, runConfig *config.RunConfiguration) *checks.Checks {
 	allChecks := checks.New(checksConfig)
 
+	if runConfig == nil {
+		runConfig = &config.RunConfiguration{}
+	}
+
 	deployment.Register(allChecks, allObjects)
 	ingress.Register(allChecks, allObjects)
 	cronjob.Register(allChecks)
