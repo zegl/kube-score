@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-test-1
+spec:
+  securityContext:
+      privileged: False
+      runAsUser: 30000
+      runAsGroup: 30000
+      readOnlyRootFilesystem: True 
+  containers:
+  - name: foobar
+    image: foo/bar:latest
+  - name: foobaz
+    image: foo/baz:latest

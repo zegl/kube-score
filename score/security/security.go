@@ -109,20 +109,51 @@ func containerSecurityContextUserGroupID(ps ks.PodSpecer) (score scorecard.TestS
 	return
 }
 
-// podSeccompProfile checks that a Seccommp profile is configured for the pod
+// podSeccompProfile checks that a Seccommp profile is configured. The
+// seccompProfile can be specified either through annotation or securityContext.
+// There are two ways to specify the seccomp profile via securityContext --
+// at the pod level or  container level.
+// Pod level seccomp profile is preferred since it is applied to all containers.
 func podSeccompProfile(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
 	metadata := ps.GetPodTemplateSpec().ObjectMeta
 
-	seccompAnnotated := false
+	secured := false
+
+	// Check if the seccomp profile is set via annotation
 	if metadata.Annotations != nil {
 		if _, ok := metadata.Annotations["seccomp.security.alpha.kubernetes.io/defaultProfileName"]; ok {
-			seccompAnnotated = true
+			secured = true
 		}
 	}
 
-	if !seccompAnnotated {
+	//Check if seccomp is set via securityContext at Pod or Container Level
+	if !secured {
+		elements := make(map[string]bool)
+		if ps.GetPodTemplateSpec().Spec.SecurityContext != nil && ps.GetPodTemplateSpec().Spec.SecurityContext.SeccompProfile != nil {
+			secured = true
+		} else {
+			// This does not check initContainers, only Containers
+			for _, container := range ps.GetPodTemplateSpec().Spec.Containers {
+				if container.SecurityContext != nil && container.SecurityContext.SeccompProfile != nil {
+					elements[container.Name] = true
+					secured = true
+				} else {
+					score.AddComment(container.Name, "The container has not configured Seccomp", "Running containers with Seccomp is recommended to reduce the kernel attack surface")
+					elements[container.Name] = false
+				}
+			}
+		}
+
+		// one unsecured container is enough to fail the test
+		for _, value := range elements {
+			if !value {
+				secured = false
+			}
+		}
+	}
+
+	if !secured {
 		score.Grade = scorecard.GradeWarning
-		score.AddComment(metadata.Name, "The pod has not configured Seccomp for its containers", "Running containers with Seccomp is recommended to reduce the kernel attack surface")
 	} else {
 		score.Grade = scorecard.GradeAllOK
 	}
