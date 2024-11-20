@@ -24,21 +24,21 @@ func TestProbesPodMissingReady(t *testing.T) {
 
 func TestProbesPodIdenticalHTTP(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-identical-http.yaml", "Pod Probes", scorecard.GradeCritical)
+	comments := testExpectedScore(t, "pod-probes-identical-http.yaml", "Pod Probes Identical", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }
 
 func TestProbesPodIdenticalTCP(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-identical-tcp.yaml", "Pod Probes", scorecard.GradeCritical)
+	comments := testExpectedScore(t, "pod-probes-identical-tcp.yaml", "Pod Probes Identical", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }
 
 func TestProbesPodIdenticalExec(t *testing.T) {
 	t.Parallel()
-	comments := testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes", scorecard.GradeCritical)
+	comments := testExpectedScore(t, "pod-probes-identical-exec.yaml", "Pod Probes Identical", scorecard.GradeCritical)
 	assert.Len(t, comments, 1)
 	assert.Equal(t, "Container has the same readiness and liveness probe", comments[0].Summary)
 }

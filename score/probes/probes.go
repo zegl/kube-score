@@ -8,8 +8,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// Register registers the pod checks, including the new one for identical probes.
 func Register(allChecks *checks.Checks, services ks.Services) {
 	allChecks.RegisterPodCheck("Pod Probes", `Makes sure that all Pods have safe probe configurations`, containerProbes(services.Services()))
+	allChecks.RegisterPodCheck("Pod Probes Identical", `Container has the same readiness and liveness probe`, containerProbesIdentical(services.Services()))
 }
 
 // containerProbes returns a function that checks if all probes are defined correctly in the Pod.
@@ -31,72 +33,14 @@ func containerProbes(allServices []ks.Service) func(ks.PodSpecer) (scorecard.Tes
 
 		hasReadinessProbe := false
 		hasLivenessProbe := false
-		probesAreIdentical := false
-		isTargetedByService := false
+		isTargetedByService := isTargetedByService(allServices, podTemplate)
 
-		for _, s := range allServices {
-			if podIsTargetedByService(podTemplate, s.Service()) {
-				isTargetedByService = true
-				break
-			}
-		}
-
+		// Check probes for each container
 		for _, container := range allContainers {
-			if container.ReadinessProbe != nil {
-				hasReadinessProbe = true
-			}
-
-			if container.LivenessProbe != nil {
-				hasLivenessProbe = true
-			}
-
-			if container.ReadinessProbe != nil && container.LivenessProbe != nil {
-
-				r := container.ReadinessProbe
-				l := container.LivenessProbe
-
-				if r.HTTPGet != nil && l.HTTPGet != nil {
-					if r.HTTPGet.Path == l.HTTPGet.Path &&
-						r.HTTPGet.Port.IntValue() == l.HTTPGet.Port.IntValue() {
-						probesAreIdentical = true
-					}
-				}
-
-				if r.TCPSocket != nil && l.TCPSocket != nil {
-					if r.TCPSocket.Port == l.TCPSocket.Port {
-						probesAreIdentical = true
-					}
-				}
-
-				if r.Exec != nil && l.Exec != nil {
-					if len(r.Exec.Command) == len(l.Exec.Command) {
-						hasDifferent := false
-						for i, v := range r.Exec.Command {
-							if l.Exec.Command[i] != v {
-								hasDifferent = true
-								break
-							}
-						}
-
-						if !hasDifferent {
-							probesAreIdentical = true
-						}
-					}
-				}
-
-			}
+			hasReadinessProbe, hasLivenessProbe = checkBasicProbes(container, hasReadinessProbe, hasLivenessProbe)
 		}
 
-		if hasLivenessProbe && hasReadinessProbe && probesAreIdentical {
-			score.Grade = scorecard.GradeCritical
-			score.AddCommentWithURL(
-				"", "Container has the same readiness and liveness probe",
-				"Using the same probe for liveness and readiness is very likely dangerous. Generally it's better to avoid the livenessProbe than re-using the readinessProbe.",
-				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
-			)
-			return score, nil
-		}
-
+		// If pod isn't targeted by a service, skip probe checks
 		if !isTargetedByService {
 			score.Grade = scorecard.GradeAllOK
 			score.Skipped = true
@@ -104,6 +48,7 @@ func containerProbes(allServices []ks.Service) func(ks.PodSpecer) (scorecard.Tes
 			return score, nil
 		}
 
+		// Evaluate probe checks
 		if !hasReadinessProbe {
 			score.Grade = scorecard.GradeCritical
 			score.AddCommentWithURL("", "Container is missing a readinessProbe",
@@ -126,9 +71,92 @@ func containerProbes(allServices []ks.Service) func(ks.PodSpecer) (scorecard.Tes
 		}
 
 		score.Grade = scorecard.GradeAllOK
-
 		return score, nil
 	}
+}
+
+// containerProbesIdentical checks if the container's readiness and liveness probes are identical.
+func containerProbesIdentical(allServices []ks.Service) func(ks.PodSpecer) (scorecard.TestScore, error) {
+	return func(ps ks.PodSpecer) (score scorecard.TestScore, err error) {
+		typeMeta := ps.GetTypeMeta()
+		if typeMeta.Kind == "CronJob" && typeMeta.GroupVersionKind().Group == "batch" || typeMeta.Kind == "Job" && typeMeta.GroupVersionKind().Group == "batch" {
+			score.Grade = scorecard.GradeAllOK
+			return score, nil
+		}
+
+		podTemplate := ps.GetPodTemplateSpec()
+		allContainers := podTemplate.Spec.InitContainers
+		allContainers = append(allContainers, podTemplate.Spec.Containers...)
+
+		probesAreIdentical := false
+		for _, container := range allContainers {
+			if container.ReadinessProbe != nil && container.LivenessProbe != nil {
+				if areProbesIdentical(container.ReadinessProbe, container.LivenessProbe) {
+					probesAreIdentical = true
+					break
+				}
+			}
+		}
+
+		// If probes are identical, mark it as a critical issue
+		if probesAreIdentical {
+			score.Grade = scorecard.GradeCritical
+			score.AddCommentWithURL(
+				"", "Container has the same readiness and liveness probe",
+				"Using the same probe for liveness and readiness is very likely dangerous. It's generally better to avoid re-using the same probe.",
+				"https://github.com/zegl/kube-score/blob/master/README_PROBES.md",
+			)
+			return score, nil
+		}
+
+		// No identical probes found, return OK grade
+		score.Grade = scorecard.GradeAllOK
+		return score, nil
+	}
+}
+
+// areProbesIdentical checks if readiness and liveness probes are identical.
+func areProbesIdentical(r, l *corev1.Probe) bool {
+	if r.HTTPGet != nil && l.HTTPGet != nil {
+		return r.HTTPGet.Path == l.HTTPGet.Path && r.HTTPGet.Port.IntValue() == l.HTTPGet.Port.IntValue()
+	}
+	if r.TCPSocket != nil && l.TCPSocket != nil {
+		return r.TCPSocket.Port == l.TCPSocket.Port
+	}
+	if r.Exec != nil && l.Exec != nil {
+		if len(r.Exec.Command) == len(l.Exec.Command) {
+			for i, v := range r.Exec.Command {
+				if l.Exec.Command[i] != v {
+					return false
+				}
+			}
+			return true
+		}
+	}
+	return false
+}
+
+// checkBasicProbes checks for the presence of readiness and liveness probes.
+func checkBasicProbes(container corev1.Container, hasReadinessProbe, hasLivenessProbe bool) (bool, bool) {
+	if container.ReadinessProbe != nil {
+		hasReadinessProbe = true
+	}
+
+	if container.LivenessProbe != nil {
+		hasLivenessProbe = true
+	}
+
+	return hasReadinessProbe, hasLivenessProbe
+}
+
+// isTargetedByService checks if the pod is targeted by any of the services.
+func isTargetedByService(allServices []ks.Service, podTemplate corev1.PodTemplateSpec) bool {
+	for _, s := range allServices {
+		if podIsTargetedByService(podTemplate, s.Service()) {
+			return true
+		}
+	}
+	return false
 }
 
 func podIsTargetedByService(pod corev1.PodTemplateSpec, service corev1.Service) bool {
