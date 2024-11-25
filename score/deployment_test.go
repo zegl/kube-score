@@ -1,8 +1,9 @@
 package score
 
 import (
-	"github.com/zegl/kube-score/config"
 	"testing"
+
+	"github.com/zegl/kube-score/config"
 
 	"github.com/stretchr/testify/assert"
 	ks "github.com/zegl/kube-score/domain"
@@ -52,6 +53,20 @@ func TestServiceTargetsDeploymentReplicasNok(t *testing.T) {
 	t.Parallel()
 	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("service-target-deployment-replica-1.yaml")}, nil, &config.RunConfiguration{
 		MinReplicasDeployment: 2,
+	}, "Deployment Replicas", scorecard.GradeWarning)
+}
+
+func TestServiceTargetsDeploymentReplicasNok1(t *testing.T) {
+	t.Parallel()
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("service-target-deployment-replica-1.yaml")}, nil, &config.RunConfiguration{
+		MinReplicasDeployment: 1,
+	}, "Deployment Replicas", scorecard.GradeAllOK)
+}
+
+func TestServiceTargetsDeploymentReplicasNok5(t *testing.T) {
+	t.Parallel()
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("service-target-deployment-replica-1.yaml")}, nil, &config.RunConfiguration{
+		MinReplicasDeployment: 5,
 	}, "Deployment Replicas", scorecard.GradeWarning)
 }
 
