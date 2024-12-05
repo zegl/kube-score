@@ -40,6 +40,24 @@ func testExpectedScoreWithConfig(t *testing.T, files []ks.NamedReader, checksCon
 	return nil
 }
 
+func fileWasSkipped(t *testing.T, files []ks.NamedReader, checksConfig *checks.Config, runConfig *config.RunConfiguration, filename string) bool {
+	sc, err := testScore(files, checksConfig, runConfig)
+	assert.NoError(t, err)
+	for _, objectScore := range sc {
+		t.Logf("path=%s skip=%v\n", objectScore.FileLocation.Name, objectScore.FileLocation.Skip)
+		if objectScore.FileLocation.Name == filename {
+			if objectScore.FileLocation.Skip {
+				// Make sure all checks are skipped too
+				for _, s := range objectScore.Checks {
+					assert.Equal(t, s.Skipped, true)
+				}
+			}
+			return objectScore.FileLocation.Skip
+		}
+	}
+	return false
+}
+
 func wasSkipped(t *testing.T, files []ks.NamedReader, checksConfig *checks.Config, runConfig *config.RunConfiguration, testcase string) bool {
 	sc, err := testScore(files, checksConfig, runConfig)
 	assert.NoError(t, err)
