@@ -123,3 +123,42 @@ func TestStatefulsetTemplateIgnoresNotIgnoredWhenFlagDisabled(t *testing.T) {
 	}, "Container Image Tag")
 	assert.False(t, skipped)
 }
+
+func TestStatefulsetTemplateNestedSkip(t *testing.T) {
+	t.Parallel()
+	sc, err := testScore(
+		[]ks.NamedReader{testFile("statefulset-nested-skip.yaml")},
+		nil,
+		&config.RunConfiguration{
+			UseIgnoreChecksAnnotation:   true,
+			UseOptionalChecksAnnotation: true,
+		},
+	)
+	assert.NoError(t, err)
+
+	for _, objectScore := range sc {
+		for _, s := range objectScore.Checks {
+			t.Logf("id=%s type=%v skipped=%v\n", s.Check.ID, s.Check.TargetType, s.Skipped)
+			switch s.Check.TargetType {
+			case "StatefulSet", "all":
+				assert.False(t, s.Skipped)
+			default:
+				assert.True(t, s.Skipped)
+			}
+		}
+	}
+}
+
+func TestStatefulsetTemplateSkip(t *testing.T) {
+	skipped := fileWasSkipped(
+		t,
+		[]ks.NamedReader{testFile("statefulset-skip.yaml")},
+		nil,
+		&config.RunConfiguration{
+			UseIgnoreChecksAnnotation:   true,
+			UseOptionalChecksAnnotation: true,
+		},
+		"testdata/statefulset-skip.yaml",
+	)
+	assert.True(t, skipped)
+}

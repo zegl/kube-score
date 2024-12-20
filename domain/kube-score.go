@@ -27,6 +27,7 @@ type NamedReader interface {
 
 type FileLocation struct {
 	Name string
+	Skip bool
 	Line int
 }
 
