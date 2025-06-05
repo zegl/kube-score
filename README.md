@@ -118,6 +118,26 @@ Flags for score:
   -v, --verbose count                       Enable verbose output, can be set multiple times for increased verbosity.
 ```
 
+### Example with `pre-commit`
+
+`kube-score` can be run as [`pre-commit`](https://pre-commit.com/) hook.
+Add the following to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: "https://github.com/zegl/kube-score"
+    rev: "<LATEST_VERSION>"
+    hooks:
+      - id: "kube-score"
+        files: "path/to/my/manifests/.*\\.ya?ml"
+```
+
+The following hook id's are provided:
+
+- `kube-score`: Installs and runs `kube-score`
+- `kube-score-system`: Runs `kube-score` installed on your system
+- `kube-score-container`: Runs `kube-score` via container
+
 ### Ignoring a test
 
 Tests can be ignored in the whole run of the program, with the `--ignore-test` flag.
