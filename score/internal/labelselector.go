@@ -14,6 +14,11 @@ func (l MapLabels) Get(key string) string {
 	return l[key]
 }
 
+func (l MapLabels) Lookup(label string) (value string, exists bool) {
+	value, exists = l[label]
+	return value, exists
+}
+
 func LabelSelectorMatchesLabels(selectorLabels map[string]string, labels map[string]string) bool {
 	labelSelector := &metav1.LabelSelector{
 		MatchLabels: selectorLabels,
