@@ -179,7 +179,7 @@ func (p *Parser) ParseFiles(files []ks.NamedReader) (ks.AllTypes, error) {
 
 			if len(bytes.TrimSpace(fileContents)) > 0 {
 				if err := p.detectAndDecode(s, namedReader.Name(), offset, fileContents); err != nil {
-					return nil, err
+					log.Println("Failed to parse '%s': %v", namedReader.Name(), err)
 				}
 			}
 
