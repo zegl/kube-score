@@ -158,6 +158,7 @@ func Empty() ks.AllTypes {
 func (p *Parser) ParseFiles(files []ks.NamedReader) (ks.AllTypes, error) {
 	s := &parsedObjects{}
 
+	errorOccured := false
 	for _, namedReader := range files {
 		fullFile, err := io.ReadAll(namedReader)
 		if err != nil {
@@ -179,14 +180,17 @@ func (p *Parser) ParseFiles(files []ks.NamedReader) (ks.AllTypes, error) {
 
 			if len(bytes.TrimSpace(fileContents)) > 0 {
 				if err := p.detectAndDecode(s, namedReader.Name(), offset, fileContents); err != nil {
-					return nil, err
+					errorOccured = true
+					log.Printf("Failed to parse '%s': %v", namedReader.Name(), err)
 				}
 			}
 
 			offset += 2 + bytes.Count(fileContents, []byte("\n"))
 		}
 	}
-
+	if errorOccured {
+		return s, fmt.Errorf("one or more files failed to parse")
+	}
 	return s, nil
 }
 

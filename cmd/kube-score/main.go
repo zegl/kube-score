@@ -212,8 +212,8 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 		return fmt.Errorf("failed to initializer parser: %w", err)
 	}
 
-	parsedFiles, err := p.ParseFiles(allFilePointers)
-	if err != nil {
+	parsedFiles, parseErr := p.ParseFiles(allFilePointers)
+	if parseErr != nil && parsedFiles == nil {
 		return fmt.Errorf("failed to parse files: %w", err)
 	}
 
@@ -231,7 +231,11 @@ Use "-" as filename to read from STDIN.`, execName(binName))
 	case *exitOneOnWarning && scoreCard.AnyBelowOrEqualToGrade(scorecard.GradeWarning):
 		exitCode = 1
 	default:
-		exitCode = 0
+		if parseErr != nil {
+			exitCode = 1
+		} else {
+			exitCode = 0
+		}
 	}
 
 	var r io.Reader
