@@ -2,7 +2,9 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
 	"testing"
 
 	ks "github.com/zegl/kube-score/domain"
@@ -72,4 +74,118 @@ spec:
 	fl := detectFileLocation("someName", 123, []byte(doc))
 	assert.Equal(t, "someName", fl.Name)
 	assert.Equal(t, 123, fl.Line)
+}
+
+type namedReader struct {
+	io.Reader
+	name string
+}
+
+func (n namedReader) Name() string {
+	return n.name
+}
+
+func parse(t *testing.T, doc, name string) ks.AllTypes {
+	p, err := New(nil)
+	assert.NoError(t, err)
+	parsedFiles, err := p.ParseFiles([]ks.NamedReader{
+		namedReader{Reader: strings.NewReader(doc), name: name},
+	})
+	assert.NoError(t, err)
+	return parsedFiles
+}
+
+func TestSkipNo(t *testing.T) {
+	t.Parallel()
+	doc := `kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+  annotations:
+    kube-score/skip:  "No"
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	location := parse(t, doc, "skip-yes.yaml").Deployments()[0].FileLocation()
+	assert.Equal(t, "skip-yes.yaml", location.Name)
+	assert.Equal(t, false, location.Skip)
+}
+
+func TestSkipYes(t *testing.T) {
+	t.Parallel()
+	doc := `kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+  annotations:
+    kube-score/skip:  " yes  "
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	location := parse(t, doc, "skip-yes.yaml").Deployments()[0].FileLocation()
+	assert.Equal(t, "skip-yes.yaml", location.Name)
+	assert.Equal(t, true, location.Skip)
+}
+
+func TestSkipTrueUppercase(t *testing.T) {
+	t.Parallel()
+	doc := `kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+  annotations:
+    "kube-score/skip": "True"
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	location := parse(t, doc, "skip-true-uppercase.yaml").Deployments()[0].FileLocation()
+	assert.Equal(t, "skip-true-uppercase.yaml", location.Name)
+	assert.Equal(t, true, location.Skip)
+}
+
+func TestSkipTrue(t *testing.T) {
+	t.Parallel()
+	doc := `kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+  annotations:
+    "kube-score/skip": "true"
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	location := parse(t, doc, "skip-true.yaml").Deployments()[0].FileLocation()
+	assert.Equal(t, "skip-true.yaml", location.Name)
+	assert.Equal(t, true, location.Skip)
+}
+
+func TestSkipFalse(t *testing.T) {
+	t.Parallel()
+	doc := `kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: foo
+  annotations:
+    "kube-score/skip": "false"
+spec:
+  template:
+    metadata:
+      labels:
+        foo: bar`
+
+	location := parse(t, doc, "skip-false.yaml").Deployments()[0].FileLocation()
+	assert.Equal(t, "skip-false.yaml", location.Name)
+	assert.Equal(t, false, location.Skip)
 }
