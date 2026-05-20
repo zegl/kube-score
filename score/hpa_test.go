@@ -19,6 +19,16 @@ func TestHorizontalPodAutoscalerV2TargetsDeployment(t *testing.T) {
 	testExpectedScore(t, "hpa-autoscalingv2-targets-deployment.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeAllOK)
 }
 
+func TestHorizontalPodAutoscalerV2beta1TargetsDeployment(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "hpa-autoscalingv2beta1-targets-deployment.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeAllOK)
+}
+
+func TestHorizontalPodAutoscalerV2beta2TargetsDeployment(t *testing.T) {
+	t.Parallel()
+	testExpectedScore(t, "hpa-autoscalingv2beta2-targets-deployment.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeAllOK)
+}
+
 func TestHorizontalPodAutoscalerHasNoTarget(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "hpa-has-no-target.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeCritical)

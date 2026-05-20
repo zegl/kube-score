@@ -13,8 +13,6 @@ import (
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
-	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
-	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -401,25 +399,14 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 		s.hpaTargeters = append(s.hpaTargeters, h)
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
 
-	case autoscalingv2beta1.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
-		var hpa autoscalingv2beta1.HorizontalPodAutoscaler
-		errs.AddIfErr(p.decode(fileContents, &hpa))
-		h := internal.HPAv2beta1{HorizontalPodAutoscaler: hpa, Location: fileLocation}
-		s.hpaTargeters = append(s.hpaTargeters, h)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
-
-	case autoscalingv2beta2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
-		var hpa autoscalingv2beta2.HorizontalPodAutoscaler
-		errs.AddIfErr(p.decode(fileContents, &hpa))
-		h := internal.HPAv2beta2{HorizontalPodAutoscaler: hpa, Location: fileLocation}
-		s.hpaTargeters = append(s.hpaTargeters, h)
-		s.bothMetas = append(s.bothMetas, ks.BothMeta{
-			TypeMeta:       hpa.TypeMeta,
-			ObjectMeta:     hpa.ObjectMeta,
-			FileLocationer: h,
-		})
-
-	case autoscalingv2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
+	// The autoscaling/v2beta1 and v2beta2 API types were removed in Kubernetes 1.26.
+	// To stay backwards compatible with manifests that still use those apiVersions,
+	// they are decoded into the structurally-compatible v2 type (only ScaleTargetRef
+	// and MinReplicas are read from HPAs). The original TypeMeta is preserved so
+	// that the "Stable version" meta check still flags them as deprecated.
+	case schema.GroupVersion{Group: "autoscaling", Version: "v2beta1"}.WithKind("HorizontalPodAutoscaler"),
+		schema.GroupVersion{Group: "autoscaling", Version: "v2beta2"}.WithKind("HorizontalPodAutoscaler"),
+		autoscalingv2.SchemeGroupVersion.WithKind("HorizontalPodAutoscaler"):
 		var hpa autoscalingv2.HorizontalPodAutoscaler
 		errs.AddIfErr(p.decode(fileContents, &hpa))
 		h := internal.HPAv2{HorizontalPodAutoscaler: hpa, Location: fileLocation}
