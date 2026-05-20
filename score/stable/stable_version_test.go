@@ -39,6 +39,20 @@ func TestStableVersionPodDisruptionBudget(t *testing.T) {
 	assert.Equal(t, []scorecard.TestScoreComment{{Path: "", Summary: "The apiVersion and kind policy/v1beta1/PodDisruptionBudget is deprecated", Description: "It's recommended to use policy/v1 instead which has been available since Kubernetes v1.21", DocumentationURL: ""}}, scoreNew.Comments)
 }
 
+func TestStableHorizontalPodAutoscalerV2beta1(t *testing.T) {
+	newKubernetes := metaStableAvailable(config.Semver{Major: 1, Minor: 26})
+	scoreNew, _ := newKubernetes(ks.BothMeta{TypeMeta: v1.TypeMeta{Kind: "HorizontalPodAutoscaler", APIVersion: "autoscaling/v2beta1"}})
+	assert.Equal(t, scorecard.GradeWarning, scoreNew.Grade)
+	assert.Equal(t, []scorecard.TestScoreComment{{Path: "", Summary: "The apiVersion and kind autoscaling/v2beta1/HorizontalPodAutoscaler is deprecated", Description: "It's recommended to use autoscaling/v2 instead which has been available since Kubernetes v1.23", DocumentationURL: ""}}, scoreNew.Comments)
+}
+
+func TestStableHorizontalPodAutoscalerV2beta2(t *testing.T) {
+	newKubernetes := metaStableAvailable(config.Semver{Major: 1, Minor: 26})
+	scoreNew, _ := newKubernetes(ks.BothMeta{TypeMeta: v1.TypeMeta{Kind: "HorizontalPodAutoscaler", APIVersion: "autoscaling/v2beta2"}})
+	assert.Equal(t, scorecard.GradeWarning, scoreNew.Grade)
+	assert.Equal(t, []scorecard.TestScoreComment{{Path: "", Summary: "The apiVersion and kind autoscaling/v2beta2/HorizontalPodAutoscaler is deprecated", Description: "It's recommended to use autoscaling/v2 instead which has been available since Kubernetes v1.23", DocumentationURL: ""}}, scoreNew.Comments)
+}
+
 func TestStableNetworkingIngress(t *testing.T) {
 	newKubernetes := metaStableAvailable(config.Semver{Major: 1, Minor: 21})
 	scoreNew, _ := newKubernetes(ks.BothMeta{TypeMeta: v1.TypeMeta{Kind: "Ingress", APIVersion: "networking.k8s.io/v1beta1"}})

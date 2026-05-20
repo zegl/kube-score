@@ -47,6 +47,12 @@ func metaStableAvailable(kubernetsVersion config.Semver) func(meta domain.BothMe
 				"Ingress":      recommendedApi{"networking.k8s.io/v1", config.Semver{Major: 1, Minor: 19}},
 				"IngressClass": recommendedApi{"networking.k8s.io/v1", config.Semver{Major: 1, Minor: 19}},
 			},
+			"autoscaling/v2beta1": {
+				"HorizontalPodAutoscaler": recommendedApi{"autoscaling/v2", config.Semver{Major: 1, Minor: 23}},
+			},
+			"autoscaling/v2beta2": {
+				"HorizontalPodAutoscaler": recommendedApi{"autoscaling/v2", config.Semver{Major: 1, Minor: 23}},
+			},
 		}
 
 		score.Grade = scorecard.GradeAllOK
