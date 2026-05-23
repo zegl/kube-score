@@ -1,0 +1,29 @@
+---
+- id: "kube-score"
+  name: "Run kube-score"
+  description:
+    "This hook installs and runs `kube-score` to perform static code analysis of your Kubernetes object definitions"
+  language: "golang"
+  types:
+    - "yaml"
+  entry: "kube-score score"
+
+- id: "kube-score-system"
+  name: "Run kube-score from system"
+  description: >-
+    This hook runs `kube-score` installed on your system
+    to perform static code analysis of your Kubernetes object definitions
+  language: "system"
+  entry: "kube-score score"
+  types:
+    - "yaml"
+
+- id: "kube-score-container"
+  name: "Run kube-score via container"
+  description:
+    "This hook runs `kube-score` via container to perform static code analysis of your Kubernetes object definitions"
+  language: "docker_image"
+  types:
+    - "yaml"
+  entry: "zegl/kube-score:latest score"
+...
