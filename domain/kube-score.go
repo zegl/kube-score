@@ -123,6 +123,9 @@ type CronJob interface {
 	GetTypeMeta() metav1.TypeMeta
 	GetObjectMeta() metav1.ObjectMeta
 	StartingDeadlineSeconds() *int64
+	// TimeZone returns the CronJob schedule time zone when set.
+	// An unset or empty value means the controller-manager process time zone is used.
+	TimeZone() *string
 	GetPodTemplateSpec() corev1.PodTemplateSpec
 	FileLocationer
 }

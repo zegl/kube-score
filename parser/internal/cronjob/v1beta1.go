@@ -16,6 +16,10 @@ func (c CronJobV1beta1) StartingDeadlineSeconds() *int64 {
 	return c.Obj.Spec.StartingDeadlineSeconds
 }
 
+func (c CronJobV1beta1) TimeZone() *string {
+	return c.Obj.Spec.TimeZone
+}
+
 func (c CronJobV1beta1) FileLocation() ks.FileLocation {
 	return c.Location
 }
