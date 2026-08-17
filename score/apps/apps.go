@@ -15,8 +15,8 @@ import (
 )
 
 func Register(allChecks *checks.Checks, allHPAs []ks.HpaTargeter, allServices []ks.Service) {
-	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
-	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
+	allChecks.RegisterDeploymentCheck("Deployment has host PodAntiAffinity", "Makes sure that a podAntiAffinity, or an equivalent topologySpreadConstraints, has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", deploymentHasAntiAffinity)
+	allChecks.RegisterStatefulSetCheck("StatefulSet has host PodAntiAffinity", "Makes sure that a podAntiAffinity, or an equivalent topologySpreadConstraints, has been set that prevents multiple pods from being scheduled on the same node. https://kubernetes.io/docs/concepts/configuration/assign-pod-node/", statefulsetHasAntiAffinity)
 
 	allChecks.RegisterDeploymentCheck("Deployment targeted by HPA does not have replicas configured", "Makes sure that Deployments using a HorizontalPodAutoscaler doesn't have a statically configured replica count set", hpaDeploymentNoReplicas(allHPAs))
 	allChecks.RegisterStatefulSetCheck("StatefulSet has ServiceName", "Makes sure that StatefulSets have an existing headless serviceName.", statefulsetHasServiceName(allServices))
@@ -68,13 +68,18 @@ func deploymentHasAntiAffinity(deployment appsv1.Deployment) (score scorecard.Te
 		score.AddComment("", "Deployment does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a deployment from being scheduled on the same node. This increases availability in case the node becomes unavailable.")
 	}
 
+	labels := internal.MapLabels(deployment.Spec.Template.GetObjectMeta().GetLabels())
+
+	if hasTopologySpreadConstraints(labels, deployment.Spec.Template.Spec.TopologySpreadConstraints) {
+		score.Grade = scorecard.GradeAllOK
+		return
+	}
+
 	affinity := deployment.Spec.Template.Spec.Affinity
 	if affinity == nil || affinity.PodAntiAffinity == nil {
 		warn()
 		return
 	}
-
-	labels := internal.MapLabels(deployment.Spec.Template.GetObjectMeta().GetLabels())
 
 	if hasPodAntiAffinity(labels, affinity) {
 		score.Grade = scorecard.GradeAllOK
@@ -100,13 +105,18 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 		score.AddComment("", "StatefulSet does not have a host podAntiAffinity set", "It's recommended to set a podAntiAffinity that stops multiple pods from a statefulset from being scheduled on the same node. This increases availability in case the node becomes unavailable.")
 	}
 
+	labels := internal.MapLabels(statefulset.Spec.Template.GetObjectMeta().GetLabels())
+
+	if hasTopologySpreadConstraints(labels, statefulset.Spec.Template.Spec.TopologySpreadConstraints) {
+		score.Grade = scorecard.GradeAllOK
+		return
+	}
+
 	affinity := statefulset.Spec.Template.Spec.Affinity
 	if affinity == nil || affinity.PodAntiAffinity == nil {
 		warn()
 		return
 	}
-
-	labels := internal.MapLabels(statefulset.Spec.Template.GetObjectMeta().GetLabels())
 
 	if hasPodAntiAffinity(labels, affinity) {
 		score.Grade = scorecard.GradeAllOK
@@ -117,17 +127,44 @@ func statefulsetHasAntiAffinity(statefulset appsv1.StatefulSet) (score scorecard
 	return
 }
 
-func hasPodAntiAffinity(selfLabels internal.MapLabels, affinity *corev1.Affinity) bool {
-	approvedTopologyKeys := map[string]struct{}{
-		"kubernetes.io/hostname":        {},
-		"topology.kubernetes.io/region": {},
-		"topology.kubernetes.io/zone":   {},
+// approvedTopologyKeys are the node label keys that spread pods across
+// physical failure domains (nodes, zones, regions). Both the podAntiAffinity
+// and the topologySpreadConstraints checks accept these.
+var approvedTopologyKeys = map[string]struct{}{
+	"kubernetes.io/hostname":        {},
+	"topology.kubernetes.io/region": {},
+	"topology.kubernetes.io/zone":   {},
 
-		// Deprecated in Kubernetes v1.17
-		"failure-domain.beta.kubernetes.io/region": {},
-		"failure-domain.beta.kubernetes.io/zone":   {},
+	// Deprecated in Kubernetes v1.17
+	"failure-domain.beta.kubernetes.io/region": {},
+	"failure-domain.beta.kubernetes.io/zone":   {},
+}
+
+// hasTopologySpreadConstraints reports whether the pod defines a
+// topologySpreadConstraint that spreads its own pods across an approved
+// topology domain. This is treated as equivalent to a host podAntiAffinity:
+// it keeps replicas off the same node/zone, but unlike anti-affinity it lets
+// more than one pod share a node once the skew allows it. See #613.
+func hasTopologySpreadConstraints(selfLabels internal.MapLabels, constraints []corev1.TopologySpreadConstraint) bool {
+	for _, c := range constraints {
+		if _, ok := approvedTopologyKeys[c.TopologyKey]; !ok {
+			continue
+		}
+		if c.LabelSelector == nil {
+			continue
+		}
+		selector, err := metav1.LabelSelectorAsSelector(c.LabelSelector)
+		if err != nil {
+			continue
+		}
+		if selector.Matches(selfLabels) {
+			return true
+		}
 	}
+	return false
+}
 
+func hasPodAntiAffinity(selfLabels internal.MapLabels, affinity *corev1.Affinity) bool {
 	for _, pref := range affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
 		if _, ok := approvedTopologyKeys[pref.PodAffinityTerm.TopologyKey]; ok {
 			if selector, err := metav1.LabelSelectorAsSelector(pref.PodAffinityTerm.LabelSelector); err == nil {

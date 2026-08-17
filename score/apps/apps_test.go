@@ -16,6 +16,7 @@ import (
 type testcase struct {
 	replicas        *int32
 	affinity        *corev1.Affinity
+	topologySpread  []corev1.TopologySpreadConstraint
 	expectedGrade   scorecard.Grade
 	expectedSkipped bool
 }
@@ -161,6 +162,91 @@ func antiAffinityTestCases() []testcase {
 			replicas:        i(1),
 			expectedSkipped: true,
 		},
+		{
+			// OK! topologySpreadConstraints spread across hostname, no anti-affinity needed
+			expectedGrade: scorecard.GradeAllOK,
+			replicas:      i(5),
+			topologySpread: []corev1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "kubernetes.io/hostname",
+					WhenUnsatisfiable: corev1.DoNotSchedule,
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
+			// OK! topologySpreadConstraints spread across zone
+			expectedGrade: scorecard.GradeAllOK,
+			replicas:      i(5),
+			topologySpread: []corev1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "topology.kubernetes.io/zone",
+					WhenUnsatisfiable: corev1.ScheduleAnyway,
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
+			// Not OK! topologySpreadConstraints on an unapproved topology key
+			expectedGrade: scorecard.GradeWarning,
+			replicas:      i(5),
+			topologySpread: []corev1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "some.custom/key",
+					WhenUnsatisfiable: corev1.DoNotSchedule,
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "foo",
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
+			// Not OK! topologySpreadConstraints selector doesn't match this pod
+			expectedGrade: scorecard.GradeWarning,
+			replicas:      i(5),
+			topologySpread: []corev1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "kubernetes.io/hostname",
+					WhenUnsatisfiable: corev1.DoNotSchedule,
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "not-foo",
+						},
+					},
+				},
+			},
+			expectedSkipped: false,
+		},
+		{
+			// Not OK! topologySpreadConstraints without a labelSelector can't be tied to this pod
+			expectedGrade: scorecard.GradeWarning,
+			replicas:      i(5),
+			topologySpread: []corev1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "kubernetes.io/hostname",
+					WhenUnsatisfiable: corev1.DoNotSchedule,
+				},
+			},
+			expectedSkipped: false,
+		},
 	}
 }
 
@@ -177,7 +263,8 @@ func TestStatefulsetHasAntiAffinity(t *testing.T) {
 						},
 					},
 					Spec: corev1.PodSpec{
-						Affinity: tc.affinity,
+						Affinity:                  tc.affinity,
+						TopologySpreadConstraints: tc.topologySpread,
 					},
 				},
 			},
@@ -202,7 +289,8 @@ func TestDeploymentHasAntiAffinity(t *testing.T) {
 						},
 					},
 					Spec: corev1.PodSpec{
-						Affinity: tc.affinity,
+						Affinity:                  tc.affinity,
+						TopologySpreadConstraints: tc.topologySpread,
 					},
 				},
 			},
