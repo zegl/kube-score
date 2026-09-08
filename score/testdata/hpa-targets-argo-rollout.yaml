@@ -1,0 +1,40 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: php-apache
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php-apache
+  template:
+    metadata:
+      labels:
+        app: php-apache
+    spec:
+      containers:
+        - name: foo
+          image: foo:latest
+  strategy:
+    canary: {}

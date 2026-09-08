@@ -29,6 +29,17 @@ func TestHorizontalPodAutoscalerV2beta2TargetsDeployment(t *testing.T) {
 	testExpectedScore(t, "hpa-autoscalingv2beta2-targets-deployment.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeAllOK)
 }
 
+func TestHorizontalPodAutoscalerV2TargetsUnknownCRD(t *testing.T) {
+	t.Parallel()
+	// Argo Rollouts' "Rollout" (argoproj.io/v1alpha1) is a drop-in replacement for
+	// apps/v1 Deployment that is commonly used as an HPA scaleTargetRef. kube-score
+	// does not parse this (or any other) CRD kind, so it is never registered in
+	// allTargetableObjs, and the HPA-target check reports a false-positive CRITICAL
+	// "The HPA target does not match anything" even though the target object is
+	// present in the same input. See issue #332.
+	testExpectedScore(t, "hpa-targets-argo-rollout.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeAllOK)
+}
+
 func TestHorizontalPodAutoscalerHasNoTarget(t *testing.T) {
 	t.Parallel()
 	testExpectedScore(t, "hpa-has-no-target.yaml", "HorizontalPodAutoscaler has target", scorecard.GradeCritical)
