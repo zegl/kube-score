@@ -21,6 +21,7 @@ import (
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	policyv1 "k8s.io/api/policy/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -89,6 +90,16 @@ func (p *Parser) addToScheme() error {
 type detectKind struct {
 	ApiVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
+}
+
+// detectMetadata is used to read the name/namespace of objects whose kind
+// kube-score has no dedicated parser for (typically CRDs), so that they can
+// still be registered as a generic BothMeta. See decodeItem's default case.
+type detectMetadata struct {
+	Metadata struct {
+		Name      string `yaml:"name"`
+		Namespace string `yaml:"namespace"`
+	} `yaml:"metadata"`
 }
 
 type parsedObjects struct {
@@ -414,6 +425,31 @@ func (p *Parser) decodeItem(s *parsedObjects, detectedVersion schema.GroupVersio
 		s.bothMetas = append(s.bothMetas, ks.BothMeta{TypeMeta: hpa.TypeMeta, ObjectMeta: hpa.ObjectMeta, FileLocationer: h})
 
 	default:
+		// detectedVersion's Kind is never empty here (detectAndDecode already
+		// validated that), but the object itself is of a kind kube-score has
+		// no dedicated parser for -- most commonly a CRD such as Argo
+		// Rollouts' "Rollout" or Knative's "Service". Register it as a
+		// generic BothMeta (TypeMeta/ObjectMeta only, no PodSpec) so that
+		// checks which only need to confirm "an object with this
+		// apiVersion/kind/name/namespace exists" -- for example the HPA
+		// scaleTargetRef check in score/hpa -- don't report a false
+		// positive just because the target is a CRD kube-score can't fully
+		// parse. See issue #332.
+		var meta detectMetadata
+		if err := yaml.Unmarshal(fileContents, &meta); err == nil && meta.Metadata.Name != "" {
+			s.bothMetas = append(s.bothMetas, ks.BothMeta{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: detectedVersion.GroupVersion().String(),
+					Kind:       detectedVersion.Kind,
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      meta.Metadata.Name,
+					Namespace: meta.Metadata.Namespace,
+				},
+				FileLocationer: internal.GenericObject{Location: fileLocation},
+			})
+		}
+
 		if p.config.VerboseOutput > 1 {
 			log.Printf("Unknown datatype: %s", detectedVersion.String())
 		}
