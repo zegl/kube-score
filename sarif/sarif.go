@@ -59,9 +59,19 @@ type Snippet struct {
 	Text string `json:"text,omitempty"`
 }
 
+// Region.Snippet and ContextRegion.Snippet are *Snippet (not Snippet):
+// encoding/json's "omitempty" only recognizes false, 0, a nil
+// pointer/interface, and an empty array/slice/map/string as "empty" -- a
+// struct value is never considered empty, so a plain Snippet field would
+// always be serialized as "snippet":{} even when unset. Per the SARIF
+// 2.1.0 schema, "snippet" is an artifactContent object that must carry
+// "text" or "binary" when present at all; an empty object fails
+// validation and causes strict consumers (GitLab's SARIF ingestion,
+// GitHub's upload-sarif) to reject the whole report. Using a pointer
+// lets omitempty actually omit the key until real snippet text exists.
 type Region struct {
-	Snippet   Snippet `json:"snippet,omitempty"`
-	StartLine int     `json:"startLine,omitempty"`
+	Snippet   *Snippet `json:"snippet,omitempty"`
+	StartLine int      `json:"startLine,omitempty"`
 }
 
 type ArtifactLocation struct {
@@ -69,9 +79,9 @@ type ArtifactLocation struct {
 }
 
 type ContextRegion struct {
-	Snippet   Snippet `json:"snippet,omitempty"`
-	EndLine   int     `json:"endLine,omitempty"`
-	StartLine int     `json:"startLine,omitempty"`
+	Snippet   *Snippet `json:"snippet,omitempty"`
+	EndLine   int      `json:"endLine,omitempty"`
+	StartLine int      `json:"startLine,omitempty"`
 }
 
 type PhysicalLocation struct {
