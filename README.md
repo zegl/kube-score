@@ -104,8 +104,8 @@ Actions:
 	help	Print this message
 
 Flags for score:
-      --disable-ignore-checks-annotations   Set to true to disable the effect of the 'kube-score/ignore' annotations
-      --disable-optional-checks-annotations Set to true to disable the effect of the 'kube-score/enable' annotations
+      --disable-ignore-checks-annotations   Set to true to disable the effect of the 'kube-score.com/ignore' and 'kube-score/ignore' annotations
+      --disable-optional-checks-annotations Set to true to disable the effect of the 'kube-score.com/enable' and 'kube-score/enable' annotations
       --enable-optional-test strings        Enable an optional test, can be set multiple times
       --exit-one-on-warning                 Exit with code 1 in case of warnings
       --help                                Print help
@@ -122,8 +122,8 @@ Flags for score:
 
 Tests can be ignored in the whole run of the program, with the `--ignore-test` flag.
 
-A test can also be ignored on a per-object basis, by adding the annotation `kube-score/ignore` to the object.
-The value should be a comma-separated string of the [test IDs](README_CHECKS.md).
+A test can also be ignored on a per-object basis, by adding the annotation `kube-score.com/ignore` (or the legacy form `kube-score/ignore`) to the object.
+The value should be a comma-separated string of the [test IDs](README_CHECKS.md). The domain-prefixed key `kube-score.com/ignore` is recommended.
 
 Example:
 
@@ -136,7 +136,7 @@ metadata:
   name: node-port-service-with-ignore
   namespace: foospace
   annotations:
-    kube-score/ignore: service-type
+    kube-score.com/ignore: service-type
 spec:
   selector:
     app: my-app
@@ -151,13 +151,13 @@ spec:
 
 Optional tests can be enabled in the whole run of the program, with the `--enable-optional-test` flag.
 
-A test can also be enabled on a per-object basis, by adding the annotation `kube-score/enable` to the object.
-The value should be a comma-separated string of the [test IDs](README_CHECKS.md).
+A test can also be enabled on a per-object basis, by adding the annotation `kube-score.com/enable` (or the legacy form `kube-score/enable`) to the object.
+The value should be a comma-separated string of the [test IDs](README_CHECKS.md). The domain-prefixed key `kube-score.com/enable` is recommended.
 
 Example:
 
 Testing this object will enable the `container-seccomp-profile` test.
-Also, multiple tests defined by `kube-score/ignore` are also ignored at the same.
+Also, multiple tests defined by `kube-score.com/ignore` are also ignored at the same.
 
 ```yaml
 apiVersion: apps/v1
@@ -167,8 +167,8 @@ metadata:
   labels:
     app: optional-test-manifest
   annotations:
-    kube-score/ignore: pod-networkpolicy,container-resources,container-image-pull-policy,container-security-context-privileged,container-security-context-user-group-id,container-security-context-readonlyrootfilesystem,container-ephemeral-storage-request-and-limit
-    kube-score/enable: container-seccomp-profile
+    kube-score.com/ignore: pod-networkpolicy,container-resources,container-image-pull-policy,container-security-context-privileged,container-security-context-user-group-id,container-security-context-readonlyrootfilesystem,container-ephemeral-storage-request-and-limit
+    kube-score.com/enable: container-seccomp-profile
 spec:
   replicas: 1
   selector:

@@ -24,16 +24,28 @@ func (so *ScoredObject) isEnabled(check ks.Check, annotations, childAnnotations 
 		return false
 	}
 
-	if childAnnotations != nil && so.useIgnoreChecksAnnotation && isIn(childAnnotations[ignoredChecksAnnotation], check.ID) {
+	matchesAnyAnnotation := func(ann map[string]string, keys []string, checkID string) bool {
+		if ann == nil {
+			return false
+		}
+		for _, k := range keys {
+			if v, ok := ann[k]; ok && isIn(v, checkID) {
+				return true
+			}
+		}
 		return false
 	}
-	if childAnnotations != nil && so.useOptionalChecksAnnotation && isIn(childAnnotations[optionalChecksAnnotation], check.ID) {
+
+	if childAnnotations != nil && so.useIgnoreChecksAnnotation && matchesAnyAnnotation(childAnnotations, ignoredChecksAnnotations, check.ID) {
+		return false
+	}
+	if childAnnotations != nil && so.useOptionalChecksAnnotation && matchesAnyAnnotation(childAnnotations, optionalChecksAnnotations, check.ID) {
 		return true
 	}
-	if so.useIgnoreChecksAnnotation && isIn(annotations[ignoredChecksAnnotation], check.ID) {
+	if so.useIgnoreChecksAnnotation && matchesAnyAnnotation(annotations, ignoredChecksAnnotations, check.ID) {
 		return false
 	}
-	if so.useOptionalChecksAnnotation && isIn(annotations[optionalChecksAnnotation], check.ID) {
+	if so.useOptionalChecksAnnotation && matchesAnyAnnotation(annotations, optionalChecksAnnotations, check.ID) {
 		return true
 	}
 

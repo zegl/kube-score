@@ -9,8 +9,15 @@ import (
 )
 
 const (
-	ignoredChecksAnnotation  = "kube-score/ignore"
-	optionalChecksAnnotation = "kube-score/enable"
+	ignoredChecksAnnotation     = "kube-score/ignore"
+	ignoredChecksAnnotationDNS  = "kube-score.com/ignore"
+	optionalChecksAnnotation    = "kube-score/enable"
+	optionalChecksAnnotationDNS = "kube-score.com/enable"
+)
+
+var (
+	ignoredChecksAnnotations  = []string{ignoredChecksAnnotationDNS, ignoredChecksAnnotation}
+	optionalChecksAnnotations = []string{optionalChecksAnnotationDNS, optionalChecksAnnotation}
 )
 
 // if this, then that

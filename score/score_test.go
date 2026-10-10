@@ -337,6 +337,51 @@ func TestAnnotationIgnoreDisabled(t *testing.T) {
 	assert.True(t, tested)
 }
 
+func TestAnnotationIgnoreDNS(t *testing.T) {
+	t.Parallel()
+	s, err := testScore([]ks.NamedReader{testFile("ignore-annotation-dns-service.yaml")}, nil, &config.RunConfiguration{
+		UseIgnoreChecksAnnotation: true,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			if c.Check.ID == "service-type" {
+				assert.True(t, c.Skipped)
+				tested = true
+			}
+		}
+		assert.Equal(t, "node-port-service-with-dns-ignore", o.ObjectMeta.Name)
+	}
+	assert.True(t, tested)
+}
+
+func TestAnnotationIgnoreDNSDisabled(t *testing.T) {
+	t.Parallel()
+	s, err := testScore([]ks.NamedReader{testFile("ignore-annotation-dns-service.yaml")}, nil, &config.RunConfiguration{
+		UseIgnoreChecksAnnotation: false,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			if c.Check.ID == "service-type" {
+				assert.False(t, c.Skipped)
+				assert.Equal(t, scorecard.GradeWarning, c.Grade)
+				tested = true
+			}
+		}
+		assert.Equal(t, "node-port-service-with-dns-ignore", o.ObjectMeta.Name)
+	}
+	assert.True(t, tested)
+}
+
 func TestList(t *testing.T) {
 	t.Parallel()
 	s, err := testScore([]ks.NamedReader{testFile("list.yaml")}, nil, nil)
@@ -558,3 +603,35 @@ func TestMultipleIgnoreAnnotations(t *testing.T) {
 	assert.True(t, tested)
 	assert.True(t, skipped)
 }
+
+func TestMultipleIgnoreDNSAnnotations(t *testing.T) {
+	t.Parallel()
+	s, err := testScore([]ks.NamedReader{testFile("kube-score-com-ignore-annotations.yaml")}, nil, &config.RunConfiguration{
+		UseIgnoreChecksAnnotation: true,
+	})
+	assert.Nil(t, err)
+	assert.Len(t, s, 1)
+
+	tested := false
+	skipped := false
+
+	for _, o := range s {
+		for _, c := range o.Checks {
+			// implied by the ignore container-resources annotation
+			if c.Check.ID == "container-ephemeral-storage-request-and-limit" {
+				assert.True(t, c.Skipped)
+				skipped = true
+			}
+			// a default check
+			if c.Check.ID == "container-image-pull-policy" {
+				assert.False(t, c.Skipped)
+				assert.Equal(t, scorecard.GradeCritical, c.Grade)
+				tested = true
+			}
+			assert.Equal(t, "kube-score-com-ignore-annotations", o.ObjectMeta.Name)
+		}
+	}
+	assert.True(t, tested)
+	assert.True(t, skipped)
+}
+
