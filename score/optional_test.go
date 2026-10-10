@@ -55,3 +55,15 @@ func TestOptionalRunAnnotationEnabled(t *testing.T) {
 			EnabledOptionalTests: enabledOptionalTests,
 		}, "Container Memory Requests Equal Limits", scorecard.GradeCritical)
 }
+
+func TestOptionalRunAnnotationDNSEnabled(t *testing.T) {
+	t.Parallel()
+
+	enabledOptionalTests := make(map[string]struct{})
+
+	testExpectedScoreWithConfig(t, []ks.NamedReader{testFile("pod-container-memory-requests-dns-annotation-optional.yaml")}, nil,
+		&config.RunConfiguration{
+			EnabledOptionalTests: enabledOptionalTests,
+		}, "Container Memory Requests Equal Limits", scorecard.GradeCritical)
+}
+

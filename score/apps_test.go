@@ -123,3 +123,22 @@ func TestStatefulsetTemplateIgnoresNotIgnoredWhenFlagDisabled(t *testing.T) {
 	}, "Container Image Tag")
 	assert.False(t, skipped)
 }
+
+func TestStatefulsetTemplateDNSIgnores(t *testing.T) {
+	t.Parallel()
+	skipped := wasSkipped(t, []ks.NamedReader{testFile("statefulset-nested-dns-ignores.yaml")}, nil, &config.RunConfiguration{
+		UseIgnoreChecksAnnotation:   true,
+		UseOptionalChecksAnnotation: true,
+	}, "Container Image Tag")
+	assert.True(t, skipped)
+}
+
+func TestStatefulsetTemplateDNSIgnoresNotIgnoredWhenFlagDisabled(t *testing.T) {
+	t.Parallel()
+	skipped := wasSkipped(t, []ks.NamedReader{testFile("statefulset-nested-dns-ignores.yaml")}, nil, &config.RunConfiguration{
+		UseIgnoreChecksAnnotation:   false,
+		UseOptionalChecksAnnotation: true,
+	}, "Container Image Tag")
+	assert.False(t, skipped)
+}
+
